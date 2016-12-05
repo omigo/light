@@ -1,61 +1,61 @@
-yan
+light
 ================================================================================
 
-根据接口和 SQL 生成数据库 CRUD 实现方法
+Generate go database code by SQL statement, like MyBatis/Ibatis, but no Reflect.
 
-文档 [doc/yan.slide](doc/yan.slide)（暂时未更新）
-
-支持 6 种操作
+7 kind of methods
 --------------------------------------------------------------------------------
 
 * add: insert into table(name) values('name') returning id
 * modify: update table set name='name' where id=1
 * remove: delete from table where id=1
-* get: select id,name from table where id=1
-* list: select id,name from table where id < 1000 offset 10 limit 5
-* count/sum: select count(id) from table where id < 1000
+* get: select id, name from table where id=1
+* count: select count(id) from table where id < 1000
+* list: select id, name from table where id < 1000 order by id offset 10 limit 5
+* page: select count(id) | id, name from table where id < 1000 [ order by id offset 10 limit 5 ]
 
 
 Usage
 --------------------------------------------------------------------------------
 
-1. 编写接口
+1. Code interface, Comment methods with SQL statement
 
 ```go
 package persist
 
-//go:generate yan
+//go:generate light
 
-// ModelMapper 示例接口
+// ModelMapper example model
 type ModelMapper interface {
 
 	// select id, name, third_field, status, content
 	// from demos
 	// where name=${d.Name}
-	//   [?{d.ThirdField != false} and third_field=${d.ThirdField} ]
-	//   [?{d.Content != nil} and content=${d.Content} ]
-	//   [?{len(statuses) != 0} and status in (${statuses}) ]
+	//   [?{ d.ThirdField != false } and third_field=${d.ThirdField} ]
+	//   [?{ d.Content != nil } and content=${d.Content} ]
+	//   [?{ len(d.Tags) != 0 } and tag in (${d.Tags}) ]
 	// order by id
-	// offset ${offset} limit ${limit}
-	List(tx *sql.Tx, d *domain.Demo, statuses []enums.Status, offset, limit int) ([]*domain.Demo, error)
+	// offset ${(d.Page-1)*d.Size} limit ${d.Size}
+	List(d *domain.Demo, tx *sql.Tx) ([]*domain.Demo, error)
 }
 ```
 
-2. 生成代码
+2. Execute go generate tool
 
     `go generate ./...`
 
-更多示例见： [example/mapper/model.go](example/mapper/model.go)
 
-生成的文件： [example/mapper/modelimpl.go](example/mapper/modelimpl.go)
+more example: [example/mapper/model.go](example/mapper/model.go)
+
+generated impl code: [example/mapper/modelimpl.go](example/mapper/modelimpl.go)
 
 
-更多参数
+More Arguments
 --------------------------------------------------------------------------------
 
 ```
-# yan -h
-Usage of yan:
+# light -h
+Usage of light:
   -db string
     	variable of prefix Query/QueryRow/Exec (default "db")
   -force
@@ -64,5 +64,5 @@ Usage of yan:
     	path variable db
   -v	version
 
-//go:generate yan -force -db "db.DB" -path "github.com/wothing/17mei/db"
+//go:generate light -force -db "db.DB" -path "github.com/wothing/17mei/db"
 ```
