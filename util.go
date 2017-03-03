@@ -1,7 +1,9 @@
 package main
 
-func CheckError(err error) {
+import "log"
+
+func checkError(err error) {
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }

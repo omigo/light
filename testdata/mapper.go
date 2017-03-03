@@ -7,7 +7,7 @@ import (
 	"github.com/arstd/light/example/enum"
 )
 
-//go:generate yan -force
+//go:generate light -force
 
 // ModelMapper 示例接口
 type ModelMapper interface {

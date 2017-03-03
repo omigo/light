@@ -3,6 +3,9 @@ package main
 import (
 	"go/ast"
 	"go/token"
+	"strings"
+
+	"github.com/arstd/log"
 )
 
 type MethodKind string
@@ -30,8 +33,20 @@ type Analyzer struct {
 	f    *ast.File
 }
 
+func (a *Analyzer) GetPath(pkg string) string {
+	for _, imp := range a.Imports {
+		if imp[0] != '"' && strings.HasPrefix(imp, pkg+" ") {
+			return imp[len(pkg)+2 : len(imp)-1]
+		} else if strings.HasSuffix(imp, "/"+pkg+`"`) {
+			return imp[1 : len(imp)-1]
+		}
+	}
+	log.Panicf("import path not found for %s", pkg)
+	return "" // unreachable code
+}
+
 type Interface struct {
-	Analyzer *Analyzer `json:"-"`
+	a *Analyzer
 
 	Name    string
 	Comment string
@@ -40,8 +55,8 @@ type Interface struct {
 }
 
 type Method struct {
-	Analyzer  *Analyzer  `json:"-"`
-	Interface *Interface `json:"-"`
+	a *Analyzer
+	i *Interface
 
 	Name    string
 	Comment string
@@ -53,12 +68,19 @@ type Method struct {
 }
 
 type VarAndType struct {
-	Analyzer  *Analyzer  `json:"-"`
-	Interface *Interface `json:"-"`
-	Method    *Method    `json:"-"`
+	a *Analyzer
+	i *Interface
+	m *Method
 
 	Var  string
 	Type string
+
+	Slice  string
+	Star   string
+	Pkg    string
+	Alias  string
+	Path   string
+	Fields []*VarAndType
 }
 
 func (vt *VarAndType) IsPrimitive() bool {

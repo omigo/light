@@ -7,7 +7,7 @@ import (
 	"github.com/arstd/light/example/enum"
 )
 
-//go:generate yan -force
+//go:generate light -force
 
 // Interface1 示例接口
 type Interface1 interface {

@@ -1,13 +1,18 @@
 package main
 
-import "testing"
+import (
+	"testing"
 
-func TestParseFragment(t *testing.T) {
+	"github.com/arstd/log"
+)
+
+func TestPrepareFragment(t *testing.T) {
 	filename := "./testdata/methods.go"
 	a := NewAnalyzer(filename)
 
 	a.Analyze()
-	// log.JSONIndent(a)
 
 	a.parse()
+
+	log.JSONIndent(a)
 }
