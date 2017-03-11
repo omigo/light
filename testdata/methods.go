@@ -3,11 +3,11 @@ package testdata
 import (
 	"database/sql"
 
-	"github.com/arstd/light/example/domain"
-	"github.com/arstd/light/example/enum"
+	"github.com/arstd/light/example/model"
+	"github.com/arstd/yan/example/enum"
 )
 
-//go:generate light -force
+//go:generate go run ../main.go
 
 // Interface1 示例接口
 type Interface1 interface {
@@ -16,7 +16,7 @@ type Interface1 interface {
 	// values (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Slice},
 	//   ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
 	// returning id
-	Insert(tx *sql.Tx, m *domain.Model) error
+	Insert(tx *sql.Tx, m *model.Model) error
 
 	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32
 	// from model
@@ -26,5 +26,5 @@ type Interface1 interface {
 	//   [?{ len(m.Slice) != 0 } and slice ?| array[${m.Slice}] ]
 	// order by id
 	// offset ${offset} limit ${limit}
-	List(tx *sql.Tx, m *domain.Model, ss []enum.Status, offset, limit int) ([]*domain.Model, error)
+	List(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) ([]*model.Model, error)
 }

@@ -1,6 +1,6 @@
 package testdata
 
-//go:generate yan -force
+//go:generate light -force
 
 // Interface1 示例接口
 type Interface1 interface {
