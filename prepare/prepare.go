@@ -90,36 +90,63 @@ func getMethodKind(m *domain.Method) domain.MethodKind {
 }
 
 func getFragments(doc string) (fs []*domain.Fragment) {
-	log.Info(doc)
-	stack, top := make([]int, 32), 0
+	stack, top := make([]int, 32), -1
 
 	last := -1
 	for i, c := range doc {
 		switch c {
 		case '\'':
-			if doc[stack[top]] == '\'' {
+			if top != -1 && stack[top] != -1 && doc[stack[top]] == '\'' {
 				stack[top] = 0
 				top--
+			} else {
+				top++
+				stack[top] = i
 			}
 
 		case '[':
-			if doc[stack[top]] == '\'' {
-				continue
-			}
-
-			if strings.HasSuffix(doc[:i], "array") {
-
+			if i == 0 {
 				top++
-				stack[top] = -1
+				stack[top] = i
+				last = 0
 				continue
 			}
 
-			if top == 0 {
+			if strings.HasSuffix(doc[last+1:i], "array") {
+				top++
+				stack[top] = -1 // 这对字符应该被看做普通字符串
+				continue
+			}
+
+			var cont bool
+			for i := top; i >= 0; i-- {
+				if stack[i] != -1 && (doc[stack[i]] == '\'' || doc[stack[i]] == '[') {
+					top++
+					stack[top] = -1 // 这对字符应该被看做普通字符串
+					cont = true
+				}
+			}
+			if cont {
+				continue
+			}
+
+			var first bool
+			if top == -1 { // 前面没有任何字符
+				first = true
+			}
+			for _, v := range stack { // 前面都被视为普通字符
+				if v == -1 {
+					first = true
+					break
+				}
+			}
+			if first {
 				f := &domain.Fragment{
 					Stmt: strings.TrimSpace(doc[last+1 : i]),
 				}
 				if parseFragment(f) {
 					fs = append(fs, f)
+					last = i
 				}
 			}
 
@@ -127,7 +154,11 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 			stack[top] = i
 
 		case ']':
-			if stack[top] == -1 {
+			if top == -1 {
+				log.Panicf("unexpected symbol `]`, not pair symbol `[`")
+			}
+
+			if stack[top] == -1 { // 这对字符应该被看做普通字符串，直接出栈
 				stack[top] = 0
 				top--
 				continue
@@ -141,6 +172,7 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 				f := &domain.Fragment{
 					Stmt: strings.TrimSpace(doc[stack[top]+1 : i]),
 				}
+
 				if parseFragment(f) {
 					fs = append(fs, f)
 					last = i
@@ -155,13 +187,14 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 		default: // do nothing
 		}
 	}
-	if top != 0 {
+	if top != -1 {
 		log.Panicf("parentheses do not match, expect `]`")
 	}
 	if last < len(doc) {
 		f := &domain.Fragment{
 			Stmt: doc[last+1:],
 		}
+
 		if parseFragment(f) {
 			fs = append(fs, f)
 		}
@@ -170,14 +203,13 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 	return fs
 }
 
-var condRegexp = regexp.MustCompile(`((\w+),\s*(\w+)\s*:=\s*)?range\s+(\w+)(\s*\|\s*(.+))?`)
+var condRegexp = regexp.MustCompile(`((\w+),\s*(\w+)\s*:=\s*)?range\s+([\w.]+)(\s*\|\s*(.+))?`)
 
 func parseFragment(f *domain.Fragment) bool {
 	f.Stmt = strings.TrimSpace(f.Stmt)
 	if len(f.Stmt) == 0 {
 		return false
 	}
-	log.Debug(f.Stmt)
 
 	if len(f.Stmt) < 1 {
 		log.Panicf("sql error near by %s", f.Stmt)
@@ -197,10 +229,8 @@ func parseFragment(f *domain.Fragment) bool {
 	}
 
 	if f.Cond != "" {
-		log.Debug(f.Cond, condRegexp.String())
-		log.Debugf("%#v", condRegexp.FindStringSubmatch(f.Cond))
 		if m := condRegexp.FindStringSubmatch(f.Cond); len(m) > 0 {
-			f.Index, f.Iterator = "i", "x"
+			f.Index, f.Iterator = "i", "v"
 			if m[2] != "" {
 				f.Index = m[2]
 			}
@@ -215,15 +245,15 @@ func parseFragment(f *domain.Fragment) bool {
 			f.Cond = fmt.Sprintf("%s, %s := range %s", f.Index, f.Iterator, f.Range)
 
 			if f.Stmt == "" {
-				f.Stmt = "${x}"
+				f.Stmt = "${" + f.Iterator + "}"
 			}
-			log.JSONIndent(f)
 		}
+	}
 
+	if f.Cond != "" || f.Stmt[0] == '[' {
 		fs := getFragments(f.Stmt)
 		if len(fs) > 1 || fs[0].Cond != "" {
 			f.Fragments = fs
-			f.Stmt = ""
 			return true
 		}
 	}
@@ -234,7 +264,6 @@ func parseFragment(f *domain.Fragment) bool {
 func parseArgs(f *domain.Fragment) bool {
 	buf := &bytes.Buffer{}
 
-	log.Debug(f.Stmt)
 	stack, top := make([]int, 32), 0
 
 	last := -1
@@ -268,7 +297,6 @@ func parseArgs(f *domain.Fragment) bool {
 				a := &domain.VarType{
 					Var: strings.TrimSpace(f.Stmt[stack[top]+1 : i]),
 				}
-				log.Debug(a.Var)
 				f.Args = append(f.Args, a)
 
 				buf.WriteString("%s")
@@ -290,6 +318,6 @@ func parseArgs(f *domain.Fragment) bool {
 		buf.WriteString(f.Stmt[last+1:])
 	}
 
-	f.Stmt = buf.String()
+	f.Prepare = buf.String()
 	return true
 }

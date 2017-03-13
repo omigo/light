@@ -59,9 +59,10 @@ type VarType struct {
 }
 
 type Fragment struct {
-	Cond string     `json:"Cond,omitempty"`
-	Stmt string     `json:"Stmt,omitempty"`
-	Args []*VarType `json:"Args,omitempty"`
+	Cond    string     `json:"Cond,omitempty"`
+	Stmt    string     `json:"Stmt,omitempty"`
+	Prepare string     `json:"Prepare,omitempty"`
+	Args    []*VarType `json:"Args,omitempty"`
 
 	Range     string `json:"Range,omitempty"`
 	Index     string `json:"Index,omitempty"`

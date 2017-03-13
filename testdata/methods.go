@@ -28,10 +28,10 @@ type Interface1 interface {
 	// from model
 	// where name like ${m.Name}
 	//   [{ m.Flag != false }
-	//       [{ m.status != 0 } status=${m.Status} ]
+	//       [{ m.Status != 0 } status=${m.Status} ]
 	//       and flag=${m.Flag} ]
 	//   [{ len(ss) != 0 } and status in ([{range ss}]) ]
-	//   [{ len(m.Slice) != 0 } and slice ?| array[${m.Slice}] ]
+	//   [{ len(m.Slice) != 0 } and slice ?| array[[{range m.Slice}]] ]
 	// order by id
 	// offset ${offset} limit ${limit}
 	List(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) ([]*model.Model, error)
