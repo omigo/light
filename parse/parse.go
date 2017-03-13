@@ -52,7 +52,7 @@ func ParseGoFile(file string) (pkg *domain.Package) {
 
 		itfType, _ := v.Type().Underlying().(*types.Interface)
 		for i, x := range interfaceType.Methods.List {
-			m := &domain.Func{
+			m := &domain.Method{
 				Name: x.Names[0].Name,
 				Doc:  getDoc(x.Doc),
 			}

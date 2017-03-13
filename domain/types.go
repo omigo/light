@@ -24,12 +24,15 @@ type Package struct {
 type Interface struct {
 	Name string
 
-	Methods []*Func
+	Methods []*Method
 }
 
-type Func struct {
+type Method struct {
 	Name string
 	Doc  string
+
+	Kind      MethodKind
+	Fragments []*Fragment
 
 	Params  []*VarType
 	Results []*VarType
@@ -53,4 +56,17 @@ type VarType struct {
 
 	Deep   bool       `json:"Deep,omitempty"` //  深入解析这个类型
 	Fields []*VarType `json:"Fields,omitempty"`
+}
+
+type Fragment struct {
+	Cond string     `json:"Cond,omitempty"`
+	Stmt string     `json:"Stmt,omitempty"`
+	Args []*VarType `json:"Args,omitempty"`
+
+	Range     string `json:"Range,omitempty"`
+	Index     string `json:"Index,omitempty"`
+	Iterator  string `json:"Iterator,omitempty"`
+	Seperator string `json:"Seperator,omitempty"`
+
+	Fragments []*Fragment `json:"Fragments,omitempty"`
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/arstd/light/parse"
+	"github.com/arstd/light/prepare"
 	"github.com/arstd/log"
 )
 
@@ -38,6 +39,8 @@ func main() {
 	fmt.Printf("Found  go file: %s\n", goFile)
 
 	p := parse.ParseGoFile(goFile)
+
+	prepare.PrepareStmt(p)
+
 	log.JSONIndent(p)
-	_ = p
 }
