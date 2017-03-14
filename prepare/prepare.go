@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/arstd/light/domain"
 	"github.com/arstd/log"
@@ -90,114 +91,54 @@ func getMethodKind(m *domain.Method) domain.MethodKind {
 }
 
 func getFragments(doc string) (fs []*domain.Fragment) {
-	stack, top := make([]int, 32), -1
+	log.Infof(doc)
+	time.Sleep(200 * time.Millisecond)
 
-	last := -1
+	ignore, left, last := false, 0, -1
 	for i, c := range doc {
-		switch c {
-		case '\'':
-			if top != -1 && stack[top] != -1 && doc[stack[top]] == '\'' {
-				stack[top] = 0
-				top--
-			} else {
-				top++
-				stack[top] = i
+		if ignore {
+			if c == '\'' {
+				ignore = false
 			}
+			continue
+		}
 
-		case '[':
-			if i == 0 {
-				top++
-				stack[top] = i
-				last = 0
-				continue
-			}
-
-			if strings.HasSuffix(doc[last+1:i], "array") {
-				top++
-				stack[top] = -1 // 这对字符应该被看做普通字符串
-				continue
-			}
-
-			var cont bool
-			for i := top; i >= 0; i-- {
-				if stack[i] != -1 && (doc[stack[i]] == '\'' || doc[stack[i]] == '[') {
-					top++
-					stack[top] = -1 // 这对字符应该被看做普通字符串
-					cont = true
+		if c == '[' {
+			if left == 0 {
+				if strings.HasSuffix(doc[last+1:i], "array") {
+					// array[ 之前没有 [，之后的会被认为普通字符
+					continue
 				}
-			}
-			if cont {
-				continue
-			}
-
-			var first bool
-			if top == -1 { // 前面没有任何字符
-				first = true
-			}
-			for _, v := range stack { // 前面都被视为普通字符
-				if v == -1 {
-					first = true
-					break
-				}
-			}
-			if first {
 				f := &domain.Fragment{
 					Stmt: strings.TrimSpace(doc[last+1 : i]),
 				}
 				if parseFragment(f) {
 					fs = append(fs, f)
-					last = i
 				}
+				last = i
 			}
-
-			top++
-			stack[top] = i
-
-		case ']':
-			if top == -1 {
-				log.Panicf("unexpected symbol `]`, not pair symbol `[`")
-			}
-
-			if stack[top] == -1 { // 这对字符应该被看做普通字符串，直接出栈
-				stack[top] = 0
-				top--
-				continue
-			}
-
-			if doc[stack[top]] == '\'' {
-				continue
-			}
-
-			if doc[stack[top]] == '[' {
+			left++
+		} else if c == ']' {
+			left--
+			if left == 0 {
 				f := &domain.Fragment{
-					Stmt: strings.TrimSpace(doc[stack[top]+1 : i]),
+					Stmt: strings.TrimSpace(doc[last+1 : i]),
 				}
 
 				if parseFragment(f) {
 					fs = append(fs, f)
 					last = i
 				}
-
-				stack[top] = 0
-				top--
-			} else {
-				log.Panicf("unexpected symbol `]`, not pair symbol `[`")
 			}
-
-		default: // do nothing
 		}
 	}
-	if top != -1 {
-		log.Panicf("parentheses do not match, expect `]`")
-	}
-	if last < len(doc) {
-		f := &domain.Fragment{
-			Stmt: doc[last+1:],
-		}
 
-		if parseFragment(f) {
-			fs = append(fs, f)
-		}
+	f := &domain.Fragment{
+		Stmt: strings.TrimSpace(doc[last+1:]),
+	}
+
+	if parseFragment(f) {
+		fs = append(fs, f)
 	}
 
 	return fs
@@ -206,6 +147,8 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 var condRegexp = regexp.MustCompile(`((\w+),\s*(\w+)\s*:=\s*)?range\s+([\w.]+)(\s*\|\s*(.+))?`)
 
 func parseFragment(f *domain.Fragment) bool {
+	log.Debug(f.Stmt)
+
 	f.Stmt = strings.TrimSpace(f.Stmt)
 	if len(f.Stmt) == 0 {
 		return false
@@ -252,7 +195,7 @@ func parseFragment(f *domain.Fragment) bool {
 
 	if f.Cond != "" || f.Stmt[0] == '[' {
 		fs := getFragments(f.Stmt)
-		if len(fs) > 1 || fs[0].Cond != "" {
+		if len(fs) > 1 || (len(fs) == 1 && fs[0].Cond != "") {
 			f.Fragments = fs
 			return true
 		}
@@ -305,7 +248,7 @@ func parseArgs(f *domain.Fragment) bool {
 				stack[top] = 0
 				top--
 			} else {
-				log.Panicf("unexpected symbol `}`, not pair symbol `{`")
+				log.Panicf("unexpected symbol `}`, not pair symbol `{`: %s", f.Stmt)
 			}
 
 		default: // do nothing
