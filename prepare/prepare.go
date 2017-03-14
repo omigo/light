@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/arstd/light/domain"
 	"github.com/arstd/log"
@@ -17,6 +16,7 @@ func PrepareStmt(p *domain.Package) {
 		for _, m := range intf.Methods {
 			m.Kind = getMethodKind(m)
 			m.Fragments = getFragments(m.Doc)
+			preparseData(m, m.Fragments)
 		}
 	}
 }
@@ -91,8 +91,8 @@ func getMethodKind(m *domain.Method) domain.MethodKind {
 }
 
 func getFragments(doc string) (fs []*domain.Fragment) {
-	log.Infof(doc)
-	time.Sleep(200 * time.Millisecond)
+	// log.Infof(doc)
+	// time.Sleep(200 * time.Millisecond)
 
 	ignore, left, last := false, 0, -1
 	for i, c := range doc {
@@ -103,11 +103,16 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 			continue
 		}
 
-		if c == '[' {
+		switch c {
+		default:
+		case '\'':
+			ignore = true
+
+		case '[':
 			if left == 0 {
 				if strings.HasSuffix(doc[last+1:i], "array") {
 					// array[ 之前没有 [，之后的会被认为普通字符
-					continue
+					break
 				}
 				f := &domain.Fragment{
 					Stmt: strings.TrimSpace(doc[last+1 : i]),
@@ -118,7 +123,8 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 				last = i
 			}
 			left++
-		} else if c == ']' {
+
+		case ']':
 			left--
 			if left == 0 {
 				f := &domain.Fragment{
@@ -147,8 +153,7 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 var condRegexp = regexp.MustCompile(`((\w+),\s*(\w+)\s*:=\s*)?range\s+([\w.]+)(\s*\|\s*(.+))?`)
 
 func parseFragment(f *domain.Fragment) bool {
-	log.Debug(f.Stmt)
-
+	// log.Debug(f.Stmt)
 	f.Stmt = strings.TrimSpace(f.Stmt)
 	if len(f.Stmt) == 0 {
 		return false
@@ -173,22 +178,23 @@ func parseFragment(f *domain.Fragment) bool {
 
 	if f.Cond != "" {
 		if m := condRegexp.FindStringSubmatch(f.Cond); len(m) > 0 {
-			f.Index, f.Iterator = "i", "v"
+			f.Index = &domain.VarType{Var: "i", Name: "int"}
+			f.Iterator = &domain.VarType{Var: "v"}
 			if m[2] != "" {
-				f.Index = m[2]
+				f.Index.Var = m[2]
 			}
 			if m[3] != "" {
-				f.Iterator = m[3]
+				f.Iterator.Var = m[3]
 			}
 			f.Seperator = ","
 			if m[6] != "" {
 				f.Seperator = m[6]
 			}
-			f.Range = m[4]
-			f.Cond = fmt.Sprintf("%s, %s := range %s", f.Index, f.Iterator, f.Range)
+			f.Range = &domain.VarType{Var: m[4]}
+			f.Cond = fmt.Sprintf("%s, %s := range %s", f.Index.Var, f.Iterator.Var, f.Range.Var)
 
 			if f.Stmt == "" {
-				f.Stmt = "${" + f.Iterator + "}"
+				f.Stmt = "${" + f.Iterator.Var + "}"
 			}
 		}
 	}
@@ -207,59 +213,41 @@ func parseFragment(f *domain.Fragment) bool {
 func parseArgs(f *domain.Fragment) bool {
 	buf := &bytes.Buffer{}
 
-	stack, top := make([]int, 32), 0
-
-	last := -1
+	quote, left, last := false, 0, -1
 	for i, c := range f.Stmt {
-		switch c {
-		case '\'':
-			if f.Stmt[stack[top]] == '\'' {
-				stack[top] = 0
-				top--
+		if quote {
+			if c == '\'' {
+				quote = false
 			}
+			continue
+		}
+
+		switch c {
+		default:
+		case '\'':
+			quote = true
 
 		case '{':
-			if f.Stmt[stack[top]] == '\'' {
-				continue
-			}
-			if i >= 1 && f.Stmt[i-1] == '$' {
-				if last+1 < i-2 {
-					buf.WriteString(f.Stmt[last+1 : i-1])
-				}
-
-				top++
-				stack[top] = i
+			if i > 0 && f.Stmt[i-1] == '$' {
+				buf.WriteString(f.Stmt[last+1 : i-1])
+				last = i
+				left++
 			}
 
 		case '}':
-			if f.Stmt[stack[top]] == '\'' {
-				continue
-			}
-
-			if f.Stmt[stack[top]] == '{' {
+			left--
+			if left == 0 {
 				a := &domain.VarType{
-					Var: strings.TrimSpace(f.Stmt[stack[top]+1 : i]),
+					Var: strings.TrimSpace(f.Stmt[last+1 : i]),
 				}
 				f.Args = append(f.Args, a)
 
 				buf.WriteString("%s")
 				last = i
-
-				stack[top] = 0
-				top--
-			} else {
-				log.Panicf("unexpected symbol `}`, not pair symbol `{`: %s", f.Stmt)
 			}
-
-		default: // do nothing
 		}
 	}
-	if top != 0 {
-		log.Panicf("parentheses do not match, expect `}`")
-	}
-	if last < len(f.Stmt) {
-		buf.WriteString(f.Stmt[last+1:])
-	}
+	buf.WriteString(f.Stmt[last+1:])
 
 	f.Prepare = buf.String()
 	return true

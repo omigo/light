@@ -23,4 +23,5 @@ type Model struct {
 
 	Pointer     *Model
 	StructSlice []*Model
+	Uint32      uint32
 }

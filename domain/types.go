@@ -64,10 +64,10 @@ type Fragment struct {
 	Prepare string     `json:"Prepare,omitempty"`
 	Args    []*VarType `json:"Args,omitempty"`
 
-	Range     string `json:"Range,omitempty"`
-	Index     string `json:"Index,omitempty"`
-	Iterator  string `json:"Iterator,omitempty"`
-	Seperator string `json:"Seperator,omitempty"`
+	Range     *VarType `json:"Range,omitempty"`
+	Index     *VarType `json:"Index,omitempty"`
+	Iterator  *VarType `json:"Iterator,omitempty"`
+	Seperator string   `json:"Seperator,omitempty"`
 
 	Fragments []*Fragment `json:"Fragments,omitempty"`
 }

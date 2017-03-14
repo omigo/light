@@ -61,6 +61,7 @@ func ParseGoFile(file string) (pkg *domain.Package) {
 			y := itfType.Method(i).Type().(*types.Signature)
 			m.Params = getTypeValues(y.Params())
 			m.Results = getTypeValues(y.Results())
+			checkResultsVar(m)
 		}
 	}
 
@@ -170,6 +171,7 @@ func parseType(t types.Type, vt *domain.VarType) {
 		parseType(t.Elem(), vt)
 
 	case *types.Map:
+		vt.Name = "map"
 		vt.Key = t.Key().String()
 		vt.Elem = t.Elem().String()
 
@@ -193,5 +195,32 @@ func parseStruct(t *types.Struct, x *domain.VarType) {
 		// log.Infof("%#v", f.String())
 		parseType(f.Type(), vt)
 		x.Fields = append(x.Fields, vt)
+	}
+}
+
+func checkResultsVar(m *domain.Method) {
+	for _, vt := range m.Results {
+		if vt.Var == "" {
+			if vt.Name == "error" {
+				vt.Var = "err"
+			} else {
+				vt.Var = "x"
+				if vt.Pkg != "" {
+					vt.Var += vt.Pkg[:1]
+				}
+				if vt.Name != "" {
+					vt.Var += vt.Name[:1]
+				}
+				if vt.Slice != "" {
+					vt.Var += "s"
+				}
+			}
+			for _, v := range m.Params {
+				if v.Var == "vt.Var" {
+					vt.Var = "x" + vt.Var
+					break
+				}
+			}
+		}
 	}
 }
