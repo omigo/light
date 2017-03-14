@@ -20,24 +20,52 @@ func fillRange(m *domain.Method, f *domain.Fragment) {
 		return
 	}
 
+	sel := strings.Split(f.Range.Var, ".")
+
 	for _, param := range m.Params {
-		if f.Range.Var == param.Var {
+		if sel[0] == param.Var {
 			if param.Slice == "" && param.Array == "" {
 				log.Panicf("variable `%s` must be slice or array for method `%s`", param.Var, m.Name)
 			}
 
-			tmp := *param
-			tmp.Var = f.Range.Var
-			*f.Range = tmp
+			switch len(sel) {
+			case 1:
+				tmp := *param
+				tmp.Var = f.Range.Var
+				*f.Range = tmp
 
-			iter := tmp
-			iter.Var = f.Iterator.Var
-			*f.Iterator = iter
+				iter := tmp
+				iter.Var = f.Iterator.Var
+				iter.Slice = ""
+				iter.Array = ""
+				*f.Iterator = iter
+
+			case 2:
+				if len(param.Fields) == 0 {
+					log.Panicf("varible `%s` no field `%s` for method %s", sel[0], sel[1], m.Name)
+				}
+				for _, field := range param.Fields {
+					if field.Var == sel[1] {
+						tmp := *param
+						tmp.Var = f.Range.Var
+						*f.Range = tmp
+
+						iter := tmp
+						iter.Var = f.Iterator.Var
+						iter.Slice = ""
+						iter.Array = ""
+						*f.Iterator = iter
+					}
+				}
+
+			default:
+				log.Panicf("variable `%s` not found for method %s", f.Range.Var, m.Name)
+			}
 		}
 	}
 
 	if f.Range.Name == "" {
-		log.Panicf("variable `%s` not found for method %s", f.Range.Var, m.Name)
+		log.Panicf("variable `%s` not found for method `%s`", f.Range.Var, m.Name)
 	}
 
 }

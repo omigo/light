@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/arstd/light/example/model"
+	"github.com/arstd/yan/example/enum"
 )
 
 //go:generate go run ../main.go
@@ -33,5 +34,5 @@ type Interface1 interface {
 	//   [{ len(m.Slice) != 0 } and slice ?| array[[{range m.Slice}]] ]
 	// order by id
 	// offset ${offset} limit ${limit}
-	// List(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) ([]*model.Model, error)
+	List(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) ([]*model.Model, error)
 }
