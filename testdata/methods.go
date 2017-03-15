@@ -15,8 +15,7 @@ type Interface1 interface {
 	// insert into model(id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32)
 	// values [{ i, m := range ms | , } (${i}, ${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Slice},
 	//   ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32}) ]
-	// returning id
-	BatchInsert(tx *sql.Tx, ms []*model.Model) error
+	BatchInsert(tx *sql.Tx, ms []*model.Model) (int64, error)
 
 	// insert into model(name, flag, score, map, time, slice, status, pointer, struct_slice, uint32)
 	// values (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Slice},

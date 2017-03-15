@@ -7,11 +7,11 @@ import (
 	"github.com/arstd/log"
 )
 
-func preparseData(m *domain.Method, fs []*domain.Fragment) {
+func prepareArgs(m *domain.Method, fs []*domain.Fragment) {
 	for _, f := range fs {
 		fillRange(m, f)
 		fillArgs(m, f)
-		preparseData(m, f.Fragments)
+		prepareArgs(m, f.Fragments)
 	}
 }
 

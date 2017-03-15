@@ -15,7 +15,7 @@ import (
 )
 
 func ParseGoFile(file string) (pkg *domain.Package) {
-	pkg = &domain.Package{}
+	pkg = &domain.Package{Source: file}
 
 	conf := loader.Config{
 		ParserMode:          parser.ParseComments,
@@ -101,10 +101,9 @@ func getTypeValues(tuple *types.Tuple) (vts []*domain.VarType) {
 			Var:  x.Name(),
 			Deep: true,
 		}
-		vts = append(vts, vt)
-
-		// log.Infof("%d: %#v", i, x.String())
 		parseType(x.Type(), vt)
+
+		vts = append(vts, vt)
 	}
 
 	return vts
@@ -113,6 +112,7 @@ func getTypeValues(tuple *types.Tuple) (vts []*domain.VarType) {
 var parsed = map[string]*domain.VarType{}
 
 func parseType(t types.Type, vt *domain.VarType) {
+
 	tt := t.String()
 	k := tt + fmt.Sprint(vt.Deep)
 	// log.Debug(k)
@@ -192,6 +192,7 @@ func parseStruct(t *types.Struct, x *domain.VarType) {
 		vt := &domain.VarType{
 			Var: f.Name(),
 		}
+
 		// log.Infof("%#v", f.String())
 		parseType(f.Type(), vt)
 		x.Fields = append(x.Fields, vt)
@@ -209,7 +210,7 @@ func checkResultsVar(m *domain.Method) {
 					vt.Var += vt.Pkg[:1]
 				}
 				if vt.Name != "" {
-					vt.Var += vt.Name[:1]
+					vt.Var += strings.ToLower(vt.Name[:1])
 				}
 				if vt.Slice != "" {
 					vt.Var += "s"
