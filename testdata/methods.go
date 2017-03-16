@@ -3,8 +3,8 @@ package testdata
 import (
 	"database/sql"
 
+	"github.com/arstd/light/example/enum"
 	"github.com/arstd/light/example/model"
-	"github.com/arstd/yan/example/enum"
 )
 
 //go:generate go run ../main.go

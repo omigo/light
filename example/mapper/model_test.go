@@ -6,31 +6,33 @@ import (
 
 	"github.com/arstd/log"
 
-	m "github.com/arstd/light/example/domain"
 	"github.com/arstd/light/example/enum"
+	"github.com/arstd/light/example/model"
 )
 
-func TestCreateTable(t *testing.T) {
+func xTestCreateTable(t *testing.T) {
 	_, err := db.Exec("drop table if exists model")
 	if err != nil {
 		log.Error(err)
 	}
 	_, err = db.Exec(`
-		create table model (
+		create table models (
 			id serial primary key,
-			name text not null default '',
+			name text not null,
 			flag bool not null default false,
-			score numeric(20,2) not null default 0.0,
+			score decimal(3,1) not null default 0.0,
 
 			map jsonb not null default '{}',
-			time timestamptz default current_timestamp,
-			slice jsonb not null default '[]',
+			time timestamptz not null default now(),
+			xarray text[] not null,
+			slice text[] not null,
 
 			status smallint not null default 0,
+			state text not null default '',
+
 			pointer jsonb not null default '{}',
 			struct_slice jsonb not null default '[]',
-
-			uint32 timestamptz default current_timestamp
+			uint32 bigint not null default 0
 		)
 	`)
 	if err != nil {
@@ -42,24 +44,28 @@ var x ModelMapper = &ModelMapperImpl{}
 var id int = 5
 
 func TestModelMapperInsert(t *testing.T) {
-	m := &m.Model{
+	m := &model.Model{
 		Name:  "name",
 		Flag:  true,
 		Score: 1.23,
 
 		Map:   map[string]interface{}{"a": 1},
-		Time:  time.Now().Add(-3 * time.Hour),
+		Time:  time.Now(),
+		Array: [3]int{1, 2, 3},
 		Slice: []string{"Slice Elem 1", "Slice Elem 2"},
 
 		Status:  enum.StatusNormal,
-		Pointer: &m.Model{Name: "Pointer"},
-		StructSlice: []*m.Model{
+		Pointer: &model.Model{Name: "Pointer"},
+		StructSlice: []*model.Model{
 			{Name: "StructSlice"},
 		},
 
-		Uint32: uint32(time.Now().Add(-5 * time.Minute).Unix()),
+		Uint32: 32,
 	}
 	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
 	defer RollbackTx(tx)
 	err = x.Insert(tx, m)
 	if err != nil {
@@ -72,7 +78,7 @@ func TestModelMapperInsert(t *testing.T) {
 }
 
 func TestModelMapperUpdate(t *testing.T) {
-	m := &m.Model{
+	m := &model.Model{
 		Id:    id,
 		Name:  "name update",
 		Flag:  true,
@@ -83,12 +89,16 @@ func TestModelMapperUpdate(t *testing.T) {
 		Slice: []string{"Slice Elem 1 update", "Slice Elem 2 update"},
 
 		Status:  enum.StatusNormal,
-		Pointer: &m.Model{Name: "Pointer update"},
-		StructSlice: []*m.Model{
+		Pointer: &model.Model{Name: "Pointer update"},
+		StructSlice: []*model.Model{
 			{Name: "StructSlice update"},
 		},
+		Uint32: 32,
 	}
 	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
 	defer RollbackTx(tx)
 	a, err := x.Update(tx, m)
 	if err != nil {
@@ -101,6 +111,9 @@ func TestModelMapperUpdate(t *testing.T) {
 
 func TestModelMapperGet(t *testing.T) {
 	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
 	defer RollbackTx(tx)
 	m, err := x.Get(tx, id)
 	if err != nil {
@@ -112,12 +125,15 @@ func TestModelMapperGet(t *testing.T) {
 }
 
 func TestModelMapperCount(t *testing.T) {
-	m := &m.Model{
+	m := &model.Model{
 		Name:   "name%", // like 'name%'
 		Flag:   true,
 		Status: enum.StatusNormal,
 	}
 	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
 	defer RollbackTx(tx)
 	count, err := x.Count(tx, m, []enum.Status{enum.StatusNormal, enum.StatusDeleted})
 	if err != nil {
@@ -129,13 +145,16 @@ func TestModelMapperCount(t *testing.T) {
 }
 
 func TestModelMapperList(t *testing.T) {
-	m := &m.Model{
+	m := &model.Model{
 		Name:   "name%", // like 'name%'
 		Flag:   true,
 		Slice:  []string{"Slice Elem 1 update error", "Slice Elem 2 update"},
 		Status: enum.StatusNormal,
 	}
 	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
 	defer RollbackTx(tx)
 	ms, err := x.List(tx, m, []enum.Status{enum.StatusNormal, enum.StatusDeleted}, 0, 20)
 	if err != nil {
@@ -148,6 +167,9 @@ func TestModelMapperList(t *testing.T) {
 
 func TestModelMapperDelete(t *testing.T) {
 	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
 	defer RollbackTx(tx)
 	a, err := x.Delete(tx, id)
 	CommitTx(tx)

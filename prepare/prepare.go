@@ -35,11 +35,8 @@ func Prepare(pkg *domain.Package) {
 			}
 
 			m.Kind = getMethodKind(m)
-
 			m.Fragments = getFragments(m.Doc)
-
 			prepareArgs(m, m.Fragments)
-
 			m.Returnings = getReturnings(m)
 		}
 	}

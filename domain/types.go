@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -51,6 +52,19 @@ type Method struct {
 	Returnings []*VarType
 }
 
+func (m *Method) Return() *VarType {
+	switch m.Kind {
+	default:
+		return nil
+	case Insert:
+		return m.Params[1]
+	case Get, Count, List:
+		return m.Results[0]
+	case Page:
+		return m.Results[1]
+	}
+}
+
 func (m *Method) ParamsExpr() string {
 	return varTypesExpr(m.Params)
 }
@@ -80,11 +94,85 @@ type VarType struct {
 	Name    string `json:"Name,omitempty"`    //  Model
 	Alias   string `json:"Alias,omitempty"`   //  e.g. domain.State => string
 
-	Key  string `json:"Key,omitempty"`
-	Elem string `json:"Elem,omitempty"`
+	Key   string `json:"Key,omitempty"`
+	Value string `json:"Value,omitempty"`
 
 	Deep   bool       `json:"Deep,omitempty"` //  深入解析这个类型
 	Fields []*VarType `json:"Fields,omitempty"`
+}
+
+func (vt *VarType) DBType() DBType {
+	if vt.Tag == "" {
+		return ""
+	}
+	ss := strings.Split(vt.Tag, " ")
+	if len(ss) < 2 {
+		return ""
+	}
+	t := DBType(ss[1])
+	if t.Array() && vt.Slice == "" && vt.Array == "" {
+		log.Panicf("tag db type array, but go type not for `%s`", vt.Name)
+	}
+	return t
+}
+
+type DBType string
+
+func (t DBType) Array() bool {
+	return strings.HasSuffix(string(t), "[]")
+}
+
+func (vt *VarType) MakeElemExpr() string {
+	if vt.Name == "error" {
+		return "error"
+	}
+	if vt.Key != "" {
+		return fmt.Sprintf("map[%s]%s", vt.Key, vt.Value)
+	}
+	pkg := ""
+	if vt.Pkg != "" {
+		pkg = vt.Pkg + "."
+	}
+	slice := ""
+	if vt.Pointer != "" {
+		slice = "&"
+	}
+	// TODO int string map not support
+	return fmt.Sprintf("%s%s%s{}", slice, pkg, vt.Name)
+}
+
+func (vt *VarType) MakeExpr() string {
+	if vt.Name == "error" {
+		return "error"
+	}
+	if vt.Key != "" {
+		return fmt.Sprintf("map[%s]%s", vt.Key, vt.Value)
+	}
+	pkg := ""
+	if vt.Pkg != "" {
+		pkg = vt.Pkg + "."
+	}
+	slice := ""
+	if vt.Slice != "" {
+		slice = vt.Slice + vt.Pointer
+	} else if vt.Array != "" {
+		slice = vt.Array + vt.Pointer
+	} else if vt.Pointer != "" {
+		slice = "&"
+	}
+	// TODO int string map not support
+	return fmt.Sprintf("%s%s%s{}", slice, pkg, vt.Name)
+}
+
+func (vt *VarType) Complex() bool {
+	if len(vt.Fields) > 0 || vt.Pointer != "" || vt.Slice != "" || vt.Array != "" || vt.Name == "map" {
+		return true
+	}
+	return false
+}
+
+func (vt *VarType) Var2() string {
+	return "x" + strings.Replace(vt.Var, ".", "", -1)
 }
 
 func (vt *VarType) Expr() string {

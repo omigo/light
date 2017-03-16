@@ -20,7 +20,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	// connect()
+	connect()
 }
 
 func connect() (err error) {

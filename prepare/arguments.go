@@ -24,12 +24,12 @@ func fillRange(m *domain.Method, f *domain.Fragment) {
 
 	for _, param := range m.Params {
 		if sel[0] == param.Var {
-			if param.Slice == "" && param.Array == "" {
-				log.Panicf("variable `%s` must be slice or array for method `%s`", param.Var, m.Name)
-			}
-
 			switch len(sel) {
 			case 1:
+				if param.Slice == "" && param.Array == "" {
+					log.Panicf("variable `%s` must be slice or array for method `%s`", param.Var, m.Name)
+				}
+
 				tmp := *param
 				tmp.Var = f.Range.Var
 				*f.Range = tmp
@@ -46,6 +46,10 @@ func fillRange(m *domain.Method, f *domain.Fragment) {
 				}
 				for _, field := range param.Fields {
 					if field.Var == sel[1] {
+						if field.Slice == "" && field.Array == "" {
+							log.Panicf("variable `%s` must be slice or array for method `%s`", field.Var, m.Name)
+						}
+
 						tmp := *param
 						tmp.Var = f.Range.Var
 						*f.Range = tmp

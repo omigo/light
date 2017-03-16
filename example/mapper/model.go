@@ -3,62 +3,69 @@ package mapper
 import (
 	"database/sql"
 
-	"github.com/arstd/light/example/domain"
 	"github.com/arstd/light/example/enum"
+	"github.com/arstd/light/example/model"
 )
 
-//go:generate light -force
+//go:generate go run ../../main.go
 
 // ModelMapper 示例接口
 type ModelMapper interface {
 
-	// insert into model(name, flag, score, map, time, slice, status, pointer, struct_slice, uint32)
-	// values (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Slice},
+	// insert into models(id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32)
+	// values [{ i, m := range ms | , }
+	//  (${i}, ${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array},
+	//  ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
+	// ]
+	BatchInsert(tx *sql.Tx, ms []*model.Model) (int64, error)
+
+	// insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32)
+	// values (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice},
 	//   ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
 	// returning id
-	Insert(tx *sql.Tx, m *domain.Model) error
+	Insert(tx *sql.Tx, m *model.Model) error
 
-	// update model
+	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32
+	// from model
+	// where id=${id}
+	Get(tx *sql.Tx, id int) (*model.Model, error)
+
+	// update models
 	// set name=${m.Name}, flag=${m.Flag}, score=${m.Score},
 	//   map=${m.Map}, time=${m.Time}, slice=${m.Slice},
 	//   status=${m.Status}, pointer=${m.Pointer}, struct_slice=${m.StructSlice},
 	//   uint32=${m.Uint32}
 	// where id=${m.Id}
-	Update(tx *sql.Tx, m *domain.Model) (int64, error)
+	Update(tx *sql.Tx, m *model.Model) (int64, error)
 
-	// delete from model
+	// delete from models
 	// where id=${id}
 	Delete(tx *sql.Tx, id int) (int64, error)
 
-	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32
-	// from model
-	// where id=${id}
-	Get(tx *sql.Tx, id int) (*domain.Model, error)
-
 	// select count(*)
-	// from model
+	// from models
 	// where name like ${m.Name}
-	//   [?{ m.Flag != false } and flag=${m.Flag} ]
-	//   [?{ len(ss) != 0 } and status in (${ss}) ]
-	Count(tx *sql.Tx, m *domain.Model, ss []enum.Status) (int64, error)
+	//   [{ m.Flag != false } and flag=${m.Flag} ]
+	//   [{ len(ss) != 0 } and status in (${ss}) ]
+	Count(tx *sql.Tx, m *model.Model, ss []enum.Status) (int64, error)
 
 	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32
-	// from model
+	// from models
 	// where name like ${m.Name}
-	//   [?{ m.Flag != false } and flag=${m.Flag} ]
-	//   [?{ len(ss) != 0 } and status in (${ss}) ]
-	//   [?{ len(m.Slice) != 0 } and slice ?| array[${m.Slice}] ]
+	//   [{ m.Flag != false } and flag=${m.Flag} ]
+	//   [{ len(ss) != 0 } and status in (${ss}) ]
+	//   [{ len(m.Slice) != 0 } and slice ?| array[ [{range m.Slice}] ] ]
 	// order by id
 	// offset ${offset} limit ${limit}
-	List(tx *sql.Tx, m *domain.Model, ss []enum.Status, offset, limit int) ([]*domain.Model, error)
+	List(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) ([]*model.Model, error)
 
 	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice
-	// from model
+	// from models
 	// where name like ${m.Name}
-	//   [?{ m.Flag != false } and flag=${m.Flag} ]
-	//   [?{ len(ss) != 0 } and status in (${ss}) ]
-	//   [?{ len(m.Slice) != 0 } and slice ?| array[${m.Slice}] ]
+	//   [{ m.Flag != false } and flag=${m.Flag} ]
+	//   [{ len(ss) != 0 } and status in (${ss}) ]
+	//   [{ len(m.Slice) != 0 } and slice ?| array[ [{range m.Slice}] ] ]
 	// order by id
 	// offset ${offset} limit ${limit}
-	// Paging(tx *sql.Tx, m *domain.Model, ss []enum.Status) (int64, []*domain.Model, error)
+	// Paging(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) (int64, []*model.Model, error)
 }

@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/types"
+	"regexp"
 	"strings"
 
 	"github.com/arstd/light/domain"
@@ -14,7 +15,11 @@ import (
 	"golang.org/x/tools/go/loader"
 )
 
+var parsed = map[string]*domain.VarType{}
+
 func ParseGoFile(file string) (pkg *domain.Package) {
+	defer func() { parsed = nil }()
+
 	pkg = &domain.Package{Source: file}
 
 	conf := loader.Config{
@@ -50,15 +55,28 @@ func ParseGoFile(file string) (pkg *domain.Package) {
 		}
 		pkg.Interfaces = append(pkg.Interfaces, itf)
 
-		itfType, _ := v.Type().Underlying().(*types.Interface)
-		for i, x := range interfaceType.Methods.List {
+		// get method name and doc
+		for _, x := range interfaceType.Methods.List {
 			m := &domain.Method{
 				Name: x.Names[0].Name,
 				Doc:  getDoc(x.Doc),
 			}
 			itf.Methods = append(itf.Methods, m)
+		}
 
-			y := itfType.Method(i).Type().(*types.Signature)
+		// get method name and params/returns
+		itfType, _ := v.Type().Underlying().(*types.Interface)
+		for i := 0; i < itfType.NumMethods(); i++ {
+			x := itfType.Method(i)
+			var m *domain.Method
+			for _, a := range itf.Methods {
+				if a.Name == x.Name() {
+					m = a
+					break
+				}
+			}
+
+			y := x.Type().(*types.Signature)
 			m.Params = getTypeValues(y.Params())
 			m.Results = getTypeValues(y.Results())
 			checkResultsVar(m)
@@ -109,13 +127,12 @@ func getTypeValues(tuple *types.Tuple) (vts []*domain.VarType) {
 	return vts
 }
 
-var parsed = map[string]*domain.VarType{}
-
 func parseType(t types.Type, vt *domain.VarType) {
-
 	tt := t.String()
-	k := tt + fmt.Sprint(vt.Deep)
-	// log.Debug(k)
+	// log.JSON(tt, vt)
+
+	// TODO not deep use deep, but no reverse
+	k := fmt.Sprintf("%s%t", tt, vt.Deep)
 	if v, ok := parsed[k]; ok {
 		tmp := *v
 		tmp.Var = vt.Var
@@ -123,10 +140,9 @@ func parseType(t types.Type, vt *domain.VarType) {
 		if !tmp.Deep {
 			tmp.Fields = nil
 		}
-		*vt = *(&tmp)
+		*vt = tmp
 		return
 	}
-	parsed[k] = vt
 
 	switch t := t.(type) {
 	case *types.Named:
@@ -138,7 +154,6 @@ func parseType(t types.Type, vt *domain.VarType) {
 			vt.Path = t.Obj().Pkg().Path()
 			vt.Pkg = t.Obj().Pkg().Name()
 		}
-
 		// log.Warnf("named %#v", t.String())
 
 		if tt == "database/sql.Tx" || tt == "time.Time" {
@@ -159,21 +174,21 @@ func parseType(t types.Type, vt *domain.VarType) {
 		}
 
 	case *types.Pointer:
-		vt.Pointer = "*"
 		parseType(t.Elem(), vt)
+		vt.Pointer = "*"
 
 	case *types.Array:
-		vt.Array = fmt.Sprintf("[%d]", t.Len())
 		parseType(t.Elem(), vt)
+		vt.Array = fmt.Sprintf("[%d]", t.Len())
 
 	case *types.Slice:
-		vt.Slice = "[]"
 		parseType(t.Elem(), vt)
+		vt.Slice = "[]"
 
 	case *types.Map:
 		vt.Name = "map"
 		vt.Key = t.Key().String()
-		vt.Elem = t.Elem().String()
+		vt.Value = t.Elem().String()
 
 	case *types.Struct:
 		if !vt.Deep {
@@ -184,6 +199,9 @@ func parseType(t types.Type, vt *domain.VarType) {
 	default:
 		log.Warnf("unimplement %#v", t)
 	}
+
+	tmp := *vt
+	parsed[k] = &tmp
 }
 
 func parseStruct(t *types.Struct, x *domain.VarType) {
@@ -192,9 +210,10 @@ func parseStruct(t *types.Struct, x *domain.VarType) {
 		vt := &domain.VarType{
 			Var: f.Name(),
 		}
-
-		// log.Infof("%#v", f.String())
 		parseType(f.Type(), vt)
+
+		vt.Tag = getLightTag(t.Tag(i))
+		setTag(vt)
 		x.Fields = append(x.Fields, vt)
 	}
 }
@@ -205,23 +224,46 @@ func checkResultsVar(m *domain.Method) {
 			if vt.Name == "error" {
 				vt.Var = "err"
 			} else {
-				vt.Var = "x"
-				if vt.Pkg != "" {
-					vt.Var += vt.Pkg[:1]
-				}
 				if vt.Name != "" {
-					vt.Var += strings.ToLower(vt.Name[:1])
+					vt.Var = strings.ToLower(vt.Name[:1])
 				}
 				if vt.Slice != "" {
 					vt.Var += "s"
 				}
 			}
 			for _, v := range m.Params {
-				if v.Var == "vt.Var" {
+				if v.Var == vt.Var {
 					vt.Var = "x" + vt.Var
 					break
 				}
 			}
 		}
 	}
+}
+
+func setTag(vt *domain.VarType) {
+	if vt.Var == "" || vt.Tag != "" {
+		return
+	}
+	last := 0
+	for i := 1; i < len(vt.Var); i++ {
+		if vt.Var[i] >= 'A' && vt.Var[i] <= 'Z' {
+			vt.Tag += vt.Var[last+1:i] + "_" + strings.ToLower(vt.Var[i:i+1])
+			last = i
+		}
+	}
+	vt.Tag = strings.ToLower(vt.Var[:1]) + vt.Tag + vt.Var[last+1:]
+}
+
+var lightRegexp = regexp.MustCompile(`light:"(.+?)"`)
+
+func getLightTag(tag string) string {
+	if tag == "" {
+		return ""
+	}
+	m := lightRegexp.FindStringSubmatch(tag)
+	if len(m) > 0 {
+		return m[1]
+	}
+	return ""
 }
