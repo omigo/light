@@ -7,7 +7,3 @@ const (
 	StatusNormal
 	StatusDeleted
 )
-
-func (s Status) String() string {
-	return "normal"
-}

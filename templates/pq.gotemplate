@@ -9,6 +9,7 @@ import (
     "encoding/json"
     "fmt"
     "github.com/arstd/log"
+	"github.com/lib/pq"
     {{- range $v := .Imports}}
         "{{$v}}"
     {{- end}}
@@ -31,28 +32,20 @@ import (
                 {{- range .}}
                     // {{.Stmt}}
                     {{- if .Range}}
-                        for i, {{.Iterator.Var}} := range {{.Range.Var}} {
-                            if i != 0 {
+                        for {{.Index.Var}}, {{.Iterator.Var}} := range {{.Range.Var}} {
+                            if {{.Index.Var}} != 0 {
                                 buf.WriteString("{{.Seperator}}")
                             }
                     {{- else if .Cond}}
                         if {{.Cond}} {
                     {{- end}}
-
                             {{- if .Prepare}}
-                                buf.WriteString(`{{.Prepare}}`)
+                                buf.WriteString(` {{.Prepare}}`)
                             {{- end}}
 
                             {{- range .Args}}
                                 {{- if .DBType.Array}}
-                                    {{.Var2}} := bytes.NewBufferString("{")
-                                    for _, v := range {{.Var}} {
-                                        {{.Var2}}.WriteString(fmt.Sprint(v))
-                                        {{.Var2}}.WriteRune(',')
-                                    }
-                                    {{.Var2}}.Truncate({{.Var2}}.Len()-1)
-                                    {{.Var2}}.WriteRune('}')
-                                    args = append(args, {{.Var2}}.String())
+                                    args = append(args, pq.Array({{.Var}}))
                                 {{- else if .Complex}}
                                     {{.Var2}}, _ := json.Marshal({{.Var}})
                                     args = append(args, {{.Var2}})
@@ -89,14 +82,26 @@ import (
                     log.Error(err)
                 }
                 return res.RowsAffected()
+            {{- /* end batch method */}}
 
-            {{/* end batch method */}}
             {{- else if or (eq .Kind "get") (eq .Kind "insert")}}
-                {{.Return.Var}} = {{.Return.MakeExpr}}
+                {{- if eq .Kind "get"}}
+                    {{.Return.Var}} = {{.Return.MakeExpr}}
+                {{- end}}
                 dest := make([]interface{}, {{len .Returnings}})
                 {{$Return := .Return}}
                 {{- range $i, $r := .Returnings}}
-                    dest[{{$i}}] = &{{$Return.Var}}.{{$r.Var}}
+                    {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                        var {{$Return.Var}}{{$r.Var2}} pq.NullTime
+                        dest[{{$i}}] = &{{$Return.Var}}{{$r.Var2}}
+                    {{- else if .DBType.Array}}
+                        dest[{{$i}}] = pq.Array(&{{$Return.Var}}.{{$r.Var}})
+                    {{- else if .Complex}}
+                        var {{$Return.Var}}{{.Var2}} []byte
+                        dest[{{$i}}] = &{{$Return.Var}}{{$r.Var2}}
+                    {{- else}}
+                        dest[{{$i}}] = &{{$Return.Var}}.{{$r.Var}}
+                    {{- end}}
                 {{- end}}
                 err = db.QueryRow(query, args...).Scan(dest...)
                 if err != nil {
@@ -105,9 +110,18 @@ import (
             		log.Error(args...)
                     return
             	}
+                {{- range $i, $r := .Returnings}}
+                    {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                        {{$Return.Var}}.{{$r.Var}} = {{$Return.Var}}{{$r.Var2}}.Time
+                    {{- else if .DBType.Array}}
+                    {{- else if .Complex}}
+                        {{$Return.Var}}.{{$r.Var}} = {{$r.MakeExpr}}
+                        json.Unmarshal({{$Return.Var}}{{.Var2}}, {{$r.VarPointerExpr}}{{$Return.Var}}.{{$r.Var}})
+                    {{- end}}
+                {{- end}}
                 return
+            {{- /* end batch method */}}
 
-            {{/* end batch method */}}
             {{- else if eq .Kind "list"}}
                 var rows *sql.Rows
                 rows, err = db.Query(query, args...)
@@ -125,31 +139,49 @@ import (
                     {{.Return.Var}} = append({{.Return.Var}}, elem)
                     dest := make([]interface{}, {{len .Returnings}})
                     {{- range $i, $r := .Returnings}}
-                        dest[{{$i}}] = &elem.{{$r.Var}}
+                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                            var elem{{$r.Var2}} pq.NullTime
+                            dest[{{$i}}] = &elem{{$r.Var2}}
+                        {{- else if .DBType.Array}}
+                            dest[{{$i}}] = pq.Array(&elem.{{$r.Var}})
+                        {{- else if .Complex}}
+                            var elem{{.Var2}} []byte
+                            dest[{{$i}}] = &elem{{$r.Var2}}
+                        {{- else}}
+                            dest[{{$i}}] = &elem.{{$r.Var}}
+                        {{- end}}
                     {{- end}}
                     err = rows.Scan(dest...)
                     if err != nil {
                         log.Error(err)
                         return
                     }
+                    {{- range $i, $r := .Returnings}}
+                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                            elem.{{$r.Var}} = elem{{$r.Var2}}.Time
+                        {{- else if .DBType.Array}}
+                        {{- else if .Complex}}
+                            elem.{{$r.Var}} = {{$r.MakeExpr}}
+                            json.Unmarshal(elem{{.Var2}}, {{$r.VarPointerExpr}}elem.{{$r.Var}})
+                        {{- end}}
+                    {{- end}}
                 }
                 if err = rows.Err(); err != nil {
                     log.Error(err)
                     return
                 }
                 return
+            {{- /* end batch method */}}
 
-            {{/* end batch method */}}
             {{- else if eq .Kind "page"}}
-                // TODO page template not implement
+                log.Error("TODO page template not implement")
                 return
+            {{- /* end page method */}}
 
-            {{/* end page method */}}
             {{- else if eq .Kind "count"}}
-                // TODO page template not implement
+                log.Error("TODO page template not implement")
                 return
-            {{end}}
+            {{- end}}
         }
     {{- end}}{{/* end range methods */}}
-
 {{- end}}{{/* end range interfaces */}}

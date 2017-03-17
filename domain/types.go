@@ -2,8 +2,9 @@ package domain
 
 import (
 	"fmt"
-	"log"
 	"strings"
+
+	"github.com/arstd/log"
 )
 
 type MethodKind string
@@ -122,12 +123,19 @@ func (t DBType) Array() bool {
 	return strings.HasSuffix(string(t), "[]")
 }
 
+func (vt *VarType) VarPointerExpr() string {
+	if vt.Name == "map" {
+		return ""
+	}
+	return "&"
+}
+
 func (vt *VarType) MakeElemExpr() string {
 	if vt.Name == "error" {
 		return "error"
 	}
 	if vt.Key != "" {
-		return fmt.Sprintf("map[%s]%s", vt.Key, vt.Value)
+		return fmt.Sprintf("map[%s]%s{}", vt.Key, vt.Value)
 	}
 	pkg := ""
 	if vt.Pkg != "" {
@@ -146,7 +154,7 @@ func (vt *VarType) MakeExpr() string {
 		return "error"
 	}
 	if vt.Key != "" {
-		return fmt.Sprintf("map[%s]%s", vt.Key, vt.Value)
+		return fmt.Sprintf("map[%s]%s{}", vt.Key, vt.Value)
 	}
 	pkg := ""
 	if vt.Pkg != "" {

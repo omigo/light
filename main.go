@@ -1,17 +1,13 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
-
-	"golang.org/x/tools/imports"
 
 	"github.com/arstd/light/parse"
 	"github.com/arstd/light/prepare"
@@ -52,26 +48,28 @@ func main() {
 	prepare.Prepare(p)
 
 	paths := strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator))
-	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "templates/pq.tmpl")
+	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "templates/pq.gotemplate")
 
 	funcMap := template.FuncMap{
 		"timestamp": func() string { return time.Now().Format("2006-01-02 15:04:05") },
 	}
 
-	tmpl, err := template.New("pq.tmpl").Funcs(funcMap).ParseFiles(tmplFile)
+	tmpl, err := template.New("pq.gotemplate").Funcs(funcMap).ParseFiles(tmplFile)
 	util.CheckError(err)
 
-	// err = tmpl.Execute(os.Stdout, p)
+	out, err := os.OpenFile(goFile[:len(goFile)-3]+"impl.go", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+	util.CheckError(err)
+	err = tmpl.Execute(out, p)
+	util.CheckError(err)
+
+	// var buf bytes.Buffer
+	// err = tmpl.Execute(&buf, p)
 	// util.CheckError(err)
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, p)
-	util.CheckError(err)
-
-	outFile := goFile[:len(goFile)-3] + "impl.go"
-	pretty, err := imports.Process(outFile, buf.Bytes(), nil)
-	util.CheckError(err)
-	err = ioutil.WriteFile(outFile, pretty, 0644)
-	util.CheckError(err)
-	fmt.Printf("Generated file: %s\n", outFile)
+	//
+	// outFile := goFile[:len(goFile)-3] + "impl.go"
+	// pretty, err := imports.Process(outFile, buf.Bytes(), nil)
+	// util.CheckError(err)
+	// err = ioutil.WriteFile(outFile, pretty, 0644)
+	// util.CheckError(err)
+	// fmt.Printf("Generated file: %s\n", outFile)
 }

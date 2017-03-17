@@ -160,10 +160,6 @@ func parseType(t types.Type, vt *domain.VarType) {
 			return
 		}
 
-		if !vt.Deep {
-			return
-		}
-
 		parseType(t.Underlying(), vt)
 
 	case *types.Basic:

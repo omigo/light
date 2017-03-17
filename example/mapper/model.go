@@ -12,21 +12,21 @@ import (
 // ModelMapper 示例接口
 type ModelMapper interface {
 
-	// insert into models(id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32)
-	// values [{ i, m := range ms | , }
-	//  (${i}, ${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array},
-	//  ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
-	// ]
-	BatchInsert(tx *sql.Tx, ms []*model.Model) (int64, error)
-
 	// insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32)
 	// values (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice},
 	//   ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
 	// returning id
 	Insert(tx *sql.Tx, m *model.Model) error
 
-	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32
-	// from model
+	// insert into models(uint32, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice)
+	// values [{ i, m := range ms | , }
+	//  (${i}+888, ${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array},
+	//  ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice})
+	// ]
+	BatchInsert(tx *sql.Tx, ms []*model.Model) (int64, error)
+
+	// select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32
+	// from models
 	// where id=${id}
 	Get(tx *sql.Tx, id int) (*model.Model, error)
 
@@ -45,16 +45,18 @@ type ModelMapper interface {
 	// select count(*)
 	// from models
 	// where name like ${m.Name}
-	//   [{ m.Flag != false } and flag=${m.Flag} ]
-	//   [{ len(ss) != 0 } and status in (${ss}) ]
+	// [{ m.Flag != false } and flag=${m.Flag} ]
+	// [{ len(ss) != 0 } and status in ( [{range ss}] ) ]
 	Count(tx *sql.Tx, m *model.Model, ss []enum.Status) (int64, error)
 
-	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32
+	// select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32
 	// from models
 	// where name like ${m.Name}
-	//   [{ m.Flag != false } and flag=${m.Flag} ]
-	//   [{ len(ss) != 0 } and status in (${ss}) ]
-	//   [{ len(m.Slice) != 0 } and slice ?| array[ [{range m.Slice}] ] ]
+	// [{ m.Flag != false }
+	//   [{ len(ss) != 0 } and status in ( [{range ss}] ) ]
+	//   and flag=${m.Flag} ]
+	// [{ len(m.Array) != 0 } and xarray && array[ [{range m.Array}] ] ]
+	// [{ len(m.Slice) != 0 } and slice && array[ [{range m.Slice}] ] ]
 	// order by id
 	// offset ${offset} limit ${limit}
 	List(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) ([]*model.Model, error)
@@ -62,9 +64,10 @@ type ModelMapper interface {
 	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice
 	// from models
 	// where name like ${m.Name}
-	//   [{ m.Flag != false } and flag=${m.Flag} ]
-	//   [{ len(ss) != 0 } and status in (${ss}) ]
-	//   [{ len(m.Slice) != 0 } and slice ?| array[ [{range m.Slice}] ] ]
+	// [{ m.Flag != false }
+	//   [{ len(ss) != 0 } and status in ( [{range ss}] ) ]
+	//   and flag=${m.Flag} ]
+	// [{ len(m.Slice) != 0 } and slice && array[ [{range m.Slice}] ] ]
 	// order by id
 	// offset ${offset} limit ${limit}
 	// Paging(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) (int64, []*model.Model, error)

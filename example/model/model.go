@@ -15,7 +15,7 @@ type Model struct {
 
 	Map   map[string]interface{}
 	Time  time.Time
-	Array [3]int   `light:"xarray int[]"`
+	Array []int64  `light:"xarray int[]"`
 	Slice []string `light:"slice text[]"`
 
 	Status enum.Status
