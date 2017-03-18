@@ -50,7 +50,7 @@ more example: [example/mapper/model.go](example/mapper/model.go)
 generated impl code: [example/mapper/modelimpl.go](example/mapper/modelimpl.go)
 
 
-More Arguments
+More
 --------------------------------------------------------------------------------
 
 ```
@@ -66,3 +66,9 @@ Usage of light:
 
 //go:generate light -force -db "db.DB" -path "github.com/wothing/17mei/db"
 ```
+
+TODO
+--------------------------------------------------------------------------------
+
+* sub select in returning
+* tx and db

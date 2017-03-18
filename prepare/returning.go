@@ -9,6 +9,8 @@ import (
 
 func getReturnings(m *domain.Method) (rs []*domain.VarType) {
 	switch m.Kind {
+	case domain.Count:
+		return nil
 	case domain.Batch, domain.Update, domain.Delete:
 		return nil
 	case domain.Insert:
@@ -48,6 +50,8 @@ func getFieldsReturings(m *domain.Method) (rs []*domain.VarType) {
 	fs := strings.Split(stmt, ",")
 	rs = make([]*domain.VarType, len(fs))
 	for i, f := range fs {
+		fs := strings.Split(f, " ")
+		f = fs[len(fs)-1]
 		f = strings.TrimSpace(f)
 		// TODO model index
 		for _, vt := range m.Results[0].Fields {

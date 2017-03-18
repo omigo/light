@@ -179,7 +179,12 @@ import (
             {{- /* end page method */}}
 
             {{- else if eq .Kind "count"}}
-                log.Error("TODO page template not implement")
+                err = db.QueryRow(query, args...).Scan(&{{.Return.Var}})
+                if err != nil {
+                    log.Error(err)
+                    log.Error(query)
+                    log.Error(args...)
+                }
                 return
             {{- end}}
         }
