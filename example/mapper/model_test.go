@@ -161,6 +161,7 @@ func TestModelMapperCount(t *testing.T) {
 		Name:   "name%", // like 'name%'
 		Flag:   true,
 		Status: enum.StatusNormal,
+		Slice:  []string{"Slice Elem 3", "xSlice Elem 2"},
 	}
 	tx, err := BeginTx()
 	if err != nil {

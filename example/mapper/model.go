@@ -47,6 +47,7 @@ type ModelMapper interface {
 	// where name like ${m.Name}
 	// [{ m.Flag != false } and flag=${m.Flag} ]
 	// [{ len(ss) != 0 } and status in ( [{range ss}] ) ]
+	// [{ len(m.Slice) != 0 } and slice && ${m.Slice} ]
 	Count(tx *sql.Tx, m *model.Model, ss []enum.Status) (int64, error)
 
 	// select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32
@@ -56,7 +57,7 @@ type ModelMapper interface {
 	//   [{ len(ss) != 0 } and status in ( [{range ss}] ) ]
 	//   and flag=${m.Flag} ]
 	// [{ len(m.Array) != 0 } and xarray && array[ [{range m.Array}] ] ]
-	// [{ len(m.Slice) != 0 } and slice && array[ [{range m.Slice}] ] ]
+	// [{ len(m.Slice) != 0 } and slice && ${m.Slice} ]
 	// order by id
 	// offset ${offset} limit ${limit}
 	List(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) ([]*model.Model, error)
@@ -67,7 +68,7 @@ type ModelMapper interface {
 	// [{ m.Flag != false }
 	//   [{ len(ss) != 0 } and status in ( [{range ss}] ) ]
 	//   and flag=${m.Flag} ]
-	// [{ len(m.Slice) != 0 } and slice && array[ [{range m.Slice}] ] ]
+	// [{ len(m.Slice) != 0 } and slice && ${m.Slice} ]
 	// order by id
 	// offset ${offset} limit ${limit}
 	// Paging(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) (int64, []*model.Model, error)

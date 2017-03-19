@@ -174,7 +174,7 @@ import (
             {{- /* end batch method */}}
 
             {{- else if eq .Kind "page"}}
-                log.Error("TODO page template not implement")
+                {{.Kind}} template not implemented
                 return
             {{- /* end page method */}}
 
@@ -186,6 +186,10 @@ import (
                     log.Error(args...)
                 }
                 return
+            {{- /* end count method */}}
+
+            {{- else}}
+                {{.Kind}} template not implemented
             {{- end}}
         }
     {{- end}}{{/* end range methods */}}
