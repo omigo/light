@@ -89,7 +89,7 @@ import (
                     {{.Return.Var}} = {{.Return.MakeExpr}}
                 {{- end}}
                 dest := make([]interface{}, {{len .Returnings}})
-                {{$Return := .Return}}
+                {{- $Return := .Return}}
                 {{- range $i, $r := .Returnings}}
                     {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
                         var {{$Return.Var}}{{$r.Var2}} pq.NullTime
