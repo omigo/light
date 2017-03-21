@@ -71,8 +71,10 @@ import (
             }
             query := fmt.Sprintf(buf.String(), ph...)
 
-            log.Debug(query)
-            log.Debug(args...)
+            {{- if ne .Kind "page"}}
+                log.Debug(query)
+                log.Debug(args...)
+            {{- end}}
 
             {{- if or (eq .Kind "batch") (eq .Kind "update") (eq .Kind "delete")}}
                 res, err := db.Exec(query, args...)
@@ -173,11 +175,6 @@ import (
                 return
             {{- /* end batch method */}}
 
-            {{- else if eq .Kind "page"}}
-                {{.Kind}} template not implemented
-                return
-            {{- /* end page method */}}
-
             {{- else if eq .Kind "count"}}
                 err = db.QueryRow(query, args...).Scan(&{{.Return.Var}})
                 if err != nil {
@@ -187,6 +184,75 @@ import (
                 }
                 return
             {{- /* end count method */}}
+
+            {{- else if eq .Kind "page"}}
+                fidx := strings.LastIndex(query, " from ")
+                obidx := strings.LastIndex(query, "order by")
+                tQuery := `select count(*)` + query[fidx:obidx]
+                dNum := strings.Count(query[obidx:], "$")
+                tArgs := args[:len(args)-dNum]
+                log.Debug(tQuery)
+                log.Debug(tArgs...)
+                err = db.QueryRow(tQuery, tArgs...).Scan(&{{(index .Results 0).Var}})
+                if err != nil {
+                    log.Error(err)
+                    log.Error(query)
+                    log.Error(args...)
+                }
+                if {{(index .Results 0).Var}} == 0 {
+                    return
+                }
+                log.Debug(query)
+                log.Debug(args...)
+                var rows *sql.Rows
+                rows, err = db.Query(query, args...)
+                if err != nil {
+                    log.Error(err)
+                    log.Error(query)
+                    log.Error(args...)
+                    return
+                }
+                defer rows.Close()
+
+                {{.Return.Var}} = {{.Return.MakeExpr}}
+                for rows.Next() {
+                    elem := {{.Return.MakeElemExpr}}
+                    {{.Return.Var}} = append({{.Return.Var}}, elem)
+                    dest := make([]interface{}, {{len .Returnings}})
+                    {{- range $i, $r := .Returnings}}
+                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                            var elem{{$r.Var2}} pq.NullTime
+                            dest[{{$i}}] = &elem{{$r.Var2}}
+                        {{- else if .DBType.Array}}
+                            dest[{{$i}}] = pq.Array(&elem.{{$r.Var}})
+                        {{- else if .Complex}}
+                            var elem{{.Var2}} []byte
+                            dest[{{$i}}] = &elem{{$r.Var2}}
+                        {{- else}}
+                            dest[{{$i}}] = &elem.{{$r.Var}}
+                        {{- end}}
+                    {{- end}}
+                    err = rows.Scan(dest...)
+                    if err != nil {
+                        log.Error(err)
+                        return
+                    }
+                    {{- range $i, $r := .Returnings}}
+                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                            elem.{{$r.Var}} = elem{{$r.Var2}}.Time
+                        {{- else if .DBType.Array}}
+                        {{- else if .Complex}}
+                            elem.{{$r.Var}} = {{$r.MakeExpr}}
+                            json.Unmarshal(elem{{.Var2}}, {{$r.VarPointerExpr}}elem.{{$r.Var}})
+                        {{- end}}
+                    {{- end}}
+                }
+                if err = rows.Err(); err != nil {
+                    log.Error(err)
+                    return
+                }
+                return
+            {{- /* end page method */}}
 
             {{- else}}
                 {{.Kind}} template not implemented

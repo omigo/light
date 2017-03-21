@@ -71,5 +71,5 @@ type ModelMapper interface {
 	// [{ len(m.Slice) != 0 } and slice && ${m.Slice} ]
 	// order by id
 	// offset ${offset} limit ${limit}
-	// Paging(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) (int64, []*model.Model, error)
+	Paging(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) (int64, []*model.Model, error)
 }

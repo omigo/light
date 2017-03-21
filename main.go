@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
+
+	"golang.org/x/tools/imports"
 
 	"github.com/arstd/light/parse"
 	"github.com/arstd/light/prepare"
@@ -43,9 +47,9 @@ func main() {
 	fmt.Printf("Found  go file: %s\n", goFile)
 
 	p := parse.ParseGoFile(goFile)
-	// log.JSONIndent(p)
 
 	prepare.Prepare(p)
+	// log.JSONIndent(p)
 
 	paths := strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator))
 	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "templates/pq.gotemplate")
@@ -57,19 +61,19 @@ func main() {
 	tmpl, err := template.New("pq.gotemplate").Funcs(funcMap).ParseFiles(tmplFile)
 	util.CheckError(err)
 
-	out, err := os.OpenFile(goFile[:len(goFile)-3]+"impl.go", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
-	util.CheckError(err)
-	err = tmpl.Execute(out, p)
+	// out, err := os.OpenFile(goFile[:len(goFile)-3]+"impl.go", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+	// util.CheckError(err)
+	// err = tmpl.Execute(out, p)
+	// util.CheckError(err)
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, p)
 	util.CheckError(err)
 
-	// var buf bytes.Buffer
-	// err = tmpl.Execute(&buf, p)
-	// util.CheckError(err)
-	//
-	// outFile := goFile[:len(goFile)-3] + "impl.go"
-	// pretty, err := imports.Process(outFile, buf.Bytes(), nil)
-	// util.CheckError(err)
-	// err = ioutil.WriteFile(outFile, pretty, 0644)
-	// util.CheckError(err)
-	// fmt.Printf("Generated file: %s\n", outFile)
+	outFile := goFile[:len(goFile)-3] + "impl.go"
+	pretty, err := imports.Process(outFile, buf.Bytes(), nil)
+	util.CheckError(err)
+	err = ioutil.WriteFile(outFile, pretty, 0644)
+	util.CheckError(err)
+	fmt.Printf("Generated file: %s\n", outFile)
 }

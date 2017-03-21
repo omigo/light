@@ -156,6 +156,22 @@ func TestModelMapperUpdate(t *testing.T) {
 	log.Infof("affected=%d", a)
 }
 
+func TestModelMapperDelete(t *testing.T) {
+	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+	defer RollbackTx(tx)
+	a, err := mapper.Delete(tx, id)
+	CommitTx(tx)
+
+	if err != nil {
+		t.Fatalf("delete error: %s", err)
+	}
+
+	log.JSON(a)
+}
+
 func TestModelMapperCount(t *testing.T) {
 	m := &model.Model{
 		Name:   "name%", // like 'name%'
@@ -199,18 +215,24 @@ func TestModelMapperList(t *testing.T) {
 	log.JSON(ms)
 }
 
-func TestModelMapperDelete(t *testing.T) {
+func TestModelMapperPage(t *testing.T) {
+	m := &model.Model{
+		Name:  "name%", // like 'name%'
+		Flag:  true,
+		Array: []int64{11, 22, 3},
+		// Slice: []string{"SliceElem1", "SliceElem2"},
+	}
+	ss := []enum.Status{enum.StatusNormal, enum.StatusDeleted}
 	tx, err := BeginTx()
 	if err != nil {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	a, err := mapper.Delete(tx, id)
-	CommitTx(tx)
-
+	cnt, ms, err := mapper.Paging(tx, m, ss, 0, 20)
 	if err != nil {
-		t.Fatalf("delete error: %s", err)
+		t.Fatalf("list(%+v) error: %s", m, err)
 	}
 
-	log.JSON(a)
+	CommitTx(tx)
+	log.JSON(cnt, ms)
 }

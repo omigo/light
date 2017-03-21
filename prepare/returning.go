@@ -15,8 +15,10 @@ func getReturnings(m *domain.Method) (rs []*domain.VarType) {
 		return nil
 	case domain.Insert:
 		return getInsertReturnings(m)
-	case domain.Get, domain.List, domain.Page:
-		return getFieldsReturings(m)
+	case domain.Get, domain.List:
+		return getFieldsReturings(m, 0)
+	case domain.Page:
+		return getFieldsReturings(m, 1)
 	}
 	return rs
 }
@@ -43,7 +45,7 @@ func getInsertReturnings(m *domain.Method) (rs []*domain.VarType) {
 	return rs
 }
 
-func getFieldsReturings(m *domain.Method) (rs []*domain.VarType) {
+func getFieldsReturings(m *domain.Method, idx int) (rs []*domain.VarType) {
 	stmt := m.Fragments[0].Stmt
 
 	stmt = stmt[len("select "):strings.Index(stmt, " from ")]
@@ -54,7 +56,7 @@ func getFieldsReturings(m *domain.Method) (rs []*domain.VarType) {
 		f = fs[len(fs)-1]
 		f = strings.TrimSpace(f)
 		// TODO model index
-		for _, vt := range m.Results[0].Fields {
+		for _, vt := range m.Results[idx].Fields {
 			if strings.HasPrefix(vt.Tag, f) {
 				rs[i] = vt
 				break
