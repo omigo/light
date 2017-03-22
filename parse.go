@@ -1,4 +1,4 @@
-package parse
+package main
 
 import (
 	"fmt"
@@ -8,16 +8,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/arstd/light/domain"
-	"github.com/arstd/light/util"
 	"github.com/arstd/log"
 
 	"golang.org/x/tools/go/loader"
 )
 
-var parsed = map[string]*domain.VarType{}
+var parsed = map[string]*VarType{}
 
-func ParseGoFile(pkg *domain.Package) {
+func ParseGoFile(pkg *Package) {
 	defer func() { parsed = nil }()
 
 	conf := loader.Config{
@@ -26,7 +24,9 @@ func ParseGoFile(pkg *domain.Package) {
 	}
 	conf.CreateFromFilenames("arstd/light", pkg.Source)
 	prog, err := conf.Load()
-	util.CheckError(err)
+	if err != nil {
+		log.Panic(err)
+	}
 
 	pkgInfos := prog.InitialPackages()
 	info := pkgInfos[0]
@@ -48,14 +48,14 @@ func ParseGoFile(pkg *domain.Package) {
 			continue
 		}
 
-		itf := &domain.Interface{
+		itf := &Interface{
 			Name: typeSpec.Name.Name,
 		}
 		pkg.Interfaces = append(pkg.Interfaces, itf)
 
 		// get method name and doc
 		for _, x := range interfaceType.Methods.List {
-			m := &domain.Method{
+			m := &Method{
 				Name: x.Names[0].Name,
 				Doc:  getDoc(x.Doc),
 			}
@@ -66,7 +66,7 @@ func ParseGoFile(pkg *domain.Package) {
 		itfType, _ := v.Type().Underlying().(*types.Interface)
 		for i := 0; i < itfType.NumMethods(); i++ {
 			x := itfType.Method(i)
-			var m *domain.Method
+			var m *Method
 			for _, a := range itf.Methods {
 				if a.Name == x.Name() {
 					m = a
@@ -81,7 +81,7 @@ func ParseGoFile(pkg *domain.Package) {
 	}
 }
 
-func parseImports(pkg *domain.Package, imports []*ast.ImportSpec) {
+func parseImports(pkg *Package, imports []*ast.ImportSpec) {
 	for _, spec := range imports {
 		imp := spec.Path.Value
 		// TODO must fix package name conflict
@@ -105,10 +105,10 @@ func getDoc(cg *ast.CommentGroup) (comment string) {
 	return strings.TrimSpace(comment)
 }
 
-func getTypeValues(tuple *types.Tuple) (vts []*domain.VarType) {
+func getTypeValues(tuple *types.Tuple) (vts []*VarType) {
 	for i := 0; i < tuple.Len(); i++ {
 		x := tuple.At(i)
-		vt := &domain.VarType{
+		vt := &VarType{
 			Var:  x.Name(),
 			Deep: true,
 		}
@@ -120,7 +120,7 @@ func getTypeValues(tuple *types.Tuple) (vts []*domain.VarType) {
 	return vts
 }
 
-func parseType(t types.Type, vt *domain.VarType) {
+func parseType(t types.Type, vt *VarType) {
 	tt := t.String()
 	// log.JSON(tt, vt)
 
@@ -193,10 +193,10 @@ func parseType(t types.Type, vt *domain.VarType) {
 	parsed[k] = &tmp
 }
 
-func parseStruct(t *types.Struct, x *domain.VarType) {
+func parseStruct(t *types.Struct, x *VarType) {
 	for i := 0; i < t.NumFields(); i++ {
 		f := t.Field(i)
-		vt := &domain.VarType{
+		vt := &VarType{
 			Var: f.Name(),
 		}
 		parseType(f.Type(), vt)
@@ -207,7 +207,7 @@ func parseStruct(t *types.Struct, x *domain.VarType) {
 	}
 }
 
-func setTag(vt *domain.VarType) {
+func setTag(vt *VarType) {
 	if vt.Var == "" || vt.Tag != "" {
 		return
 	}

@@ -64,7 +64,7 @@ Usage of light:
     	path variable db
   -v	version
 
-//go:generate light -force -db "db.DB" -path "github.com/wothing/17mei/db"
+//go:generate light -force -dbvar "alias.DB" -dbpath "github.com/arstd/light/example/db"
 ```
 
 TODO
@@ -73,4 +73,3 @@ TODO
 - [ ] tx: two method or ...tx?
 - [ ] force argument
 - [ ] sub select in returning
-- [ ] all file in one directory

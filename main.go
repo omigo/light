@@ -11,13 +11,8 @@ import (
 	"text/template"
 	"time"
 
-	"golang.org/x/tools/imports"
-
-	"github.com/arstd/light/domain"
-	"github.com/arstd/light/parse"
-	"github.com/arstd/light/prepare"
-	"github.com/arstd/light/util"
 	"github.com/arstd/log"
+	"golang.org/x/tools/imports"
 )
 
 func usage() {
@@ -68,7 +63,7 @@ func main() {
 		// return
 	}
 
-	pkg := &domain.Package{
+	pkg := &Package{
 		Source:  goFile,
 		DBVar:   *dbVar,
 		Imports: map[string]string{},
@@ -83,34 +78,43 @@ func main() {
 		pkg.Imports[ss[0]] = strings.Trim(*dbPath, `'"`)
 	}
 
-	parse.ParseGoFile(pkg)
+	ParseGoFile(pkg)
 
-	prepare.Prepare(pkg)
+	Prepare(pkg)
 	// log.JSONIndent(pkg)
 
 	paths := strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator))
-	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "templates/pq.gotemplate")
+	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "postgresql.pq.gotemplate")
 
 	funcMap := template.FuncMap{
 		"timestamp": func() string { return time.Now().Format("2006-01-02 15:04:05") },
 	}
 
-	tmpl, err := template.New("pq.gotemplate").Funcs(funcMap).ParseFiles(tmplFile)
-	util.CheckError(err)
-
+	tmpl, err := template.New("postgresql.pq.gotemplate").Funcs(funcMap).ParseFiles(tmplFile)
+	if err != nil {
+		log.Panic(err)
+	}
 	// out, err := os.OpenFile(goFile[:len(goFile)-3]+"impl.go", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
-	// util.CheckError(err)
+	//	if err != nil {
+	// 	log.Panic(err)
+	// }
 	// err = tmpl.Execute(out, pkg)
-	// util.CheckError(err)
+	// 	if err != nil {
+	// 	log.Panic(err)
+	// }
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, pkg)
-	util.CheckError(err)
-
+	if err != nil {
+		log.Panic(err)
+	}
 	pretty, err := imports.Process(outFile, buf.Bytes(), nil)
-	util.CheckError(err)
+	if err != nil {
+		log.Panic(err)
+	}
 	err = ioutil.WriteFile(outFile, pretty, 0644)
-	util.CheckError(err)
-
+	if err != nil {
+		log.Panic(err)
+	}
 	fmt.Printf("Generated file: %s\n", outFile)
 }

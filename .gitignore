@@ -24,6 +24,4 @@ _testmain.go
 *.prof
 
 # generated files
-#examples/persist/demoimpl.go
-
-vendor/github.com/gotips/log
+#example/mapper/modelimpl.go

@@ -1,13 +1,12 @@
-package prepare
+package main
 
 import (
 	"strings"
 
-	"github.com/arstd/light/domain"
 	"github.com/arstd/log"
 )
 
-func Prepare(pkg *domain.Package) {
+func Prepare(pkg *Package) {
 	for _, intf := range pkg.Interfaces {
 		for _, m := range intf.Methods {
 			addPathToImports(pkg, m)
@@ -22,7 +21,7 @@ func Prepare(pkg *domain.Package) {
 	}
 }
 
-func addPathToImports(pkg *domain.Package, m *domain.Method) {
+func addPathToImports(pkg *Package, m *Method) {
 	// TODO conflict
 	for _, p := range m.Params {
 		if p.Path != "" {
@@ -46,7 +45,7 @@ func addPathToImports(pkg *domain.Package, m *domain.Method) {
 	}
 }
 
-func getMethodKind(m *domain.Method) domain.MethodKind {
+func getMethodKind(m *Method) MethodKind {
 	if len(m.Results) < 0 {
 		log.Panicf("all metheds must have 1-3 returns, but %s no return", m.Name)
 	}
@@ -71,23 +70,23 @@ func getMethodKind(m *domain.Method) domain.MethodKind {
 
 	case "insert":
 		if len(m.Results) == 1 {
-			return domain.Insert
+			return Insert
 		} else if len(m.Results) == 2 && m.Results[0].Name == "int64" {
-			return domain.Batch
+			return Batch
 		} else {
 			log.Panicf("method '%s' for insert must only return 'error'", m.Name)
 		}
 
 	case "update":
 		if len(m.Results) == 2 && m.Results[0].Name == "int64" {
-			return domain.Update
+			return Update
 		} else {
 			log.Panicf("method '%s' for 'update' must only return '(int64, error)'", m.Name)
 		}
 
 	case "delete":
 		if len(m.Results) == 2 && m.Results[0].Name == "int64" {
-			return domain.Delete
+			return Delete
 		} else {
 			log.Panicf("method '%s' for 'delete' must only return '(int64, error)'", m.Name)
 		}
@@ -98,17 +97,17 @@ func getMethodKind(m *domain.Method) domain.MethodKind {
 
 	if len(m.Results) == 2 {
 		if m.Results[0].Slice != "" {
-			return domain.List
+			return List
 		} else if len(m.Results[0].Fields) > 0 {
-			return domain.Get
+			return Get
 		} else {
-			return domain.Count
+			return Count
 		}
 	}
 
 	if len(m.Results) == 3 {
 		if m.Results[0].Name == "int64" && m.Results[1].Slice != "" {
-			return domain.Page
+			return Page
 		} else {
 			log.Panicf("method '%s' for 'delete' must only return '(int64, []<*struct>, error)'", m.Name)
 		}
@@ -117,25 +116,25 @@ func getMethodKind(m *domain.Method) domain.MethodKind {
 	panic("unreachable code")
 }
 
-func fillResultsVar(m *domain.Method) {
+func fillResultsVar(m *Method) {
 	m.Results[len(m.Results)-1].Var = "err"
 
 	switch m.Kind {
-	case domain.Insert:
+	case Insert:
 
-	case domain.Batch, domain.Update, domain.Delete:
+	case Batch, Update, Delete:
 		m.Results[0].Var = "xa"
 
-	case domain.Get:
+	case Get:
 		m.Results[0].Var = "xobj"
 
-	case domain.Count:
+	case Count:
 		m.Results[0].Var = "xcnt"
 
-	case domain.List:
+	case List:
 		m.Results[0].Var = "xdata"
 
-	case domain.Page:
+	case Page:
 		m.Results[0].Var = "xcnt"
 		m.Results[1].Var = "xdata"
 

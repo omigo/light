@@ -1,4 +1,4 @@
-package model
+package domain
 
 import (
 	"time"
@@ -15,8 +15,8 @@ type Model struct {
 
 	Map   map[string]interface{}
 	Time  time.Time
-	Array []int64  `light:"xarray int[]"`
-	Slice []string `light:"slice text[]"`
+	Array []int64 `light:"xarray int[]"`
+	Slice []string
 
 	Status enum.Status
 	State  enum.State

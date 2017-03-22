@@ -1,4 +1,4 @@
-package prepare
+package main
 
 import (
 	"bytes"
@@ -6,11 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/arstd/light/domain"
 	"github.com/arstd/log"
 )
 
-func getFragments(doc string) (fs []*domain.Fragment) {
+func getFragments(doc string) (fs []*Fragment) {
 	// log.Infof(doc)
 	// time.Sleep(200 * time.Millisecond)
 
@@ -34,7 +33,7 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 					// array[ 之前没有 [，之后的会被认为普通字符
 					break
 				}
-				f := &domain.Fragment{
+				f := &Fragment{
 					Stmt: strings.TrimSpace(doc[last+1 : i]),
 				}
 				if parseFragment(f) {
@@ -47,7 +46,7 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 		case ']':
 			left--
 			if left == 0 {
-				f := &domain.Fragment{
+				f := &Fragment{
 					Stmt: strings.TrimSpace(doc[last+1 : i]),
 				}
 
@@ -59,7 +58,7 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 		}
 	}
 
-	f := &domain.Fragment{
+	f := &Fragment{
 		Stmt: strings.TrimSpace(doc[last+1:]),
 	}
 
@@ -72,7 +71,7 @@ func getFragments(doc string) (fs []*domain.Fragment) {
 
 var condRegexp = regexp.MustCompile(`((\w+),\s*(\w+)\s*:=\s*)?range\s+([\w.]+)(\s*\|\s*(.+))?`)
 
-func parseFragment(f *domain.Fragment) bool {
+func parseFragment(f *Fragment) bool {
 	// log.Debug(f.Stmt)
 	f.Stmt = strings.TrimSpace(f.Stmt)
 	if len(f.Stmt) == 0 {
@@ -98,8 +97,8 @@ func parseFragment(f *domain.Fragment) bool {
 
 	if f.Cond != "" {
 		if m := condRegexp.FindStringSubmatch(f.Cond); len(m) > 0 {
-			f.Index = &domain.VarType{Var: "i", Name: "int"}
-			f.Iterator = &domain.VarType{Var: "v"}
+			f.Index = &VarType{Var: "i", Name: "int"}
+			f.Iterator = &VarType{Var: "v"}
 			if m[2] != "" {
 				f.Index.Var = m[2]
 			}
@@ -110,7 +109,7 @@ func parseFragment(f *domain.Fragment) bool {
 			if m[6] != "" {
 				f.Seperator = m[6]
 			}
-			f.Range = &domain.VarType{Var: m[4]}
+			f.Range = &VarType{Var: m[4]}
 			f.Cond = fmt.Sprintf("%s, %s := range %s", f.Index.Var, f.Iterator.Var, f.Range.Var)
 
 			if f.Stmt == "" {
@@ -130,7 +129,7 @@ func parseFragment(f *domain.Fragment) bool {
 	return parseArgs(f)
 }
 
-func parseArgs(f *domain.Fragment) bool {
+func parseArgs(f *Fragment) bool {
 	buf := &bytes.Buffer{}
 
 	quote, left, last := false, 0, -1
@@ -157,7 +156,7 @@ func parseArgs(f *domain.Fragment) bool {
 		case '}':
 			left--
 			if left == 0 {
-				a := &domain.VarType{
+				a := &VarType{
 					Var: strings.TrimSpace(f.Stmt[last+1 : i]),
 				}
 				f.Args = append(f.Args, a)

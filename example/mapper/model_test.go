@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arstd/light/example/domain"
 	"github.com/arstd/light/example/enum"
-	"github.com/arstd/light/example/model"
 	"github.com/arstd/log"
 )
 
@@ -43,7 +43,7 @@ var mapper ModelMapper = &ModelMapperImpl{}
 var id int = 1
 
 func TestModelMapperInsert(t *testing.T) {
-	m := &model.Model{
+	m := &domain.Model{
 		Name:  "name",
 		Flag:  true,
 		Score: 1.23,
@@ -54,8 +54,8 @@ func TestModelMapperInsert(t *testing.T) {
 		Slice: []string{"Slice Elem 1", "Slice Elem 2"},
 
 		Status:  enum.StatusNormal,
-		Pointer: &model.Model{Name: "Pointer"},
-		StructSlice: []*model.Model{
+		Pointer: &domain.Model{Name: "Pointer"},
+		StructSlice: []*domain.Model{
 			{Name: "StructSlice"},
 		},
 
@@ -77,7 +77,7 @@ func TestModelMapperInsert(t *testing.T) {
 }
 
 func TestModelMapperBatchInsert(t *testing.T) {
-	m := &model.Model{
+	m := &domain.Model{
 		Name:  "name",
 		Flag:  true,
 		Score: 1.23,
@@ -88,8 +88,8 @@ func TestModelMapperBatchInsert(t *testing.T) {
 		Slice: []string{"Slice Elem 1", "Slice Elem 2"},
 
 		Status:  enum.StatusNormal,
-		Pointer: &model.Model{Name: "Pointer"},
-		StructSlice: []*model.Model{
+		Pointer: &domain.Model{Name: "Pointer"},
+		StructSlice: []*domain.Model{
 			{Name: "StructSlice"},
 		},
 
@@ -100,7 +100,7 @@ func TestModelMapperBatchInsert(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	a, err := mapper.BatchInsert(tx, []*model.Model{m, m, m})
+	a, err := mapper.BatchInsert(tx, []*domain.Model{m, m, m})
 	if err != nil {
 		t.Fatalf("insert error: %s", err)
 	}
@@ -125,7 +125,7 @@ func TestModelMapperGet(t *testing.T) {
 }
 
 func TestModelMapperUpdate(t *testing.T) {
-	m := &model.Model{
+	m := &domain.Model{
 		Id:    id,
 		Name:  "name update",
 		Flag:  true,
@@ -136,8 +136,8 @@ func TestModelMapperUpdate(t *testing.T) {
 		Slice: []string{"Slice Elem 1 update", "Slice Elem 2 update"},
 
 		Status:  enum.StatusNormal,
-		Pointer: &model.Model{Name: "Pointer update"},
-		StructSlice: []*model.Model{
+		Pointer: &domain.Model{Name: "Pointer update"},
+		StructSlice: []*domain.Model{
 			{Name: "StructSlice update"},
 		},
 		Uint32: 32,
@@ -173,7 +173,7 @@ func TestModelMapperDelete(t *testing.T) {
 }
 
 func TestModelMapperCount(t *testing.T) {
-	m := &model.Model{
+	m := &domain.Model{
 		Name:   "name%", // like 'name%'
 		Flag:   true,
 		Status: enum.StatusNormal,
@@ -194,7 +194,7 @@ func TestModelMapperCount(t *testing.T) {
 }
 
 func TestModelMapperList(t *testing.T) {
-	m := &model.Model{
+	m := &domain.Model{
 		Name:  "name%", // like 'name%'
 		Flag:  true,
 		Array: []int64{11, 22, 3},
@@ -216,7 +216,7 @@ func TestModelMapperList(t *testing.T) {
 }
 
 func TestModelMapperPage(t *testing.T) {
-	m := &model.Model{
+	m := &domain.Model{
 		Name:  "name%", // like 'name%'
 		Flag:  true,
 		Array: []int64{11, 22, 3},

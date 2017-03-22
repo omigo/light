@@ -1,33 +1,32 @@
-package prepare
+package main
 
 import (
 	"strings"
 
-	"github.com/arstd/light/domain"
 	"github.com/arstd/log"
 )
 
-func getReturnings(m *domain.Method) (rs []*domain.VarType) {
+func getReturnings(m *Method) (rs []*VarType) {
 	switch m.Kind {
-	case domain.Count:
+	case Count:
 		return nil
-	case domain.Batch, domain.Update, domain.Delete:
+	case Batch, Update, Delete:
 		return nil
-	case domain.Insert:
+	case Insert:
 		return getInsertReturnings(m)
-	case domain.Get, domain.List:
+	case Get, List:
 		return getFieldsReturings(m, 0)
-	case domain.Page:
+	case Page:
 		return getFieldsReturings(m, 1)
 	}
 	return rs
 }
 
-func getInsertReturnings(m *domain.Method) (rs []*domain.VarType) {
+func getInsertReturnings(m *Method) (rs []*VarType) {
 	stmt := m.Fragments[len(m.Fragments)-1].Stmt
 
 	fs := strings.Split(stmt[(strings.Index(stmt, "returning ")+len("returning ")):], ",")
-	rs = make([]*domain.VarType, len(fs))
+	rs = make([]*VarType, len(fs))
 	for i, f := range fs {
 		f = strings.TrimSpace(f)
 		// TODO model index ?= 1
@@ -45,12 +44,12 @@ func getInsertReturnings(m *domain.Method) (rs []*domain.VarType) {
 	return rs
 }
 
-func getFieldsReturings(m *domain.Method, idx int) (rs []*domain.VarType) {
+func getFieldsReturings(m *Method, idx int) (rs []*VarType) {
 	stmt := m.Fragments[0].Stmt
 
 	stmt = stmt[len("select "):strings.Index(stmt, " from ")]
 	fs := strings.Split(stmt, ",")
-	rs = make([]*domain.VarType, len(fs))
+	rs = make([]*VarType, len(fs))
 	for i, f := range fs {
 		fs := strings.Split(f, " ")
 		f = fs[len(fs)-1]

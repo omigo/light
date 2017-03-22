@@ -1,4 +1,4 @@
-package domain
+package main
 
 import (
 	"fmt"
@@ -95,7 +95,7 @@ func varTypesExpr(vts []*VarType) string {
 }
 
 type VarType struct {
-	// ms []*domain.Model
+	// ms []*model.Model
 	Var string `json:"Var,omitempty"` //  ms
 	Tag string `json:"Tag,omitempty"`
 
@@ -105,7 +105,7 @@ type VarType struct {
 	Pointer string `json:"Pointer,omitempty"` //  *
 	Pkg     string `json:"Pkg,omitempty"`     //  domain
 	Name    string `json:"Name,omitempty"`    //  Model
-	Alias   string `json:"Alias,omitempty"`   //  e.g. domain.State => string
+	Alias   string `json:"Alias,omitempty"`   //  e.g. model.State => string
 
 	Key   string `json:"Key,omitempty"`
 	Value string `json:"Value,omitempty"`

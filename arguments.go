@@ -1,13 +1,12 @@
-package prepare
+package main
 
 import (
 	"strings"
 
-	"github.com/arstd/light/domain"
 	"github.com/arstd/log"
 )
 
-func prepareArgs(m *domain.Method, fs []*domain.Fragment) {
+func prepareArgs(m *Method, fs []*Fragment) {
 	for _, f := range fs {
 		fillRange(m, f)
 		fillArgs(m, f)
@@ -15,7 +14,7 @@ func prepareArgs(m *domain.Method, fs []*domain.Fragment) {
 	}
 }
 
-func fillRange(m *domain.Method, f *domain.Fragment) {
+func fillRange(m *Method, f *Fragment) {
 	if f.Range == nil {
 		return
 	}
@@ -74,7 +73,7 @@ func fillRange(m *domain.Method, f *domain.Fragment) {
 
 }
 
-func fillArgs(m *domain.Method, f *domain.Fragment) {
+func fillArgs(m *Method, f *Fragment) {
 	for _, vt := range f.Args {
 		sel := strings.Split(vt.Var, ".")
 
