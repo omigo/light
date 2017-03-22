@@ -70,9 +70,7 @@ Usage of light:
 TODO
 --------------------------------------------------------------------------------
 
-- [x] remove args append
-- [ ] only []int64/[]string/[]float/[]bool use pq.Array
 - [ ] tx: two method or ...tx?
-- [x] dbvar and dbpath argument
 - [ ] force argument
 - [ ] sub select in returning
+- [ ] all file in one directory

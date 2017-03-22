@@ -77,7 +77,6 @@ func ParseGoFile(pkg *domain.Package) {
 			y := x.Type().(*types.Signature)
 			m.Params = getTypeValues(y.Params())
 			m.Results = getTypeValues(y.Results())
-			checkResultsVar(m)
 		}
 	}
 }
@@ -205,29 +204,6 @@ func parseStruct(t *types.Struct, x *domain.VarType) {
 		vt.Tag = getLightTag(t.Tag(i))
 		setTag(vt)
 		x.Fields = append(x.Fields, vt)
-	}
-}
-
-func checkResultsVar(m *domain.Method) {
-	for _, vt := range m.Results {
-		if vt.Var == "" {
-			if vt.Name == "error" {
-				vt.Var = "err"
-			} else {
-				if vt.Name != "" {
-					vt.Var = strings.ToLower(vt.Name[:1])
-				}
-				if vt.Slice != "" {
-					vt.Var += "s"
-				}
-			}
-			for _, v := range m.Params {
-				if v.Var == vt.Var {
-					vt.Var = "x" + vt.Var
-					break
-				}
-			}
-		}
 	}
 }
 

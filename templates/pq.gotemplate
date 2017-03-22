@@ -22,8 +22,8 @@ import (
         func (*{{$itf.Name}}Impl) {{.Name}}({{.ParamsExpr}})({{.ResultsExpr}}) {
             {{- $dbVar := (or "" $.DBVar)}}
             var (
-                buf  bytes.Buffer
-                args []interface{}
+                xbuf  bytes.Buffer
+                xargs []interface{}
             )
 
             {{- block "fragments" .Fragments}}
@@ -31,24 +31,24 @@ import (
                     {{- if .Range}}
                         for {{.Index.Var}}, {{.Iterator.Var}} := range {{.Range.Var}} {
                             if {{.Index.Var}} != 0 {
-                                buf.WriteString("{{.Seperator}}")
+                                xbuf.WriteString("{{.Seperator}}")
                             }
                     {{- else if .Cond}}
                         if {{.Cond}} {
                     {{- end}}
                             {{- if .Prepare}}
-                                buf.WriteString(` {{.Prepare}}`)
+                                xbuf.WriteString(` {{.Prepare}}`)
                             {{- end}}
 
                             {{- range .Args}}
-                                {{- if .DBType.Array}}
+                                {{- if .PGArray}}
                                 {{- else if .Complex}}
                                     {{.Var2}}, _ := json.Marshal({{.Var}})
                                 {{- end}}
                             {{- end}}
-                            args = append(args
+                            xargs = append(xargs
                             {{- range .Args}},
-                                {{- if .DBType.Array}}pq.Array({{.Var}})
+                                {{- if .PGArray}}pq.Array({{.Var}})
                                 {{- else if .Complex}}{{- .Var2}}
                                 {{- else}}{{- .Var}}
                                 {{- end}}
@@ -65,25 +65,25 @@ import (
                 {{- end}}{{/* end range fragments */}}
             {{- end}}{{/* end fragments block */}}
 
-            ph := make([]interface{}, len(args))
-            for i := range args {
-                ph[i] = fmt.Sprintf("$%d", i+1)
+            xholder := make([]interface{}, len(xargs))
+            for i := range xargs {
+                xholder[i] = fmt.Sprintf("$%d", i+1)
             }
-            query := fmt.Sprintf(buf.String(), ph...)
+            xquery := fmt.Sprintf(xbuf.String(), xholder...)
 
             {{- if ne .Kind "page"}}
-                log.Debug(query)
-                log.Debug(args...)
+                log.Debug(xquery)
+                log.Debug(xargs...)
             {{end}}
 
             {{- if or (eq .Kind "batch") (eq .Kind "update") (eq .Kind "delete")}}
-                res, err := {{$dbVar}}.Exec(query, args...)
+                xres, err := {{$dbVar}}.Exec(xquery, xargs...)
                 if err != nil {
-                    log.Error(query)
-                    log.Error(args...)
+                    log.Error(xquery)
+                    log.Error(xargs...)
                     log.Error(err)
                 }
-                return res.RowsAffected()
+                return xres.RowsAffected()
             {{- /* end batch method */}}
 
             {{- else if or (eq .Kind "get") (eq .Kind "insert")}}
@@ -94,30 +94,30 @@ import (
                 {{- range $i, $r := .Returnings}}
                     {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
                         var {{$Return.Var}}{{$r.Var2}} pq.NullTime
-                    {{- else if .DBType.Array}}
+                    {{- else if .PGArray}}
                     {{- else if .Complex}}
                         var {{$Return.Var}}{{.Var2}} []byte
                     {{- end}}
                 {{- end}}
-                dest := []interface{}{
+                xdest := []interface{}{
                 {{- range $i, $r := .Returnings}}
                     {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&{{$Return.Var}}{{$r.Var2}},
-                    {{- else if .DBType.Array}}pq.Array(&{{$Return.Var}}.{{$r.Var}}),
+                    {{- else if .PGArray}}pq.Array(&{{$Return.Var}}.{{$r.Var}}),
                     {{- else if .Complex}}&{{$Return.Var}}{{$r.Var2}},
                     {{- else}}&{{$Return.Var}}.{{$r.Var}},
                     {{- end}}
                 {{- end}} }
-                err = db.QueryRow(query, args...).Scan(dest...)
+                err = db.QueryRow(xquery, xargs...).Scan(xdest...)
                 if err != nil {
             		log.Error(err)
-            		log.Error(query)
-            		log.Error(args...)
+            		log.Error(xquery)
+            		log.Error(xargs...)
                     return
             	}
                 {{- range $i, $r := .Returnings}}
                     {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
                         {{$Return.Var}}.{{$r.Var}} = {{$Return.Var}}{{$r.Var2}}.Time
-                    {{- else if .DBType.Array}}
+                    {{- else if .PGArray}}
                     {{- else if .Complex}}
                         {{$Return.Var}}.{{$r.Var}} = {{$r.MakeExpr}}
                         json.Unmarshal({{$Return.Var}}{{.Var2}}, {{$r.VarPointerExpr}}{{$Return.Var}}.{{$r.Var}})
@@ -127,52 +127,52 @@ import (
             {{- /* end batch method */}}
 
             {{- else if eq .Kind "list"}}
-                var rows *sql.Rows
-                rows, err = db.Query(query, args...)
+                var xrows *sql.Rows
+                xrows, err = db.Query(xquery, xargs...)
                 if err != nil {
                     log.Error(err)
-                    log.Error(query)
-                    log.Error(args...)
+                    log.Error(xquery)
+                    log.Error(xargs...)
                     return
                 }
-                defer rows.Close()
+                defer xrows.Close()
 
                 {{.Return.Var}} = {{.Return.MakeExpr}}
-                for rows.Next() {
-                    elem := {{.Return.MakeElemExpr}}
-                    {{.Return.Var}} = append({{.Return.Var}}, elem)
+                for xrows.Next() {
+                    xe := {{.Return.MakeElemExpr}}
+                    {{.Return.Var}} = append({{.Return.Var}}, xe)
                     {{- range $i, $r := .Returnings}}
                         {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
-                            var elem{{$r.Var2}} pq.NullTime
-                        {{- else if .DBType.Array}}
+                            var xe{{$r.Var2}} pq.NullTime
+                        {{- else if .PGArray}}
                         {{- else if .Complex}}
-                            var elem{{.Var2}} []byte
+                            var xe{{.Var2}} []byte
                         {{- end}}
                     {{- end}}
-                    dest := []interface{}{
+                    xdest := []interface{}{
                     {{- range $i, $r := .Returnings}}
-                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&elem{{$r.Var2}},
-                        {{- else if .DBType.Array}}pq.Array(&elem.{{$r.Var}}),
-                        {{- else if .Complex}}&elem{{$r.Var2}},
-                        {{- else}}&elem.{{$r.Var}},
+                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&xe{{$r.Var2}},
+                        {{- else if .PGArray}}pq.Array(&xe.{{$r.Var}}),
+                        {{- else if .Complex}}&xe{{$r.Var2}},
+                        {{- else}}&xe.{{$r.Var}},
                         {{- end}}
                     {{- end}} }
-                    err = rows.Scan(dest...)
+                    err = xrows.Scan(xdest...)
                     if err != nil {
                         log.Error(err)
                         return
                     }
                     {{- range $i, $r := .Returnings}}
                         {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
-                            elem.{{$r.Var}} = elem{{$r.Var2}}.Time
-                        {{- else if .DBType.Array}}
+                            xe.{{$r.Var}} = xe{{$r.Var2}}.Time
+                        {{- else if .PGArray}}
                         {{- else if .Complex}}
-                            elem.{{$r.Var}} = {{$r.MakeExpr}}
-                            json.Unmarshal(elem{{.Var2}}, {{$r.VarPointerExpr}}elem.{{$r.Var}})
+                            xe.{{$r.Var}} = {{$r.MakeExpr}}
+                            json.Unmarshal(xe{{.Var2}}, {{$r.VarPointerExpr}}xe.{{$r.Var}})
                         {{- end}}
                     {{- end}}
                 }
-                if err = rows.Err(); err != nil {
+                if err = xrows.Err(); err != nil {
                     log.Error(err)
                     return
                 }
@@ -180,83 +180,83 @@ import (
             {{- /* end batch method */}}
 
             {{- else if eq .Kind "count"}}
-                err = db.QueryRow(query, args...).Scan(&{{.Return.Var}})
+                err = db.QueryRow(xquery, xargs...).Scan(&{{.Return.Var}})
                 if err != nil {
                     log.Error(err)
-                    log.Error(query)
-                    log.Error(args...)
+                    log.Error(xquery)
+                    log.Error(xargs...)
                 }
                 return
             {{- /* end count method */}}
 
             {{- else if eq .Kind "page"}}
-                fidx := strings.LastIndex(query, " from ")
-                obidx := strings.LastIndex(query, "order by")
-                tQuery := `select count(*)` + query[fidx:obidx]
-                dNum := strings.Count(query[obidx:], "$")
-                tArgs := args[:len(args)-dNum]
-                log.Debug(tQuery)
-                log.Debug(tArgs...)
+                xfindex := strings.LastIndex(xquery, " from ")
+                xobindex := strings.LastIndex(xquery, "order by")
+                xtquery := `select count(*)` + xquery[xfindex:xobindex]
+                xdcnt := strings.Count(xquery[xobindex:], "$")
+                xtargs := xargs[:len(xargs)-xdcnt]
+                log.Debug(xtquery)
+                log.Debug(xtargs...)
 
-                err = db.QueryRow(tQuery, tArgs...).Scan(&{{(index .Results 0).Var}})
+                err = db.QueryRow(xtquery, xtargs...).Scan(&{{(index .Results 0).Var}})
                 if err != nil {
                     log.Error(err)
-                    log.Error(query)
-                    log.Error(args...)
+                    log.Error(xquery)
+                    log.Error(xargs...)
                 }
                 if {{(index .Results 0).Var}} == 0 {
                     return
                 }
 
-                log.Debug(query)
-                log.Debug(args...)
+                log.Debug(xquery)
+                log.Debug(xargs...)
 
-                var rows *sql.Rows
-                rows, err = db.Query(query, args...)
+                var xrows *sql.Rows
+                xrows, err = db.Query(xquery, xargs...)
                 if err != nil {
                     log.Error(err)
-                    log.Error(query)
-                    log.Error(args...)
+                    log.Error(xquery)
+                    log.Error(xargs...)
                     return
                 }
-                defer rows.Close()
+                defer xrows.Close()
 
                 {{.Return.Var}} = {{.Return.MakeExpr}}
-                for rows.Next() {
-                    elem := {{.Return.MakeElemExpr}}
-                    {{.Return.Var}} = append({{.Return.Var}}, elem)
+                for xrows.Next() {
+                    xe := {{.Return.MakeElemExpr}}
+                    {{.Return.Var}} = append({{.Return.Var}}, xe)
                     {{- range $i, $r := .Returnings}}
                         {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
-                            var elem{{$r.Var2}} pq.NullTime
-                        {{- else if .DBType.Array}}
+                            var xe{{$r.Var2}} pq.NullTime
+                        {{- else if .PGArray}}
                         {{- else if .Complex}}
-                            var elem{{.Var2}} []byte
+                            var xe{{.Var2}} []byte
                         {{- end}}
                     {{- end}}
-                    dest := []interface{}{
+                    xdest := []interface{}{
                     {{- range $i, $r := .Returnings}}
-                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&elem{{$r.Var2}},
-                        {{- else if .DBType.Array}}pq.Array(&elem.{{$r.Var}}),
-                        {{- else if .Complex}}&elem{{$r.Var2}},
-                        {{- else}}&elem.{{$r.Var}},
+                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&xe{{$r.Var2}},
+                        {{- else if .PGArray}}pq.Array(&xe.{{$r.Var}}),
+                        {{- else if .Complex}}&xe{{$r.Var2}},
+                        {{- else}}&xe.{{$r.Var}},
                         {{- end}}
                     {{- end}} }
-                    err = rows.Scan(dest...)
+                    err = xrows.Scan(xdest...)
                     if err != nil {
                         log.Error(err)
                         return
                     }
                     {{- range $i, $r := .Returnings}}
                         {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
-                            elem.{{$r.Var}} = elem{{$r.Var2}}.Time
-                        {{- else if .DBType.Array}}
+                            xe.{{$r.Var}} = xe{{$r.Var2}}.Time
+                        {{- else if .PGArray}}
                         {{- else if .Complex}}
-                            elem.{{$r.Var}} = {{$r.MakeExpr}}
-                            json.Unmarshal(elem{{.Var2}}, {{$r.VarPointerExpr}}elem.{{$r.Var}})
+                            xe.{{$r.Var}} = {{$r.MakeExpr}}
+                            json.Unmarshal(xe{{.Var2}}, {{$r.VarPointerExpr}}xe.{{$r.Var}})
                         {{- end}}
                     {{- end}}
                 }
-                if err = rows.Err(); err != nil {
+                if err = xrows.Err(); err != nil {
                     log.Error(err)
                     return
                 }

@@ -3,8 +3,6 @@ package domain
 import (
 	"fmt"
 	"strings"
-
-	"github.com/arstd/log"
 )
 
 type MethodKind string
@@ -116,25 +114,13 @@ type VarType struct {
 	Fields []*VarType `json:"Fields,omitempty"`
 }
 
-func (vt *VarType) DBType() DBType {
-	if vt.Tag == "" {
-		return ""
+func (vt *VarType) PGArray() bool {
+	if vt.Slice == "[]" && vt.Pkg == "" && vt.Path == "" && vt.Array == "" {
+		if vt.Name == "int64" || vt.Name == "string" || vt.Name == "float64" || vt.Name == "bool" {
+			return true
+		}
 	}
-	ss := strings.Split(vt.Tag, " ")
-	if len(ss) < 2 {
-		return ""
-	}
-	t := DBType(ss[1])
-	if t.Array() && vt.Slice == "" && vt.Array == "" {
-		log.Panicf("tag db type array, but go type not for `%s`", vt.Name)
-	}
-	return t
-}
-
-type DBType string
-
-func (t DBType) Array() bool {
-	return strings.HasSuffix(string(t), "[]")
+	return false
 }
 
 func (vt *VarType) VarPointerExpr() string {
@@ -194,7 +180,7 @@ func (vt *VarType) Complex() bool {
 }
 
 func (vt *VarType) Var2() string {
-	return "x" + strings.Replace(vt.Var, ".", "", -1)
+	return "z" + strings.Replace(vt.Var, ".", "", -1)
 }
 
 func (vt *VarType) Expr() string {

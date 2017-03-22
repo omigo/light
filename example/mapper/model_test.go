@@ -228,7 +228,7 @@ func TestModelMapperPage(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	cnt, ms, err := mapper.Paging(tx, m, ss, 0, 20)
+	cnt, ms, err := mapper.Page(tx, m, ss, 0, 20)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}

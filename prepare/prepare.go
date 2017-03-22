@@ -8,36 +8,40 @@ import (
 )
 
 func Prepare(pkg *domain.Package) {
-	// var err error
 	for _, intf := range pkg.Interfaces {
 		for _, m := range intf.Methods {
-
-			// TODO conflict
-			for _, p := range m.Params {
-				if p.Path != "" {
-					pkg.Imports[p.Path[strings.LastIndex(p.Path, "/")+1:]] = p.Path
-				}
-				for _, f := range p.Fields {
-					if f.Path != "" {
-						pkg.Imports[f.Path[strings.LastIndex(f.Path, "/")+1:]] = f.Path
-					}
-				}
-			}
-			for _, p := range m.Results {
-				if p.Path != "" {
-					pkg.Imports[p.Path[strings.LastIndex(p.Path, "/")+1:]] = p.Path
-				}
-				for _, f := range p.Fields {
-					if f.Path != "" {
-						pkg.Imports[f.Path[strings.LastIndex(f.Path, "/")+1:]] = f.Path
-					}
-				}
-			}
-
+			addPathToImports(pkg, m)
 			m.Kind = getMethodKind(m)
+
+			fillResultsVar(m)
+
 			m.Fragments = getFragments(m.Doc)
 			prepareArgs(m, m.Fragments)
 			m.Returnings = getReturnings(m)
+		}
+	}
+}
+
+func addPathToImports(pkg *domain.Package, m *domain.Method) {
+	// TODO conflict
+	for _, p := range m.Params {
+		if p.Path != "" {
+			pkg.Imports[p.Path[strings.LastIndex(p.Path, "/")+1:]] = p.Path
+		}
+		for _, f := range p.Fields {
+			if f.Path != "" {
+				pkg.Imports[f.Path[strings.LastIndex(f.Path, "/")+1:]] = f.Path
+			}
+		}
+	}
+	for _, p := range m.Results {
+		if p.Path != "" {
+			pkg.Imports[p.Path[strings.LastIndex(p.Path, "/")+1:]] = p.Path
+		}
+		for _, f := range p.Fields {
+			if f.Path != "" {
+				pkg.Imports[f.Path[strings.LastIndex(f.Path, "/")+1:]] = f.Path
+			}
 		}
 	}
 }
@@ -111,4 +115,31 @@ func getMethodKind(m *domain.Method) domain.MethodKind {
 	}
 
 	panic("unreachable code")
+}
+
+func fillResultsVar(m *domain.Method) {
+	m.Results[len(m.Results)-1].Var = "err"
+
+	switch m.Kind {
+	case domain.Insert:
+
+	case domain.Batch, domain.Update, domain.Delete:
+		m.Results[0].Var = "xa"
+
+	case domain.Get:
+		m.Results[0].Var = "xobj"
+
+	case domain.Count:
+		m.Results[0].Var = "xcnt"
+
+	case domain.List:
+		m.Results[0].Var = "xdata"
+
+	case domain.Page:
+		m.Results[0].Var = "xcnt"
+		m.Results[1].Var = "xdata"
+
+	default:
+		log.Panicf("unimplements method kind %s", m.Kind)
+	}
 }

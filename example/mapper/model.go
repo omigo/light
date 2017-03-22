@@ -16,7 +16,7 @@ type ModelMapper interface {
 	// values (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice},
 	//   ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
 	// returning id
-	Insert(tx *sql.Tx, m *model.Model) error
+	Insert(trans *sql.Tx, m *model.Model) error
 
 	// insert into models(uint32, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice)
 	// values [{ i, m := range ms | , }
@@ -71,5 +71,5 @@ type ModelMapper interface {
 	// [{ len(m.Slice) != 0 } and slice && ${m.Slice} ]
 	// order by id
 	// offset ${offset} limit ${limit}
-	Paging(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) (int64, []*model.Model, error)
+	Page(tx *sql.Tx, m *model.Model, ss []enum.Status, offset, limit int) (int64, []*model.Model, error)
 }
