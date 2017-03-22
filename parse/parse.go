@@ -17,16 +17,14 @@ import (
 
 var parsed = map[string]*domain.VarType{}
 
-func ParseGoFile(file string) (pkg *domain.Package) {
+func ParseGoFile(pkg *domain.Package) {
 	defer func() { parsed = nil }()
-
-	pkg = &domain.Package{Source: file}
 
 	conf := loader.Config{
 		ParserMode:          parser.ParseComments,
 		TypeCheckFuncBodies: func(path string) bool { return false },
 	}
-	conf.CreateFromFilenames("arstd/light", file)
+	conf.CreateFromFilenames("arstd/light", pkg.Source)
 	prog, err := conf.Load()
 	util.CheckError(err)
 
@@ -35,7 +33,7 @@ func ParseGoFile(file string) (pkg *domain.Package) {
 
 	pkg.Path = info.Pkg.Path()
 	pkg.Name = info.Pkg.Name()
-	pkg.Imports = parseImports(info.Files[0].Imports)
+	parseImports(pkg, info.Files[0].Imports)
 
 	for k, v := range info.Defs {
 		if k.Obj == nil || k.Obj.Kind != ast.Typ {
@@ -82,24 +80,20 @@ func ParseGoFile(file string) (pkg *domain.Package) {
 			checkResultsVar(m)
 		}
 	}
-
-	return pkg
 }
 
-func parseImports(imports []*ast.ImportSpec) (ret map[string]string) {
-	ret = map[string]string{}
+func parseImports(pkg *domain.Package, imports []*ast.ImportSpec) {
 	for _, spec := range imports {
 		imp := spec.Path.Value
 		// TODO must fix package name conflict
 		if imp[0] == '"' {
 			i := strings.LastIndex(imp, "/")
-			ret[imp[i+1:len(imp)-1]] = imp[1 : len(imp)-1]
+			pkg.Imports[imp[i+1:len(imp)-1]] = imp[1 : len(imp)-1]
 		} else {
 			i := strings.Index(imp, " ")
-			ret[imp[:i]] = imp[i+1 : len(imp)-1]
+			pkg.Imports[imp[:i]] = imp[i+1 : len(imp)-1]
 		}
 	}
-	return ret
 }
 
 func getDoc(cg *ast.CommentGroup) (comment string) {

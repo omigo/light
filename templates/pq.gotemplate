@@ -10,9 +10,7 @@ import (
     "fmt"
     "github.com/arstd/log"
 	"github.com/lib/pq"
-    {{- range $v := .Imports}}
-        "{{$v}}"
-    {{- end}}
+    {{.ImportsExpr}}
 )
 
 {{- range .Interfaces}}
@@ -21,8 +19,8 @@ import (
     type {{$itf.Name}}Impl struct{}
 
     {{- range .Methods}}
-        // {{.Kind}}: {{.Doc}}
         func (*{{$itf.Name}}Impl) {{.Name}}({{.ParamsExpr}})({{.ResultsExpr}}) {
+            {{$dbVar := (or "" $.DBVar)}}
             var (
                 buf  bytes.Buffer
                 args []interface{}
@@ -30,7 +28,6 @@ import (
 
             {{- block "fragments" .Fragments}}
                 {{- range .}}
-                    // {{.Stmt}}
                     {{- if .Range}}
                         for {{.Index.Var}}, {{.Iterator.Var}} := range {{.Range.Var}} {
                             if {{.Index.Var}} != 0 {
@@ -77,7 +74,7 @@ import (
             {{- end}}
 
             {{- if or (eq .Kind "batch") (eq .Kind "update") (eq .Kind "delete")}}
-                res, err := db.Exec(query, args...)
+                res, err := {{$dbVar}}.Exec(query, args...)
                 if err != nil {
                     log.Error(query)
                     log.Error(args...)

@@ -70,5 +70,8 @@ Usage of light:
 TODO
 --------------------------------------------------------------------------------
 
-* sub select in returning
-* tx and db
+- [ ] remove args append
+- [ ] tx: two method or ...tx?
+- [x] dbvar and dbpath argument
+- [ ] force argument
+- [ ] sub select in returning

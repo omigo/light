@@ -25,9 +25,23 @@ type Package struct {
 	Path   string
 	Name   string
 
+	DBVar string
+
 	Imports map[string]string
 
 	Interfaces []*Interface
+}
+
+func (pkg *Package) ImportsExpr() string {
+	s := make([]string, 0, len(pkg.Imports))
+	for k, v := range pkg.Imports {
+		if strings.HasSuffix("/"+v, "/"+k) {
+			s = append(s, `"`+v+`"`)
+		} else {
+			s = append(s, k+` "`+v+`"`)
+		}
+	}
+	return strings.Join(s, "\n")
 }
 
 type Interface struct {
