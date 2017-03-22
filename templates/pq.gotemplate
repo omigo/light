@@ -20,7 +20,7 @@ import (
 
     {{- range .Methods}}
         func (*{{$itf.Name}}Impl) {{.Name}}({{.ParamsExpr}})({{.ResultsExpr}}) {
-            {{$dbVar := (or "" $.DBVar)}}
+            {{- $dbVar := (or "" $.DBVar)}}
             var (
                 buf  bytes.Buffer
                 args []interface{}
@@ -42,14 +42,17 @@ import (
 
                             {{- range .Args}}
                                 {{- if .DBType.Array}}
-                                    args = append(args, pq.Array({{.Var}}))
                                 {{- else if .Complex}}
                                     {{.Var2}}, _ := json.Marshal({{.Var}})
-                                    args = append(args, {{.Var2}})
-                                {{- else}}
-                                    args = append(args, {{.Var}})
                                 {{- end}}
                             {{- end}}
+                            args = append(args
+                            {{- range .Args}},
+                                {{- if .DBType.Array}}pq.Array({{.Var}})
+                                {{- else if .Complex}}{{- .Var2}}
+                                {{- else}}{{- .Var}}
+                                {{- end}}
+                            {{- end}})
 
                             {{- template "fragments" .Fragments}}
 
@@ -71,7 +74,7 @@ import (
             {{- if ne .Kind "page"}}
                 log.Debug(query)
                 log.Debug(args...)
-            {{- end}}
+            {{end}}
 
             {{- if or (eq .Kind "batch") (eq .Kind "update") (eq .Kind "delete")}}
                 res, err := {{$dbVar}}.Exec(query, args...)
@@ -87,21 +90,23 @@ import (
                 {{- if eq .Kind "get"}}
                     {{.Return.Var}} = {{.Return.MakeExpr}}
                 {{- end}}
-                dest := make([]interface{}, {{len .Returnings}})
                 {{- $Return := .Return}}
                 {{- range $i, $r := .Returnings}}
                     {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
                         var {{$Return.Var}}{{$r.Var2}} pq.NullTime
-                        dest[{{$i}}] = &{{$Return.Var}}{{$r.Var2}}
                     {{- else if .DBType.Array}}
-                        dest[{{$i}}] = pq.Array(&{{$Return.Var}}.{{$r.Var}})
                     {{- else if .Complex}}
                         var {{$Return.Var}}{{.Var2}} []byte
-                        dest[{{$i}}] = &{{$Return.Var}}{{$r.Var2}}
-                    {{- else}}
-                        dest[{{$i}}] = &{{$Return.Var}}.{{$r.Var}}
                     {{- end}}
                 {{- end}}
+                dest := []interface{}{
+                {{- range $i, $r := .Returnings}}
+                    {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&{{$Return.Var}}{{$r.Var2}},
+                    {{- else if .DBType.Array}}pq.Array(&{{$Return.Var}}.{{$r.Var}}),
+                    {{- else if .Complex}}&{{$Return.Var}}{{$r.Var2}},
+                    {{- else}}&{{$Return.Var}}.{{$r.Var}},
+                    {{- end}}
+                {{- end}} }
                 err = db.QueryRow(query, args...).Scan(dest...)
                 if err != nil {
             		log.Error(err)
@@ -136,20 +141,22 @@ import (
                 for rows.Next() {
                     elem := {{.Return.MakeElemExpr}}
                     {{.Return.Var}} = append({{.Return.Var}}, elem)
-                    dest := make([]interface{}, {{len .Returnings}})
                     {{- range $i, $r := .Returnings}}
                         {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
                             var elem{{$r.Var2}} pq.NullTime
-                            dest[{{$i}}] = &elem{{$r.Var2}}
                         {{- else if .DBType.Array}}
-                            dest[{{$i}}] = pq.Array(&elem.{{$r.Var}})
                         {{- else if .Complex}}
                             var elem{{.Var2}} []byte
-                            dest[{{$i}}] = &elem{{$r.Var2}}
-                        {{- else}}
-                            dest[{{$i}}] = &elem.{{$r.Var}}
                         {{- end}}
                     {{- end}}
+                    dest := []interface{}{
+                    {{- range $i, $r := .Returnings}}
+                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&elem{{$r.Var2}},
+                        {{- else if .DBType.Array}}pq.Array(&elem.{{$r.Var}}),
+                        {{- else if .Complex}}&elem{{$r.Var2}},
+                        {{- else}}&elem.{{$r.Var}},
+                        {{- end}}
+                    {{- end}} }
                     err = rows.Scan(dest...)
                     if err != nil {
                         log.Error(err)
@@ -190,6 +197,7 @@ import (
                 tArgs := args[:len(args)-dNum]
                 log.Debug(tQuery)
                 log.Debug(tArgs...)
+
                 err = db.QueryRow(tQuery, tArgs...).Scan(&{{(index .Results 0).Var}})
                 if err != nil {
                     log.Error(err)
@@ -199,8 +207,10 @@ import (
                 if {{(index .Results 0).Var}} == 0 {
                     return
                 }
+
                 log.Debug(query)
                 log.Debug(args...)
+
                 var rows *sql.Rows
                 rows, err = db.Query(query, args...)
                 if err != nil {
@@ -215,20 +225,22 @@ import (
                 for rows.Next() {
                     elem := {{.Return.MakeElemExpr}}
                     {{.Return.Var}} = append({{.Return.Var}}, elem)
-                    dest := make([]interface{}, {{len .Returnings}})
                     {{- range $i, $r := .Returnings}}
                         {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
                             var elem{{$r.Var2}} pq.NullTime
-                            dest[{{$i}}] = &elem{{$r.Var2}}
                         {{- else if .DBType.Array}}
-                            dest[{{$i}}] = pq.Array(&elem.{{$r.Var}})
                         {{- else if .Complex}}
                             var elem{{.Var2}} []byte
-                            dest[{{$i}}] = &elem{{$r.Var2}}
-                        {{- else}}
-                            dest[{{$i}}] = &elem.{{$r.Var}}
                         {{- end}}
                     {{- end}}
+                    dest := []interface{}{
+                    {{- range $i, $r := .Returnings}}
+                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&elem{{$r.Var2}},
+                        {{- else if .DBType.Array}}pq.Array(&elem.{{$r.Var}}),
+                        {{- else if .Complex}}&elem{{$r.Var2}},
+                        {{- else}}&elem.{{$r.Var}},
+                        {{- end}}
+                    {{- end}} }
                     err = rows.Scan(dest...)
                     if err != nil {
                         log.Error(err)
@@ -255,5 +267,5 @@ import (
                 {{.Kind}} template not implemented
             {{- end}}
         }
-    {{- end}}{{/* end range methods */}}
+    {{end}}{{/* end range methods */}}
 {{- end}}{{/* end range interfaces */}}
