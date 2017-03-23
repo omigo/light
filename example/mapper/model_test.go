@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -42,7 +43,7 @@ func TestCreateTable(t *testing.T) {
 var mapper ModelMapper = &ModelMapperImpl{}
 var id int = 1
 
-func TestModelMapperInsert(t *testing.T) {
+func TestModelMapperInsertTx(t *testing.T) {
 	m := &domain.Model{
 		Name:  "name",
 		Flag:  true,
@@ -66,13 +67,40 @@ func TestModelMapperInsert(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	// err = mapper.Insert(m)
 	err = mapper.Insert(m, tx)
 	if err != nil {
 		t.Fatalf("insert error: %s", err)
 	}
 
 	CommitTx(tx)
+	id = m.Id
+	log.Infof("id=%d", m.Id)
+}
+
+func TestModelMapperInsert(t *testing.T) {
+	m := &domain.Model{
+		Name:  "name",
+		Flag:  true,
+		Score: 1.23,
+
+		Map:   map[string]interface{}{"a": 1},
+		Time:  time.Now(),
+		Array: []int64{1, 2, 3},
+		Slice: []string{"Slice Elem 1", "Slice Elem 2"},
+
+		Status:  enum.StatusNormal,
+		Pointer: &domain.Model{Name: "Pointer"},
+		StructSlice: []*domain.Model{
+			{Name: "StructSlice"},
+		},
+
+		Uint32: 32,
+	}
+	err := mapper.Insert(m)
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+
 	id = m.Id
 	log.Infof("id=%d", m.Id)
 }
@@ -122,7 +150,7 @@ func TestModelMapperGet(t *testing.T) {
 	}
 
 	CommitTx(tx)
-	log.JSON(m)
+	log.Info(json.Marshal(m))
 }
 
 func TestModelMapperUpdate(t *testing.T) {
@@ -191,7 +219,7 @@ func TestModelMapperCount(t *testing.T) {
 	}
 
 	CommitTx(tx)
-	log.JSON(count)
+	log.Info(count)
 }
 
 func TestModelMapperList(t *testing.T) {
@@ -213,7 +241,7 @@ func TestModelMapperList(t *testing.T) {
 	}
 
 	CommitTx(tx)
-	log.JSON(ms)
+	log.Info(json.Marshal(ms))
 }
 
 func TestModelMapperPage(t *testing.T) {
@@ -235,5 +263,6 @@ func TestModelMapperPage(t *testing.T) {
 	}
 
 	CommitTx(tx)
-	log.JSON(cnt, ms)
+	log.Info(cnt)
+	log.Info(json.Marshal(ms))
 }

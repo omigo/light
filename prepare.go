@@ -26,6 +26,9 @@ func checkLastParamTx(m *Method) {
 	vt := m.Params[len(m.Params)-1]
 	if vt.Name == "Tx" && vt.Path == "database/sql" && vt.Pointer == "*" && vt.Slice == "[]" {
 		vt.Slice = "..."
+		vt.Var = "xtx"
+	} else {
+		log.Panicf("last param expect `txs ...*sql.Tx`, but `%s` not", m.Name)
 	}
 }
 
