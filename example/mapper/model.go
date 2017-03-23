@@ -16,19 +16,19 @@ type ModelMapper interface {
 	// values (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice},
 	//   ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
 	// returning id
-	Insert(trans *sql.Tx, m *domain.Model) error
+	Insert(m *domain.Model, tx ...*sql.Tx) error
 
 	// insert into models(uint32, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice)
 	// values [{ i, m := range ms | , }
 	//  (${i}+888, ${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array},
 	//  ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice})
 	// ]
-	BatchInsert(tx *sql.Tx, ms []*domain.Model) (int64, error)
+	BatchInsert(ms []*domain.Model, tx ...*sql.Tx) (int64, error)
 
 	// select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32
 	// from models
 	// where id=${id}
-	Get(tx *sql.Tx, id int) (*domain.Model, error)
+	Get(id int, tx ...*sql.Tx) (*domain.Model, error)
 
 	// update models
 	// set name=${m.Name}, flag=${m.Flag}, score=${m.Score},
@@ -36,11 +36,11 @@ type ModelMapper interface {
 	//   status=${m.Status}, pointer=${m.Pointer}, struct_slice=${m.StructSlice},
 	//   uint32=${m.Uint32}
 	// where id=${m.Id}
-	Update(tx *sql.Tx, m *domain.Model) (int64, error)
+	Update(m *domain.Model, tx ...*sql.Tx) (int64, error)
 
 	// delete from models
 	// where id=${id}
-	Delete(tx *sql.Tx, id int) (int64, error)
+	Delete(id int, tx ...*sql.Tx) (int64, error)
 
 	// select count(*)
 	// from models
@@ -48,7 +48,7 @@ type ModelMapper interface {
 	// [{ m.Flag != false } and flag=${m.Flag} ]
 	// [{ len(ss) != 0 } and status in ( [{range ss}] ) ]
 	// [{ len(m.Slice) != 0 } and slice && ${m.Slice} ]
-	Count(tx *sql.Tx, m *domain.Model, ss []enum.Status) (int64, error)
+	Count(m *domain.Model, ss []enum.Status, tx ...*sql.Tx) (int64, error)
 
 	// select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32
 	// from models
@@ -60,7 +60,7 @@ type ModelMapper interface {
 	// [{ len(m.Slice) != 0 } and slice && ${m.Slice} ]
 	// order by id
 	// offset ${offset} limit ${limit}
-	List(tx *sql.Tx, m *domain.Model, ss []enum.Status, offset, limit int) ([]*domain.Model, error)
+	List(m *domain.Model, ss []enum.Status, offset, limit int, tx ...*sql.Tx) ([]*domain.Model, error)
 
 	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice
 	// from models
@@ -71,5 +71,5 @@ type ModelMapper interface {
 	// [{ len(m.Slice) != 0 } and slice && ${m.Slice} ]
 	// order by id
 	// offset ${offset} limit ${limit}
-	Page(tx *sql.Tx, m *domain.Model, ss []enum.Status, offset, limit int) (int64, []*domain.Model, error)
+	Page(m *domain.Model, ss []enum.Status, offset, limit int, tx ...*sql.Tx) (int64, []*domain.Model, error)
 }

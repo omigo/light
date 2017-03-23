@@ -122,17 +122,13 @@ func getTypeValues(tuple *types.Tuple) (vts []*VarType) {
 
 func parseType(t types.Type, vt *VarType) {
 	tt := t.String()
-	// log.JSON(tt, vt)
+	log.JSON(tt, vt)
 
 	// TODO not deep use deep, but no reverse
 	k := fmt.Sprintf("%s%t", tt, vt.Deep)
 	if v, ok := parsed[k]; ok {
 		tmp := *v
 		tmp.Var = vt.Var
-		tmp.Deep = vt.Deep
-		if !tmp.Deep {
-			tmp.Fields = nil
-		}
 		*vt = tmp
 		return
 	}
@@ -147,12 +143,11 @@ func parseType(t types.Type, vt *VarType) {
 			vt.Path = t.Obj().Pkg().Path()
 			vt.Pkg = t.Obj().Pkg().Name()
 		}
-		// log.Warnf("named %#v", t.String())
 
 		if tt == "database/sql.Tx" || tt == "time.Time" {
+			vt.Deep = false
 			return
 		}
-
 		parseType(t.Underlying(), vt)
 
 	case *types.Basic:

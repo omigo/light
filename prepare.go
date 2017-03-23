@@ -12,12 +12,20 @@ func Prepare(pkg *Package) {
 			addPathToImports(pkg, m)
 			m.Kind = getMethodKind(m)
 
+			checkLastParamTx(m)
 			fillResultsVar(m)
 
 			m.Fragments = getFragments(m.Doc)
 			prepareArgs(m, m.Fragments)
 			m.Returnings = getReturnings(m)
 		}
+	}
+}
+
+func checkLastParamTx(m *Method) {
+	vt := m.Params[len(m.Params)-1]
+	if vt.Name == "Tx" && vt.Path == "database/sql" && vt.Pointer == "*" && vt.Slice == "[]" {
+		vt.Slice = "..."
 	}
 }
 

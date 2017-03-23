@@ -1,7 +1,7 @@
 light
 ================================================================================
 
-Generate go database code by SQL statement, like MyBatis/Ibatis, but no Reflect.
+Generate go database code by SQL statement, sprit from MyBatis/ibatis, but no Reflect.
 
 7 kind of methods
 --------------------------------------------------------------------------------
@@ -66,10 +66,3 @@ Usage of light:
 
 //go:generate light -force -dbvar "alias.DB" -dbpath "github.com/arstd/light/example/db"
 ```
-
-TODO
---------------------------------------------------------------------------------
-
-- [ ] tx: two method or ...tx?
-- [ ] force argument
-- [ ] sub select in returning

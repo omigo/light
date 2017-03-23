@@ -66,7 +66,8 @@ func TestModelMapperInsert(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	err = mapper.Insert(tx, m)
+	// err = mapper.Insert(m)
+	err = mapper.Insert(m, tx)
 	if err != nil {
 		t.Fatalf("insert error: %s", err)
 	}
@@ -100,7 +101,7 @@ func TestModelMapperBatchInsert(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	a, err := mapper.BatchInsert(tx, []*domain.Model{m, m, m})
+	a, err := mapper.BatchInsert([]*domain.Model{m, m, m}, tx)
 	if err != nil {
 		t.Fatalf("insert error: %s", err)
 	}
@@ -115,7 +116,7 @@ func TestModelMapperGet(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	m, err := mapper.Get(tx, id)
+	m, err := mapper.Get(id, tx)
 	if err != nil {
 		t.Fatalf("get error: %s", err)
 	}
@@ -147,7 +148,7 @@ func TestModelMapperUpdate(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	a, err := mapper.Update(tx, m)
+	a, err := mapper.Update(m, tx)
 	if err != nil {
 		t.Fatalf("update error: %s", err)
 	}
@@ -162,7 +163,7 @@ func TestModelMapperDelete(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	a, err := mapper.Delete(tx, id)
+	a, err := mapper.Delete(id, tx)
 	CommitTx(tx)
 
 	if err != nil {
@@ -184,7 +185,7 @@ func TestModelMapperCount(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	count, err := mapper.Count(tx, m, []enum.Status{enum.StatusNormal, enum.StatusDeleted})
+	count, err := mapper.Count(m, []enum.Status{enum.StatusNormal, enum.StatusDeleted}, tx)
 	if err != nil {
 		t.Fatalf("count(%+v) error: %s", m, err)
 	}
@@ -206,7 +207,7 @@ func TestModelMapperList(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	ms, err := mapper.List(tx, m, ss, 0, 20)
+	ms, err := mapper.List(m, ss, 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}
@@ -228,7 +229,7 @@ func TestModelMapperPage(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	cnt, ms, err := mapper.Page(tx, m, ss, 0, 20)
+	cnt, ms, err := mapper.Page(m, ss, 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}

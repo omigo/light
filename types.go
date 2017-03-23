@@ -70,7 +70,7 @@ func (m *Method) Return() *VarType {
 	default:
 		return nil
 	case Insert:
-		return m.Params[1]
+		return m.Params[0]
 	case Get, Count, List:
 		return m.Results[0]
 	case Page:

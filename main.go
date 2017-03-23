@@ -11,8 +11,9 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/arstd/log"
 	"golang.org/x/tools/imports"
+
+	"github.com/arstd/log"
 )
 
 func usage() {
@@ -26,7 +27,7 @@ examples:
 }
 
 func main() {
-	// log.SetLevel(log.Lwarn)
+	log.SetLevel(log.Linfo)
 	log.SetFormat("2006-01-02 15:04:05.999 info examples/main.go:88 message")
 
 	dbVar := flag.String("dbvar", "db", "variable of db to open transaction and execute SQL statements")
@@ -79,9 +80,8 @@ func main() {
 	}
 
 	ParseGoFile(pkg)
-
 	Prepare(pkg)
-	// log.JSONIndent(pkg)
+	log.JSONIndent(pkg)
 
 	paths := strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator))
 	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "postgresql.pq.gotemplate")
@@ -94,20 +94,15 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	// out, err := os.OpenFile(goFile[:len(goFile)-3]+"impl.go", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
-	//	if err != nil {
-	// 	log.Panic(err)
-	// }
-	// err = tmpl.Execute(out, pkg)
-	// 	if err != nil {
-	// 	log.Panic(err)
-	// }
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, pkg)
 	if err != nil {
 		log.Panic(err)
 	}
+
+	// ioutil.WriteFile(outFile, buf.Bytes(), 0644)
+
 	pretty, err := imports.Process(outFile, buf.Bytes(), nil)
 	if err != nil {
 		log.Panic(err)

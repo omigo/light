@@ -29,11 +29,15 @@ func getInsertReturnings(m *Method) (rs []*VarType) {
 	rs = make([]*VarType, len(fs))
 	for i, f := range fs {
 		f = strings.TrimSpace(f)
-		// TODO model index ?= 1
-		for _, vt := range m.Params[1].Fields {
-			if strings.HasPrefix(vt.Tag, f) {
-				rs[i] = vt
+		for _, p := range m.Params {
+			if p.Fields == nil {
 				break
+			}
+			for _, vt := range p.Fields {
+				if strings.HasPrefix(vt.Tag, f) {
+					rs[i] = vt
+					break
+				}
 			}
 		}
 		if rs[i] == nil {
