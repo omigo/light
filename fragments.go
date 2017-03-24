@@ -66,8 +66,11 @@ func splitToFragments(doc string) (fs []*Fragment) {
 						if len(nests) == 0 {
 							log.Panicf("expect fragment(s), but no: %s", part)
 						} else if len(nests) == 1 {
+							f.Stmt = nests[0].Stmt
+							f.Prepare = nests[0].Prepare
+							f.Args = nests[0].Args
+							f.Fragments = nests[0].Fragments
 							fs = append(fs, f)
-							extractArgs(f)
 						} else {
 							f.Fragments = nests
 							fs = append(fs, f)

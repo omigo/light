@@ -58,6 +58,9 @@ type ModelMapper interface {
 	//   and flag=${m.Flag}
 	//   [{ !from.IsZero() && to.IsZero() } and time >= ${from} ]
 	// ]
+	// [ and time between ${from} and ${to} ]
+	// [{ !from.IsZero() && to.IsZero() } and time >= ${from} ]
+	// [{ from.IsZero() && !to.IsZero() } and time <= ${to} ]
 	// [ and xarray && array[ [{range m.Array}] ] ]
 	// [ and slice && ${m.Slice} ]
 	// order by id

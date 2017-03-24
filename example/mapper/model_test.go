@@ -206,7 +206,7 @@ func TestModelMapperCount(t *testing.T) {
 		Name:   "name%", // like 'name%'
 		Flag:   true,
 		Status: enum.StatusNormal,
-		Slice:  []string{"Slice Elem 3", "xSlice Elem 2"},
+		Slice:  []string{"Slice Elem 1", "Slice Elem Not Exist"},
 	}
 	tx, err := BeginTx()
 	if err != nil {
@@ -227,7 +227,7 @@ func TestModelMapperList(t *testing.T) {
 		Name:  "name%", // like 'name%'
 		Flag:  true,
 		Array: []int64{11, 22, 3},
-		// Slice: []string{"SliceElem1", "SliceElem2"},
+		Slice: []string{"Slice Elem 1", "Slice Elem Not Exist"},
 	}
 	ss := []enum.Status{enum.StatusNormal, enum.StatusDeleted}
 	tx, err := BeginTx()
@@ -235,7 +235,7 @@ func TestModelMapperList(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	ms, err := mapper.List(m, ss, time.Now().AddDate(1, 0, 0), time.Now(), 0, 20, tx)
+	ms, err := mapper.List(m, ss, time.Now().AddDate(0, 0, -1), time.Now(), 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}
@@ -249,7 +249,7 @@ func TestModelMapperPage(t *testing.T) {
 		Name:  "name%", // like 'name%'
 		Flag:  true,
 		Array: []int64{11, 22, 3},
-		// Slice: []string{"SliceElem1", "SliceElem2"},
+		Slice: []string{"Slice Elem 1", "Slice Elem Not Exist"},
 	}
 	ss := []enum.Status{enum.StatusNormal, enum.StatusDeleted}
 	tx, err := BeginTx()
@@ -257,7 +257,7 @@ func TestModelMapperPage(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	cnt, ms, err := mapper.Page(m, ss, time.Now().AddDate(1, 0, 0), time.Now(), 0, 20, tx)
+	cnt, ms, err := mapper.Page(m, ss, time.Now().AddDate(0, 0, -1), time.Now(), 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}

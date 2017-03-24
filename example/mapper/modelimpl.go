@@ -278,7 +278,7 @@ func (*ModelMapperImpl) Count(m *domain.Model, ss []enum.Status, xtx ...*sql.Tx)
 	return
 }
 
-// select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where name like ${m.Name} [ [ and status in ( [{range ss}] ) ] and flag=${m.Flag} [{ !from.IsZero() && to.IsZero() } and time >= ${from} ] ] [ and xarray && array[ [{range m.Array}] ] ] [ and slice && ${m.Slice} ] order by id offset ${offset} limit ${limit}
+// select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where name like ${m.Name} [ [ and status in ( [{range ss}] ) ] and flag=${m.Flag} [{ !from.IsZero() && to.IsZero() } and time >= ${from} ] ] [ and time between ${from} and ${to} ] [{ !from.IsZero() && to.IsZero() } and time >= ${from} ] [{ from.IsZero() && !to.IsZero() } and time <= ${to} ] [ and xarray && array[ [{range m.Array}] ] ] [ and slice && ${m.Slice} ] order by id offset ${offset} limit ${limit}
 func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, to time.Time, offset int, limit int, xtx ...*sql.Tx) (xdata []*domain.Model, err error) {
 	var (
 		xbuf  bytes.Buffer
@@ -314,6 +314,21 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 			xbuf.WriteString(`and time >= %s `)
 			xargs = append(xargs, from)
 		}
+	}
+	// and time between ${from} and ${to}
+	if !from.IsZero() && !to.IsZero() {
+		xbuf.WriteString(`and time between %s and %s `)
+		xargs = append(xargs, from, to)
+	}
+	// and time >= ${from}
+	if !from.IsZero() && to.IsZero() {
+		xbuf.WriteString(`and time >= %s `)
+		xargs = append(xargs, from)
+	}
+	// and time <= ${to}
+	if from.IsZero() && !to.IsZero() {
+		xbuf.WriteString(`and time <= %s `)
+		xargs = append(xargs, to)
 	}
 	// and xarray && array[ [{range m.Array}] ]
 	if len(m.Array) != 0 {
