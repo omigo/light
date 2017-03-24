@@ -50,7 +50,8 @@ import (
                                 xargs = append(xargs
                             {{- end}}
                             {{- range .Args}},
-                                {{- if .PGArray}}pq.Array({{.Var}})
+                                {{- if eq .Name "uint32"}}time.Unix(int64({{.Var}}),0)
+                                {{- else if .PGArray}}pq.Array({{.Var}})
                                 {{- else if .Complex}}{{- .Var2}}
                                 {{- else}}{{- .Var}}
                                 {{- end}}
@@ -99,7 +100,7 @@ import (
                 {{- end}}
                 {{- $Return := .Return}}
                 {{- range $i, $r := .Returnings}}
-                    {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                    {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}
                         var {{$Return.Var}}{{$r.Var2}} pq.NullTime
                     {{- else if .PGArray}}
                     {{- else if .Complex}}
@@ -108,7 +109,8 @@ import (
                 {{- end}}
                 xdest := []interface{}{
                 {{- range $i, $r := .Returnings}}
-                    {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&{{$Return.Var}}{{$r.Var2}},
+                    {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}
+                        &{{$Return.Var}}{{$r.Var2}},
                     {{- else if .PGArray}}pq.Array(&{{$Return.Var}}.{{$r.Var}}),
                     {{- else if .Complex}}&{{$Return.Var}}{{$r.Var2}},
                     {{- else}}&{{$Return.Var}}.{{$r.Var}},
@@ -125,7 +127,9 @@ import (
             		log.Error(xargs...)
             	}
                 {{- range $i, $r := .Returnings}}
-                    {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                    {{- if eq $r.Name "uint32"}}
+                        {{$Return.Var}}.{{$r.Var}} = uint32({{$Return.Var}}{{$r.Var2}}.Time.Unix())
+                    {{- else if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
                         {{$Return.Var}}.{{$r.Var}} = {{$Return.Var}}{{$r.Var2}}.Time
                     {{- else if .PGArray}}
                     {{- else if .Complex}}
@@ -156,7 +160,7 @@ import (
                     xe := {{.Return.MakeElemExpr}}
                     {{.Return.Var}} = append({{.Return.Var}}, xe)
                     {{- range $i, $r := .Returnings}}
-                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                        {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}
                             var xe{{$r.Var2}} pq.NullTime
                         {{- else if .PGArray}}
                         {{- else if .Complex}}
@@ -165,7 +169,7 @@ import (
                     {{- end}}
                     xdest := []interface{}{
                     {{- range $i, $r := .Returnings}}
-                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&xe{{$r.Var2}},
+                        {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}&xe{{$r.Var2}},
                         {{- else if .PGArray}}pq.Array(&xe.{{$r.Var}}),
                         {{- else if .Complex}}&xe{{$r.Var2}},
                         {{- else}}&xe.{{$r.Var}},
@@ -177,7 +181,9 @@ import (
                         return
                     }
                     {{- range $i, $r := .Returnings}}
-                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                        {{- if eq $r.Name "uint32"}}
+                            xe.{{$r.Var}} = uint32(xe{{$r.Var2}}.Time.Unix())
+                        {{- else if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
                             xe.{{$r.Var}} = xe{{$r.Var2}}.Time
                         {{- else if .PGArray}}
                         {{- else if .Complex}}
@@ -254,7 +260,7 @@ import (
                     xe := {{.Return.MakeElemExpr}}
                     {{.Return.Var}} = append({{.Return.Var}}, xe)
                     {{- range $i, $r := .Returnings}}
-                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                        {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}
                             var xe{{$r.Var2}} pq.NullTime
                         {{- else if .PGArray}}
                         {{- else if .Complex}}
@@ -263,7 +269,7 @@ import (
                     {{- end}}
                     xdest := []interface{}{
                     {{- range $i, $r := .Returnings}}
-                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}&xe{{$r.Var2}},
+                        {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}&xe{{$r.Var2}},
                         {{- else if .PGArray}}pq.Array(&xe.{{$r.Var}}),
                         {{- else if .Complex}}&xe{{$r.Var2}},
                         {{- else}}&xe.{{$r.Var}},
@@ -275,8 +281,8 @@ import (
                         return
                     }
                     {{- range $i, $r := .Returnings}}
-                        {{- if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
-                            xe.{{$r.Var}} = xe{{$r.Var2}}.Time
+                        {{- if eq $r.Name "uint32"}}xe.{{$r.Var}} = uint32(xe{{$r.Var2}}.Time.Unix())
+                        {{- else if and (eq $r.Pkg "time") (eq $r.Name "Time")}}xe.{{$r.Var}} = xe{{$r.Var2}}.Time
                         {{- else if .PGArray}}
                         {{- else if .Complex}}
                             xe.{{$r.Var}} = {{$r.MakeExpr}}
