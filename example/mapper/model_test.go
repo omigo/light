@@ -50,7 +50,7 @@ func TestModelMapperInsertTx(t *testing.T) {
 		Score: 1.23,
 
 		Map:   map[string]interface{}{"a": 1},
-		Time:  time.Now(),
+		Time:  time.Now().Add(time.Hour),
 		Array: []int64{1, 2, 3},
 		Slice: []string{"Slice Elem 1", "Slice Elem 2"},
 
@@ -235,7 +235,7 @@ func TestModelMapperList(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	ms, err := mapper.List(m, ss, 0, 20, tx)
+	ms, err := mapper.List(m, ss, time.Now().AddDate(1, 0, 0), time.Now(), 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}
@@ -257,7 +257,7 @@ func TestModelMapperPage(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	cnt, ms, err := mapper.Page(m, ss, 0, 20, tx)
+	cnt, ms, err := mapper.Page(m, ss, time.Now().AddDate(1, 0, 0), time.Now(), 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}

@@ -86,7 +86,7 @@ func parseImports(pkg *Package, imports []*ast.ImportSpec) {
 		imp := spec.Path.Value
 		// TODO must fix package name conflict
 		if imp[0] == '"' {
-			i := strings.LastIndex(imp, "/")
+			i := strings.LastIndex("/"+imp, "/")
 			pkg.Imports[imp[i+1:len(imp)-1]] = imp[1 : len(imp)-1]
 		} else {
 			i := strings.Index(imp, " ")

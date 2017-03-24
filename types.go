@@ -203,4 +203,6 @@ type Fragment struct {
 	Seperator string   `json:"Seperator,omitempty"`
 
 	Fragments []*Fragment `json:"Fragments,omitempty"`
+
+	Bracket bool `json:"Bracket,omitempty"`
 }

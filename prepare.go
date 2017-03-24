@@ -15,8 +15,9 @@ func Prepare(pkg *Package) {
 			checkLastParamTx(m)
 			fillResultsVar(m)
 
-			m.Fragments = getFragments(m.Doc)
+			m.Fragments = splitToFragments(m.Doc)
 			prepareArgs(m, m.Fragments)
+
 			m.Returnings = getReturnings(m)
 		}
 	}

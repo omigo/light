@@ -9,9 +9,8 @@ import (
 	"github.com/arstd/log"
 )
 
-func getFragments(doc string) (fs []*Fragment) {
-	// log.Infof(doc)
-	// time.Sleep(200 * time.Millisecond)
+func splitToFragments(doc string) (fs []*Fragment) {
+	log.Debug(doc)
 
 	ignore, left, last := false, 0, -1
 	for i, c := range doc {
@@ -33,103 +32,118 @@ func getFragments(doc string) (fs []*Fragment) {
 					// array[ 之前没有 [，之后的会被认为普通字符
 					break
 				}
-				f := &Fragment{
-					Stmt: strings.TrimSpace(doc[last+1 : i]),
-				}
-				if parseFragment(f) {
-					fs = append(fs, f)
-				}
+				part := strings.TrimSpace(doc[last+1 : i])
 				last = i
+				if part != "" { // ] 和 [ 中间没有内容
+					// 如果有内容，只可能是简单语句，没有 {...} 和 [...]
+					f := &Fragment{
+						Cond: "",
+						Stmt: part,
+					}
+					fs = append(fs, f)
+					extractArgs(f)
+				}
 			}
 			left++
 
 		case ']':
 			left--
 			if left == 0 {
-				f := &Fragment{
-					Stmt: strings.TrimSpace(doc[last+1 : i]),
-				}
-
-				if parseFragment(f) {
-					fs = append(fs, f)
-					last = i
+				part := strings.TrimSpace(doc[last+1 : i])
+				last = i
+				if part != "" { // [ 和 ] 之间没有内容
+					// part 可能有 {...}, 可能嵌套有 [...]
+					cond, sub := divideCond(part)
+					f := checkRange(cond, sub)
+					if sub == "" {
+						if f.Range == nil {
+							log.Panicf("miss statement: %s", part)
+						}
+						fs = append(fs, f)
+						extractArgs(f)
+					} else {
+						nests := splitToFragments(sub)
+						if len(nests) == 0 {
+							log.Panicf("expect fragment(s), but no: %s", part)
+						} else if len(nests) == 1 {
+							fs = append(fs, f)
+							extractArgs(f)
+						} else {
+							f.Fragments = nests
+							fs = append(fs, f)
+						}
+					}
 				}
 			}
 		}
 	}
-
-	f := &Fragment{
-		Stmt: strings.TrimSpace(doc[last+1:]),
+	if last != -1 && doc[last] == '[' {
+		log.Panicf("miss `[` to match left bracket: %s", doc[last:])
 	}
 
-	if parseFragment(f) {
+	part := strings.TrimSpace(doc[last+1:])
+	if part != "" { // 已经到了末尾
+		// 如果有内容，只可能是简单语句，没有 {...} 和 [...]
+		f := &Fragment{
+			Cond: "",
+			Stmt: part,
+		}
 		fs = append(fs, f)
+		extractArgs(f)
 	}
 
 	return fs
 }
 
-var condRegexp = regexp.MustCompile(`((\w+),\s*(\w+)\s*:=\s*)?range\s+([\w.]+)(\s*\|\s*(.+))?`)
-
-func parseFragment(f *Fragment) bool {
-	// log.Debug(f.Stmt)
-	f.Stmt = strings.TrimSpace(f.Stmt)
-	if len(f.Stmt) == 0 {
-		return false
-	}
-
-	if len(f.Stmt) < 1 {
-		log.Panicf("sql error near by %s", f.Stmt)
-	}
-	if f.Stmt[0] == '{' {
-		for i, c := range f.Stmt {
-			// TODO must deal cond contain { or }
+func divideCond(part string) (cond string, sub string) {
+	if part[0] == '{' {
+		var left int
+		for i, c := range part {
+			if c == '\'' {
+				continue
+			}
+			if c == '{' {
+				left++
+			}
 			if c == '}' {
-				f.Cond = strings.TrimSpace(f.Stmt[1:i])
-				f.Stmt = strings.TrimSpace(f.Stmt[i+1:])
-				break
-			}
-		}
-		if f.Cond == "" {
-			log.Panicf("sql error near by %s", f.Stmt)
-		}
-	}
-
-	if f.Cond != "" {
-		if m := condRegexp.FindStringSubmatch(f.Cond); len(m) > 0 {
-			f.Index = &VarType{Var: "i", Name: "int"}
-			f.Iterator = &VarType{Var: "v"}
-			if m[2] != "" {
-				f.Index.Var = m[2]
-			}
-			if m[3] != "" {
-				f.Iterator.Var = m[3]
-			}
-			f.Seperator = ","
-			if m[6] != "" {
-				f.Seperator = m[6]
-			}
-			f.Range = &VarType{Var: m[4]}
-			f.Cond = fmt.Sprintf("%s, %s := range %s", f.Index.Var, f.Iterator.Var, f.Range.Var)
-
-			if f.Stmt == "" {
-				f.Stmt = "${" + f.Iterator.Var + "}"
+				left--
+				if left == 0 {
+					return strings.TrimSpace(part[1:i]), strings.TrimSpace(part[i+1:])
+				}
 			}
 		}
 	}
-
-	if f.Cond != "" || f.Stmt[0] == '[' {
-		fs := getFragments(f.Stmt)
-		if len(fs) > 1 || (len(fs) == 1 && fs[0].Cond != "") {
-			f.Fragments = fs
-			return true
-		}
-	}
-
-	return parseArgs(f)
+	return "", part
 }
 
-func parseArgs(f *Fragment) bool {
+var rre = regexp.MustCompile(`((\w+),\s*(\w+)\s*:=\s*)?range\s+([\w.]+)(\s*\|\s*(.+))?`)
+
+func checkRange(cond, sub string) (f *Fragment) {
+	f = &Fragment{Cond: cond, Stmt: sub, Bracket: true}
+	if m := rre.FindStringSubmatch(cond); len(m) > 0 {
+		f.Index = &VarType{Var: "i", Name: "int"}
+		f.Iterator = &VarType{Var: "v"}
+		if m[2] != "" {
+			f.Index.Var = m[2]
+		}
+		if m[3] != "" {
+			f.Iterator.Var = m[3]
+		}
+		f.Seperator = ","
+		if m[6] != "" {
+			f.Seperator = m[6]
+		}
+		f.Range = &VarType{Var: m[4]}
+		f.Cond = fmt.Sprintf("%s, %s := range %s", f.Index.Var, f.Iterator.Var, f.Range.Var)
+
+		if f.Stmt == "" {
+			f.Stmt = "${" + f.Iterator.Var + "}"
+		}
+	}
+	return
+}
+
+func extractArgs(f *Fragment) {
 	buf := &bytes.Buffer{}
 
 	quote, left, last := false, 0, -1
@@ -169,5 +183,4 @@ func parseArgs(f *Fragment) bool {
 	buf.WriteString(f.Stmt[last+1:])
 
 	f.Prepare = buf.String()
-	return true
 }

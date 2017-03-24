@@ -18,6 +18,7 @@ import (
     type {{$itf.Name}}Impl struct{}
 
     {{- range .Methods}}
+        // {{.Doc}}
         func (*{{$itf.Name}}Impl) {{.Name}}({{.ParamsExpr}})({{.ResultsExpr}}) {
             var (
                 xbuf  bytes.Buffer
@@ -26,16 +27,17 @@ import (
 
             {{- block "fragments" .Fragments}}
                 {{- range .}}
+                    // {{.Stmt}}
                     {{- if .Range}}
                         for {{.Index.Var}}, {{.Iterator.Var}} := range {{.Range.Var}} {
                             if {{.Index.Var}} != 0 {
-                                xbuf.WriteString("{{.Seperator}}")
+                                xbuf.WriteString("{{.Seperator}} ")
                             }
                     {{- else if .Cond}}
                         if {{.Cond}} {
                     {{- end}}
                             {{- if .Prepare}}
-                                xbuf.WriteString(` {{.Prepare}}`)
+                                xbuf.WriteString(`{{.Prepare}} `)
                             {{- end}}
 
                             {{- range .Args}}
@@ -44,16 +46,18 @@ import (
                                     {{.Var2}}, _ := json.Marshal({{.Var}})
                                 {{- end}}
                             {{- end}}
-                            xargs = append(xargs
+                            {{- if .Args}}
+                                xargs = append(xargs
+                            {{- end}}
                             {{- range .Args}},
                                 {{- if .PGArray}}pq.Array({{.Var}})
                                 {{- else if .Complex}}{{- .Var2}}
                                 {{- else}}{{- .Var}}
                                 {{- end}}
-                            {{- end}})
+                            {{- end}}
+                            {{- if .Args}} ) {{- end}}
 
                             {{- template "fragments" .Fragments}}
-
                     {{- if .Range}}
                         }
                     {{- else if .Cond}}

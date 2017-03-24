@@ -27,7 +27,7 @@ examples:
 }
 
 func main() {
-	log.SetLevel(log.Linfo)
+	// log.SetLevel(log.Linfo)
 	log.SetFormat("2006-01-02 15:04:05.999 info examples/main.go:88 message")
 
 	dbVar := flag.String("dbvar", "db", "variable of db to open transaction and execute SQL statements")
@@ -101,7 +101,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	// ioutil.WriteFile(outFile, buf.Bytes(), 0644)
+	ioutil.WriteFile(outFile, buf.Bytes(), 0644)
 
 	pretty, err := imports.Process(outFile, buf.Bytes(), nil)
 	if err != nil {
