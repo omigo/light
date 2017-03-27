@@ -18,10 +18,10 @@ type ModelMapper interface {
 	// returning id
 	Insert(m *domain.Model, tx ...*sql.Tx) error
 
-	// insert into models(uint32, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice)
+	// insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32)
 	// values [{ i, m := range ms | , }
-	//  (${i}+888, ${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array},
-	//  ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice})
+	//  (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array},
+	//  ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
 	// ]
 	BatchInsert(ms []*domain.Model, tx ...*sql.Tx) (int64, error)
 

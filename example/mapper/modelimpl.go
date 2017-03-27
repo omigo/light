@@ -54,24 +54,24 @@ func (*ModelMapperImpl) Insert(m *domain.Model, xtx ...*sql.Tx) (err error) {
 	return
 }
 
-// insert into models(uint32, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice) values [{ i, m := range ms | , } (${i}+888, ${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice}) ]
+// insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values [{ i, m := range ms | , } (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32}) ]
 func (*ModelMapperImpl) BatchInsert(ms []*domain.Model, xtx ...*sql.Tx) (xa int64, err error) {
 	var (
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	// insert into models(uint32, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice) values
-	xbuf.WriteString(`insert into models(uint32, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice) values `)
-	// (${i}+888, ${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice})
+	// insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values
+	xbuf.WriteString(`insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values `)
+	// (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32})
 	for i, m := range ms {
 		if i != 0 {
 			xbuf.WriteString(", ")
 		}
-		xbuf.WriteString(`(%s+888, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) `)
+		xbuf.WriteString(`(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) `)
 		zmMap, _ := json.Marshal(m.Map)
 		zmPointer, _ := json.Marshal(m.Pointer)
 		zmStructSlice, _ := json.Marshal(m.StructSlice)
-		xargs = append(xargs, i, m.Name, m.Flag, m.Score, zmMap, m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, zmPointer, zmStructSlice)
+		xargs = append(xargs, m.Name, m.Flag, m.Score, zmMap, m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, zmPointer, zmStructSlice, time.Unix(int64(m.Uint32), 0))
 	}
 
 	xholder := make([]interface{}, len(xargs))
@@ -389,9 +389,7 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 		var xezPointer []byte
 		var xezStructSlice []byte
 		var xezUint32 pq.NullTime
-		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, &xezMap,
-			&xezTime, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, &xezPointer, &xezStructSlice,
-			&xezUint32}
+		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, &xezMap, &xezTime, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, &xezPointer, &xezStructSlice, &xezUint32}
 		err = xrows.Scan(xdest...)
 		if err != nil {
 			log.Error(err)
@@ -521,8 +519,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 		var xezTime pq.NullTime
 		var xezPointer []byte
 		var xezStructSlice []byte
-		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, &xezMap,
-			&xezTime, pq.Array(&xe.Slice), &xe.Status, &xezPointer, &xezStructSlice}
+		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, &xezMap, &xezTime, pq.Array(&xe.Slice), &xe.Status, &xezPointer, &xezStructSlice}
 		err = xrows.Scan(xdest...)
 		if err != nil {
 			log.Error(err)

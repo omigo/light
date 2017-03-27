@@ -32,7 +32,7 @@ func TestCreateTable(t *testing.T) {
 
 			pointer jsonb not null default '{}',
 			struct_slice jsonb not null default '[]',
-			uint32 bigint not null default 0
+			uint32 timestamptz not null default now()
 		)
 	`)
 	if err != nil {
@@ -62,17 +62,19 @@ func TestModelMapperInsertTx(t *testing.T) {
 
 		Uint32: 32,
 	}
-	tx, err := BeginTx()
+
+	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf("insert error: %s", err)
+		t.Error(err)
 	}
-	defer RollbackTx(tx)
+	defer tx.Commit()
+
 	err = mapper.Insert(m, tx)
 	if err != nil {
+		tx.Rollback()
 		t.Fatalf("insert error: %s", err)
 	}
 
-	CommitTx(tx)
 	id = m.Id
 	log.Infof("id=%d", m.Id)
 }

@@ -281,8 +281,10 @@ import (
                         return
                     }
                     {{- range $i, $r := .Returnings}}
-                        {{- if eq $r.Name "uint32"}}xe.{{$r.Var}} = uint32(xe{{$r.Var2}}.Time.Unix())
-                        {{- else if and (eq $r.Pkg "time") (eq $r.Name "Time")}}xe.{{$r.Var}} = xe{{$r.Var2}}.Time
+                        {{- if eq $r.Name "uint32"}}
+                            xe.{{$r.Var}} = uint32(xe{{$r.Var2}}.Time.Unix())
+                        {{- else if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
+                            xe.{{$r.Var}} = xe{{$r.Var2}}.Time
                         {{- else if .PGArray}}
                         {{- else if .Complex}}
                             xe.{{$r.Var}} = {{$r.MakeExpr}}
