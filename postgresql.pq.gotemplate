@@ -8,6 +8,7 @@ import (
     "encoding/json"
     "fmt"
     "github.com/arstd/log"
+    "github.com/arstd/light/light"
 	"github.com/lib/pq"
     {{.ImportsExpr}}
 )
@@ -40,19 +41,13 @@ import (
                                 xbuf.WriteString(`{{.Prepare}} `)
                             {{- end}}
 
-                            {{- range .Args}}
-                                {{- if .PGArray}}
-                                {{- else if .Complex}}
-                                    {{.Var2}}, _ := json.Marshal({{.Var}})
-                                {{- end}}
-                            {{- end}}
                             {{- if .Args}}
                                 xargs = append(xargs
                             {{- end}}
                             {{- range .Args}},
-                                {{- if eq .Name "uint32"}}time.Unix(int64({{.Var}}),0)
+                                {{- if eq .Name "uint32"}}light.Time({{.Var}})
                                 {{- else if .PGArray}}pq.Array({{.Var}})
-                                {{- else if .Complex}}{{- .Var2}}
+                                {{- else if .Complex}}light.JSON({{.Var}})
                                 {{- else}}{{- .Var}}
                                 {{- end}}
                             {{- end}}
@@ -99,20 +94,11 @@ import (
                     {{.Return.Var}} = {{.Return.MakeExpr}}
                 {{- end}}
                 {{- $Return := .Return}}
-                {{- range $i, $r := .Returnings}}
-                    {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}
-                        var {{$Return.Var}}{{$r.Var2}} pq.NullTime
-                    {{- else if .PGArray}}
-                    {{- else if .Complex}}
-                        var {{$Return.Var}}{{.Var2}} []byte
-                    {{- end}}
-                {{- end}}
                 xdest := []interface{}{
                 {{- range $i, $r := .Returnings}}
-                    {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}
-                        &{{$Return.Var}}{{$r.Var2}},
+                    {{- if eq $r.Name "uint32"}}light.Time(&{{$Return.Var}}.{{$r.Var}}),
                     {{- else if .PGArray}}pq.Array(&{{$Return.Var}}.{{$r.Var}}),
-                    {{- else if .Complex}}&{{$Return.Var}}{{$r.Var2}},
+                    {{- else if .Complex}}light.JSON(&{{$Return.Var}}.{{$r.Var}}),
                     {{- else}}&{{$Return.Var}}.{{$r.Var}},
                     {{- end}}
                 {{- end}} }
@@ -126,17 +112,6 @@ import (
             		log.Error(xquery)
             		log.Error(xargs...)
             	}
-                {{- range $i, $r := .Returnings}}
-                    {{- if eq $r.Name "uint32"}}
-                        {{$Return.Var}}.{{$r.Var}} = uint32({{$Return.Var}}{{$r.Var2}}.Time.Unix())
-                    {{- else if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
-                        {{$Return.Var}}.{{$r.Var}} = {{$Return.Var}}{{$r.Var2}}.Time
-                    {{- else if .PGArray}}
-                    {{- else if .Complex}}
-                        {{$Return.Var}}.{{$r.Var}} = {{$r.MakeExpr}}
-                        json.Unmarshal({{$Return.Var}}{{.Var2}}, {{$r.VarPointerExpr}}{{$Return.Var}}.{{$r.Var}})
-                    {{- end}}
-                {{- end}}
                 return
             {{- /* end batch method */}}
 
@@ -159,19 +134,11 @@ import (
                 for xrows.Next() {
                     xe := {{.Return.MakeElemExpr}}
                     {{.Return.Var}} = append({{.Return.Var}}, xe)
-                    {{- range $i, $r := .Returnings}}
-                        {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}
-                            var xe{{$r.Var2}} pq.NullTime
-                        {{- else if .PGArray}}
-                        {{- else if .Complex}}
-                            var xe{{.Var2}} []byte
-                        {{- end}}
-                    {{- end}}
                     xdest := []interface{}{
                     {{- range $i, $r := .Returnings}}
-                        {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}&xe{{$r.Var2}},
+                        {{- if eq $r.Name "uint32"}}light.Time(&xe.{{$r.Var}}),
                         {{- else if .PGArray}}pq.Array(&xe.{{$r.Var}}),
-                        {{- else if .Complex}}&xe{{$r.Var2}},
+                        {{- else if .Complex}}light.JSON(&xe.{{$r.Var}}),
                         {{- else}}&xe.{{$r.Var}},
                         {{- end}}
                     {{- end}} }
@@ -180,17 +147,6 @@ import (
                         log.Error(err)
                         return
                     }
-                    {{- range $i, $r := .Returnings}}
-                        {{- if eq $r.Name "uint32"}}
-                            xe.{{$r.Var}} = uint32(xe{{$r.Var2}}.Time.Unix())
-                        {{- else if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
-                            xe.{{$r.Var}} = xe{{$r.Var2}}.Time
-                        {{- else if .PGArray}}
-                        {{- else if .Complex}}
-                            xe.{{$r.Var}} = {{$r.MakeExpr}}
-                            json.Unmarshal(xe{{.Var2}}, {{$r.VarPointerExpr}}xe.{{$r.Var}})
-                        {{- end}}
-                    {{- end}}
                 }
                 if err = xrows.Err(); err != nil {
                     log.Error(err)
@@ -259,19 +215,11 @@ import (
                 for xrows.Next() {
                     xe := {{.Return.MakeElemExpr}}
                     {{.Return.Var}} = append({{.Return.Var}}, xe)
-                    {{- range $i, $r := .Returnings}}
-                        {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}
-                            var xe{{$r.Var2}} pq.NullTime
-                        {{- else if .PGArray}}
-                        {{- else if .Complex}}
-                            var xe{{.Var2}} []byte
-                        {{- end}}
-                    {{- end}}
                     xdest := []interface{}{
                     {{- range $i, $r := .Returnings}}
-                        {{- if or (eq $r.Name "uint32") (and (eq $r.Pkg "time") (eq $r.Name "Time"))}}&xe{{$r.Var2}},
+                        {{- if eq $r.Name "uint32"}}light.Time(&xe.{{$r.Var}}),
                         {{- else if .PGArray}}pq.Array(&xe.{{$r.Var}}),
-                        {{- else if .Complex}}&xe{{$r.Var2}},
+                        {{- else if .Complex}}light.JSON(&xe.{{$r.Var}}),
                         {{- else}}&xe.{{$r.Var}},
                         {{- end}}
                     {{- end}} }
@@ -280,17 +228,6 @@ import (
                         log.Error(err)
                         return
                     }
-                    {{- range $i, $r := .Returnings}}
-                        {{- if eq $r.Name "uint32"}}
-                            xe.{{$r.Var}} = uint32(xe{{$r.Var2}}.Time.Unix())
-                        {{- else if and (eq $r.Pkg "time") (eq $r.Name "Time")}}
-                            xe.{{$r.Var}} = xe{{$r.Var2}}.Time
-                        {{- else if .PGArray}}
-                        {{- else if .Complex}}
-                            xe.{{$r.Var}} = {{$r.MakeExpr}}
-                            json.Unmarshal(xe{{.Var2}}, {{$r.VarPointerExpr}}xe.{{$r.Var}})
-                        {{- end}}
-                    {{- end}}
                 }
                 if err = xrows.Err(); err != nil {
                     log.Error(err)

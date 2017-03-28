@@ -55,14 +55,16 @@ More
 
 ```
 # light -h
-Usage of light:
-  -db string
-    	variable of prefix Query/QueryRow/Exec (default "db")
+usage: light [flags] [file.go]
+	//go:generate light [flags] [file.go]
+examples:
+	light -force -dbvar=db.DB -dbpath=github.com/arstd/light/example/mapper
+	light -force -dbvar=db2.DB -dbpath=github.com/arstd/light/example/mapper
+  -dbpath string
+    	path of db to open transaction and execute SQL statements
+  -dbvar string
+    	variable of db to open transaction and execute SQL statements (default "db")
   -force
-    	not skip, force to rewrite impl file even if it newer than go file
-  -path string
-    	path variable db
-  -v	version
-
-//go:generate light -force -dbvar "alias.DB" -dbpath "github.com/arstd/light/example/db"
+    	force to regenerate, even sourceimpl.go file newer than source.go file
+  -v	variable of db to open transaction and execute SQL statements
 ```

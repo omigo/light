@@ -60,7 +60,7 @@ func TestModelMapperInsertTx(t *testing.T) {
 			{Name: "StructSlice"},
 		},
 
-		Uint32: 32,
+		Uint32: uint32(time.Now().Unix()),
 	}
 
 	tx, err := db.Begin()
@@ -91,12 +91,12 @@ func TestModelMapperInsert(t *testing.T) {
 		Slice: []string{"Slice Elem 1", "Slice Elem 2"},
 
 		Status:  enum.StatusNormal,
-		Pointer: &domain.Model{Name: "Pointer"},
+		Pointer: &domain.Model{Name: "Pointer 2"},
 		StructSlice: []*domain.Model{
 			{Name: "StructSlice"},
 		},
 
-		Uint32: 32,
+		Uint32: uint32(time.Now().Unix()),
 	}
 	err := mapper.Insert(m)
 	if err != nil {
@@ -124,7 +124,7 @@ func TestModelMapperBatchInsert(t *testing.T) {
 			{Name: "StructSlice"},
 		},
 
-		Uint32: 32,
+		Uint32: uint32(time.Now().Unix()),
 	}
 	tx, err := BeginTx()
 	if err != nil {

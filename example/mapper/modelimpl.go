@@ -6,13 +6,13 @@ package mapper
 import (
 	"bytes"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/arstd/light/example/domain"
 	"github.com/arstd/light/example/enum"
+	"github.com/arstd/light/light"
 	"github.com/arstd/log"
 	"github.com/lib/pq"
 )
@@ -27,10 +27,7 @@ func (*ModelMapperImpl) Insert(m *domain.Model, xtx ...*sql.Tx) (err error) {
 	)
 	// insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values (${m.Name}, ${m.Flag}, ${m.Score}, ${m.Map}, ${m.Time}, ${m.Array}, ${m.Slice}, ${m.Status}, ${m.Pointer}, ${m.StructSlice}, ${m.Uint32}) returning id
 	xbuf.WriteString(`insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id `)
-	zmMap, _ := json.Marshal(m.Map)
-	zmPointer, _ := json.Marshal(m.Pointer)
-	zmStructSlice, _ := json.Marshal(m.StructSlice)
-	xargs = append(xargs, m.Name, m.Flag, m.Score, zmMap, m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, zmPointer, zmStructSlice, time.Unix(int64(m.Uint32), 0))
+	xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32))
 
 	xholder := make([]interface{}, len(xargs))
 	for i := range xargs {
@@ -68,10 +65,7 @@ func (*ModelMapperImpl) BatchInsert(ms []*domain.Model, xtx ...*sql.Tx) (xa int6
 			xbuf.WriteString(", ")
 		}
 		xbuf.WriteString(`(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) `)
-		zmMap, _ := json.Marshal(m.Map)
-		zmPointer, _ := json.Marshal(m.Pointer)
-		zmStructSlice, _ := json.Marshal(m.StructSlice)
-		xargs = append(xargs, m.Name, m.Flag, m.Score, zmMap, m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, zmPointer, zmStructSlice, time.Unix(int64(m.Uint32), 0))
+		xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32))
 	}
 
 	xholder := make([]interface{}, len(xargs))
@@ -115,14 +109,7 @@ func (*ModelMapperImpl) Get(id int, xtx ...*sql.Tx) (xobj *domain.Model, err err
 	log.Debug(xargs...)
 
 	xobj = &domain.Model{}
-	var xobjzMap []byte
-	var xobjzTime pq.NullTime
-	var xobjzPointer []byte
-	var xobjzStructSlice []byte
-	var xobjzUint32 pq.NullTime
-	xdest := []interface{}{&xobj.Id, &xobj.Name, &xobj.Flag, &xobj.Score, &xobjzMap,
-		&xobjzTime, pq.Array(&xobj.Array), pq.Array(&xobj.Slice), &xobj.Status, &xobjzPointer, &xobjzStructSlice,
-		&xobjzUint32}
+	xdest := []interface{}{&xobj.Id, &xobj.Name, &xobj.Flag, &xobj.Score, light.JSON(&xobj.Map), &xobj.Time, pq.Array(&xobj.Array), pq.Array(&xobj.Slice), &xobj.Status, light.JSON(&xobj.Pointer), light.JSON(&xobj.StructSlice), light.Time(&xobj.Uint32)}
 	if len(xtx) > 0 {
 		err = xtx[0].QueryRow(xquery, xargs...).Scan(xdest...)
 	} else {
@@ -133,14 +120,6 @@ func (*ModelMapperImpl) Get(id int, xtx ...*sql.Tx) (xobj *domain.Model, err err
 		log.Error(xquery)
 		log.Error(xargs...)
 	}
-	xobj.Map = map[string]interface{}{}
-	json.Unmarshal(xobjzMap, xobj.Map)
-	xobj.Time = xobjzTime.Time
-	xobj.Pointer = &domain.Model{}
-	json.Unmarshal(xobjzPointer, &xobj.Pointer)
-	xobj.StructSlice = []*domain.Model{}
-	json.Unmarshal(xobjzStructSlice, &xobj.StructSlice)
-	xobj.Uint32 = uint32(xobjzUint32.Time.Unix())
 	return
 }
 
@@ -152,10 +131,7 @@ func (*ModelMapperImpl) Update(m *domain.Model, xtx ...*sql.Tx) (xa int64, err e
 	)
 	// update models set name=${m.Name}, flag=${m.Flag}, score=${m.Score}, map=${m.Map}, time=${m.Time}, slice=${m.Slice}, status=${m.Status}, pointer=${m.Pointer}, struct_slice=${m.StructSlice}, uint32=${m.Uint32} where id=${m.Id}
 	xbuf.WriteString(`update models set name=%s, flag=%s, score=%s, map=%s, time=%s, slice=%s, status=%s, pointer=%s, struct_slice=%s, uint32=%s where id=%s `)
-	zmMap, _ := json.Marshal(m.Map)
-	zmPointer, _ := json.Marshal(m.Pointer)
-	zmStructSlice, _ := json.Marshal(m.StructSlice)
-	xargs = append(xargs, m.Name, m.Flag, m.Score, zmMap, m.Time, pq.Array(m.Slice), m.Status, zmPointer, zmStructSlice, time.Unix(int64(m.Uint32), 0), m.Id)
+	xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32), m.Id)
 
 	xholder := make([]interface{}, len(xargs))
 	for i := range xargs {
@@ -384,25 +360,12 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 	for xrows.Next() {
 		xe := &domain.Model{}
 		xdata = append(xdata, xe)
-		var xezMap []byte
-		var xezTime pq.NullTime
-		var xezPointer []byte
-		var xezStructSlice []byte
-		var xezUint32 pq.NullTime
-		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, &xezMap, &xezTime, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, &xezPointer, &xezStructSlice, &xezUint32}
+		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, light.JSON(&xe.Map), &xe.Time, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, light.JSON(&xe.Pointer), light.JSON(&xe.StructSlice), light.Time(&xe.Uint32)}
 		err = xrows.Scan(xdest...)
 		if err != nil {
 			log.Error(err)
 			return
 		}
-		xe.Map = map[string]interface{}{}
-		json.Unmarshal(xezMap, xe.Map)
-		xe.Time = xezTime.Time
-		xe.Pointer = &domain.Model{}
-		json.Unmarshal(xezPointer, &xe.Pointer)
-		xe.StructSlice = []*domain.Model{}
-		json.Unmarshal(xezStructSlice, &xe.StructSlice)
-		xe.Uint32 = uint32(xezUint32.Time.Unix())
 	}
 	if err = xrows.Err(); err != nil {
 		log.Error(err)
@@ -410,14 +373,14 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 	return
 }
 
-// select id, name, flag, score, map, time, slice, status, pointer, struct_slice from models where name like ${m.Name} [{ m.Flag != false } [{ len(ss) != 0 } and status in ( [{range ss}] ) ] and flag=${m.Flag} ] [{ len(m.Slice) != 0 } and slice && ${m.Slice} ] [ and time between ${from} and ${to} ] [{ !from.IsZero() && to.IsZero() } and time >= ${from} ] [{ from.IsZero() && !to.IsZero() } and time <= ${to} ] order by id offset ${offset} limit ${limit}
+// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32 from models where name like ${m.Name} [{ m.Flag != false } [{ len(ss) != 0 } and status in ( [{range ss}] ) ] and flag=${m.Flag} ] [{ len(m.Slice) != 0 } and slice && ${m.Slice} ] [ and time between ${from} and ${to} ] [{ !from.IsZero() && to.IsZero() } and time >= ${from} ] [{ from.IsZero() && !to.IsZero() } and time <= ${to} ] order by id offset ${offset} limit ${limit}
 func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, to time.Time, offset int, limit int, xtx ...*sql.Tx) (xcnt int64, xdata []*domain.Model, err error) {
 	var (
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice from models where name like ${m.Name}
-	xbuf.WriteString(`select id, name, flag, score, map, time, slice, status, pointer, struct_slice from models where name like %s `)
+	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32 from models where name like ${m.Name}
+	xbuf.WriteString(`select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
 	xargs = append(xargs, m.Name)
 	// [{ len(ss) != 0 } and status in ( [{range ss}] ) ] and flag=${m.Flag}
 	if m.Flag != false {
@@ -515,23 +478,12 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	for xrows.Next() {
 		xe := &domain.Model{}
 		xdata = append(xdata, xe)
-		var xezMap []byte
-		var xezTime pq.NullTime
-		var xezPointer []byte
-		var xezStructSlice []byte
-		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, &xezMap, &xezTime, pq.Array(&xe.Slice), &xe.Status, &xezPointer, &xezStructSlice}
+		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, light.JSON(&xe.Map), &xe.Time, pq.Array(&xe.Slice), &xe.Status, light.JSON(&xe.Pointer), light.JSON(&xe.StructSlice), light.Time(&xe.Uint32)}
 		err = xrows.Scan(xdest...)
 		if err != nil {
 			log.Error(err)
 			return
 		}
-		xe.Map = map[string]interface{}{}
-		json.Unmarshal(xezMap, xe.Map)
-		xe.Time = xezTime.Time
-		xe.Pointer = &domain.Model{}
-		json.Unmarshal(xezPointer, &xe.Pointer)
-		xe.StructSlice = []*domain.Model{}
-		json.Unmarshal(xezStructSlice, &xe.StructSlice)
 	}
 	if err = xrows.Err(); err != nil {
 		log.Error(err)

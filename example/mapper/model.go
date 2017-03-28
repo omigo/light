@@ -67,7 +67,7 @@ type ModelMapper interface {
 	// offset ${offset} limit ${limit}
 	List(m *domain.Model, ss []enum.Status, from, to time.Time, offset, limit int, tx ...*sql.Tx) ([]*domain.Model, error)
 
-	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice
+	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32
 	// from models
 	// where name like ${m.Name}
 	// [{ m.Flag != false }
