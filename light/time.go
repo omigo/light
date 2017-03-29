@@ -13,10 +13,10 @@ func Time(a interface{}) interface {
 
 	switch v := a.(type) {
 	case uint32:
-		return &TimeWapper{Time: time.Unix(int64(v), 0), Uint32: v, Valid: v != 0}
+		return &TimeWapper{Time: time.Unix(int64(v), 0), Uint32: &v, Valid: v != 0}
 
 	case *uint32:
-		return &TimeWapper{Time: time.Unix(int64(*v), 0), Uint32: *v, Valid: *v != 0}
+		return &TimeWapper{Time: time.Unix(int64(*v), 0), Uint32: v, Valid: *v != 0}
 
 	default:
 		panic("type not implemented")
@@ -24,7 +24,7 @@ func Time(a interface{}) interface {
 }
 
 type TimeWapper struct {
-	Uint32 uint32
+	Uint32 *uint32
 	Time   time.Time
 	Valid  bool
 }
@@ -39,7 +39,7 @@ func (b TimeWapper) Value() (driver.Value, error) {
 func (b *TimeWapper) Scan(src interface{}) error {
 	b.Time, b.Valid = src.(time.Time)
 	if b.Valid {
-		b.Uint32 = uint32(b.Time.Unix())
+		*b.Uint32 = uint32(b.Time.Unix())
 	}
 	return nil
 }
