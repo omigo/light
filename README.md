@@ -1,4 +1,4 @@
-light
+light [![Build Status](https://travis-ci.org/arstd/light.svg?branch=master)](https://travis-ci.org/arstd/light)
 ================================================================================
 
 Generate Go database query code, sprit from MyBatis/ibatis, GoBatis?
