@@ -179,10 +179,6 @@ func (vt *VarType) Complex() bool {
 	return false
 }
 
-func (vt *VarType) Var2() string {
-	return "z" + strings.Replace(vt.Var, ".", "", -1)
-}
-
 func (vt *VarType) Expr() string {
 	var pkg string
 	if vt.Pkg != "" {
