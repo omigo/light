@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"time"
-
-	"github.com/arstd/log"
 )
 
 // ugly code....
@@ -77,7 +75,6 @@ func (b TimeWapper) Value() (driver.Value, error) {
 }
 
 func (b *TimeWapper) Scan(src interface{}) error {
-	log.Warn(src)
 	if src == nil {
 		return nil
 	}
