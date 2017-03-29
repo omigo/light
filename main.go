@@ -62,10 +62,16 @@ func main() {
 
 	outFile := goFile[:len(goFile)-3] + "impl.go"
 	if !*force {
-		// TODO
-		// if sourceimpl.go newer than source.go
-		// do nothing, skip, return
-		// return
+		outStat, err := os.Stat(outFile)
+		if err != nil {
+			// log.Info(err)
+		} else {
+			goStat, _ := os.Stat(goFile)
+			if !outStat.ModTime().Before(goStat.ModTime()) {
+				fmt.Printf("Generated file: %s, skip!\n", outFile)
+				return
+			}
+		}
 	}
 
 	pkg := &Package{
