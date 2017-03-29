@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-
-	"github.com/arstd/log"
 )
 
 func JSON(a interface{}) interface {
@@ -20,11 +18,7 @@ type JSONWapper struct {
 }
 
 func (b JSONWapper) Value() (driver.Value, error) {
-	js, err := json.Marshal(b.a)
-	if err != nil {
-		log.Error(err)
-	}
-	return js, nil
+	return json.Marshal(b.a)
 }
 
 func (b *JSONWapper) Scan(src interface{}) error {
@@ -39,9 +33,5 @@ func (b *JSONWapper) Scan(src interface{}) error {
 		return nil
 	}
 
-	err := json.Unmarshal(js, b.a)
-	if err != nil {
-		log.Error(err)
-	}
-	return err
+	return json.Unmarshal(js, b.a)
 }
