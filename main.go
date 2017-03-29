@@ -19,10 +19,14 @@ import (
 func usage() {
 	fmt.Fprintln(os.Stderr, `usage: light [flags] [file.go]
 	//go:generate light [flags] [file.go]
+`)
+	flag.PrintDefaults()
+
+	fmt.Fprintln(os.Stderr, `
 examples:
 	light -force -dbvar=db.DB -dbpath=github.com/arstd/light/example/mapper
-	light -force -dbvar=db2.DB -dbpath=github.com/arstd/light/example/mapper`)
-	flag.PrintDefaults()
+	light -force -dbvar=db2.DB -dbpath=github.com/arstd/light/example/mapper
+`)
 	os.Exit(2)
 }
 
@@ -38,7 +42,7 @@ func main() {
 
 	flag.Parse()
 	if *version {
-		fmt.Println("0.5.0")
+		fmt.Println("0.5.5")
 		return
 	}
 

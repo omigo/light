@@ -1,18 +1,19 @@
 light
 ================================================================================
 
-Generate go database code by SQL statement, sprit from MyBatis/ibatis, but no Reflect.
+Generate Go database query code, sprit from MyBatis/ibatis, GoBatis?
 
-7 kind of methods
+8 kinds of methods
 --------------------------------------------------------------------------------
 
-* add: insert into table(name) values('name') returning id
-* modify: update table set name='name' where id=1
-* remove: delete from table where id=1
+* insert: insert into table(name) values('name') returning id
+* batch: batch insert into table(name) values('name'),('name2')
+* update: update table set name='name' where id=1
+* delete: delete from table where id=1
 * get: select id, name from table where id=1
 * count: select count(id) from table where id < 1000
 * list: select id, name from table where id < 1000 order by id offset 10 limit 5
-* page: select count(id) | id, name from table where id < 1000 [ order by id offset 10 limit 5 ]
+* page: select id, name from table where id < 1000 order by id offset 10 limit 5
 
 
 Usage
@@ -28,15 +29,20 @@ package persist
 // ModelMapper example model
 type ModelMapper interface {
 
-	// select id, name, third_field, status, content
-	// from demos
-	// where name=${d.Name}
-	//   [?{ d.ThirdField != false } and third_field=${d.ThirdField} ]
-	//   [?{ d.Content != nil } and content=${d.Content} ]
-	//   [?{ len(d.Tags) != 0 } and tag in (${d.Tags}) ]
+	// select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32
+	// from models
+	// where name like ${m.Name}
+	// [
+	//   [ and status in ( [{range ss}] ) ]
+	//   and flag=${m.Flag}
+	// ]
+	// [ and slice && ${m.Slice} ]
+	// [ and time between ${from} and ${to} ]
+	// [{ !from.IsZero() && to.IsZero() } and time >= ${from} ]
+	// [{ from.IsZero() && !to.IsZero() } and time <= ${to} ]
 	// order by id
-	// offset ${(d.Page-1)*d.Size} limit ${d.Size}
-	List(d *domain.Demo, tx *sql.Tx) ([]*domain.Demo, error)
+	// offset ${offset} limit ${limit}
+	Page(m *domain.Model, ss []enum.Status, from, to time.Time, offset, limit int, tx ...*sql.Tx) (total int64, data []*domain.Model, err error)
 }
 ```
 
@@ -60,6 +66,7 @@ usage: light [flags] [file.go]
 examples:
 	light -force -dbvar=db.DB -dbpath=github.com/arstd/light/example/mapper
 	light -force -dbvar=db2.DB -dbpath=github.com/arstd/light/example/mapper
+
   -dbpath string
     	path of db to open transaction and execute SQL statements
   -dbvar string
