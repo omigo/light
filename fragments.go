@@ -164,15 +164,21 @@ func extractArgs(f *Fragment) {
 			quote = true
 
 		case '{':
-			if i > 0 && f.Stmt[i-1] == '$' {
-				buf.WriteString(f.Stmt[last+1 : i-1])
-				last = i
-				left++
+			if i > 0 {
+				if f.Stmt[i-1] == '$' {
+					buf.WriteString(f.Stmt[last+1 : i-1])
+					last = i
+					left++
+				} else if f.Stmt[i-1] == '#' {
+					buf.WriteString(f.Stmt[last+1 : i-1])
+					last = i
+					left--
+					log.Debug(buf.String())
+				}
 			}
 
 		case '}':
-			left--
-			if left == 0 {
+			if left == 1 {
 				a := &VarType{
 					Var: strings.TrimSpace(f.Stmt[last+1 : i]),
 				}
@@ -180,7 +186,21 @@ func extractArgs(f *Fragment) {
 
 				buf.WriteString("%s")
 				last = i
+			} else if left == -1 {
+
+				a := &VarType{
+					Var:     strings.TrimSpace(f.Stmt[last+1 : i]),
+					Hashtag: true,
+				}
+				f.Args = append(f.Args, a)
+
+				buf.WriteString("%s")
+				last = i
+
+				log.Debug(buf.String())
 			}
+
+			left = 0
 		}
 	}
 	buf.WriteString(f.Stmt[last+1:])

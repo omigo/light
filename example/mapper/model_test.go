@@ -259,7 +259,7 @@ func TestModelMapperPage(t *testing.T) {
 		t.Fatalf("insert error: %s", err)
 	}
 	defer RollbackTx(tx)
-	cnt, ms, err := mapper.Page(m, ss, time.Now().AddDate(0, 0, -1), time.Now(), 0, 20, tx)
+	cnt, ms, err := mapper.Page(m, ss, time.Now().AddDate(0, 0, -1), time.Now(), "id desc", 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}

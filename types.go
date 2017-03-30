@@ -112,6 +112,8 @@ type VarType struct {
 
 	Deep   bool       `json:"Deep,omitempty"` //  深入解析这个类型
 	Fields []*VarType `json:"Fields,omitempty"`
+
+	Hashtag bool `json:"Hashtag,omitempty"`
 }
 
 func (vt *VarType) PGArray() bool {

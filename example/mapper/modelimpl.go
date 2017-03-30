@@ -28,7 +28,7 @@ func (*ModelMapperImpl) Insert(m *domain.Model, xtx ...*sql.Tx) (err error) {
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id `)
+	xbuf.WriteString(fmt.Sprintf(`insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id `, "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s"))
 	xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32))
 
 	xholder := make([]interface{}, len(xargs))
@@ -63,7 +63,7 @@ func (*ModelMapperImpl) BatchInsert(ms []*domain.Model, xtx ...*sql.Tx) (xa int6
 		if i != 0 {
 			xbuf.WriteString(", ")
 		}
-		xbuf.WriteString(`(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) `)
+		xbuf.WriteString(fmt.Sprintf(`(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) `, "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s"))
 		xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32))
 	}
 
@@ -94,7 +94,7 @@ func (*ModelMapperImpl) Get(id int, xtx ...*sql.Tx) (xobj *domain.Model, err err
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where id=%s `)
+	xbuf.WriteString(fmt.Sprintf(`select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where id=%s `, "%s"))
 	xargs = append(xargs, id)
 
 	xholder := make([]interface{}, len(xargs))
@@ -125,7 +125,7 @@ func (*ModelMapperImpl) Update(m *domain.Model, xtx ...*sql.Tx) (xa int64, err e
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`update models set name=%s, flag=%s, score=%s, map=%s, time=%s, slice=%s, status=%s, pointer=%s, struct_slice=%s, uint32=%s where id=%s `)
+	xbuf.WriteString(fmt.Sprintf(`update models set name=%s, flag=%s, score=%s, map=%s, time=%s, slice=%s, status=%s, pointer=%s, struct_slice=%s, uint32=%s where id=%s `, "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s"))
 	xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32), m.Id)
 
 	xholder := make([]interface{}, len(xargs))
@@ -155,7 +155,7 @@ func (*ModelMapperImpl) Delete(id int, xtx ...*sql.Tx) (xa int64, err error) {
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`delete from models where id=%s `)
+	xbuf.WriteString(fmt.Sprintf(`delete from models where id=%s `, "%s"))
 	xargs = append(xargs, id)
 
 	xholder := make([]interface{}, len(xargs))
@@ -185,10 +185,10 @@ func (*ModelMapperImpl) Count(m *domain.Model, ss []enum.Status, xtx ...*sql.Tx)
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`select count(*) from models where name like %s `)
+	xbuf.WriteString(fmt.Sprintf(`select count(*) from models where name like %s `, "%s"))
 	xargs = append(xargs, m.Name)
 	if m.Flag {
-		xbuf.WriteString(`and flag=%s `)
+		xbuf.WriteString(fmt.Sprintf(`and flag=%s `, "%s"))
 		xargs = append(xargs, m.Flag)
 	}
 	if len(m.Array) != 0 {
@@ -197,7 +197,7 @@ func (*ModelMapperImpl) Count(m *domain.Model, ss []enum.Status, xtx ...*sql.Tx)
 			if i != 0 {
 				xbuf.WriteString(", ")
 			}
-			xbuf.WriteString(`%s `)
+			xbuf.WriteString(fmt.Sprintf(`%s `, "%s"))
 			xargs = append(xargs, v)
 		}
 		xbuf.WriteString(`] `)
@@ -208,13 +208,13 @@ func (*ModelMapperImpl) Count(m *domain.Model, ss []enum.Status, xtx ...*sql.Tx)
 			if i != 0 {
 				xbuf.WriteString(", ")
 			}
-			xbuf.WriteString(`%s `)
+			xbuf.WriteString(fmt.Sprintf(`%s `, "%s"))
 			xargs = append(xargs, v)
 		}
 		xbuf.WriteString(`) `)
 	}
 	if len(m.Slice) != 0 {
-		xbuf.WriteString(`and slice && %s `)
+		xbuf.WriteString(fmt.Sprintf(`and slice && %s `, "%s"))
 		xargs = append(xargs, pq.Array(m.Slice))
 	}
 
@@ -244,7 +244,7 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
+	xbuf.WriteString(fmt.Sprintf(`select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where name like %s `, "%s"))
 	xargs = append(xargs, m.Name)
 	if len(ss) != 0 && m.Flag && !from.IsZero() && to.IsZero() {
 		if len(ss) != 0 {
@@ -253,30 +253,30 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 				if i != 0 {
 					xbuf.WriteString(", ")
 				}
-				xbuf.WriteString(`%s `)
+				xbuf.WriteString(fmt.Sprintf(`%s `, "%s"))
 				xargs = append(xargs, v)
 			}
 			xbuf.WriteString(`) `)
 		}
 		if m.Flag {
-			xbuf.WriteString(`and flag=%s `)
+			xbuf.WriteString(fmt.Sprintf(`and flag=%s `, "%s"))
 			xargs = append(xargs, m.Flag)
 		}
 		if !from.IsZero() && to.IsZero() {
-			xbuf.WriteString(`and time >= %s `)
+			xbuf.WriteString(fmt.Sprintf(`and time >= %s `, "%s"))
 			xargs = append(xargs, from)
 		}
 	}
 	if !from.IsZero() && !to.IsZero() {
-		xbuf.WriteString(`and time between %s and %s `)
+		xbuf.WriteString(fmt.Sprintf(`and time between %s and %s `, "%s", "%s"))
 		xargs = append(xargs, from, to)
 	}
 	if !from.IsZero() && to.IsZero() {
-		xbuf.WriteString(`and time >= %s `)
+		xbuf.WriteString(fmt.Sprintf(`and time >= %s `, "%s"))
 		xargs = append(xargs, from)
 	}
 	if from.IsZero() && !to.IsZero() {
-		xbuf.WriteString(`and time <= %s `)
+		xbuf.WriteString(fmt.Sprintf(`and time <= %s `, "%s"))
 		xargs = append(xargs, to)
 	}
 	if len(m.Array) != 0 {
@@ -285,16 +285,16 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 			if i != 0 {
 				xbuf.WriteString(", ")
 			}
-			xbuf.WriteString(`%s `)
+			xbuf.WriteString(fmt.Sprintf(`%s `, "%s"))
 			xargs = append(xargs, v)
 		}
 		xbuf.WriteString(`] `)
 	}
 	if len(m.Slice) != 0 {
-		xbuf.WriteString(`and slice && %s `)
+		xbuf.WriteString(fmt.Sprintf(`and slice && %s `, "%s"))
 		xargs = append(xargs, pq.Array(m.Slice))
 	}
-	xbuf.WriteString(`order by id offset %s limit %s `)
+	xbuf.WriteString(fmt.Sprintf(`order by id offset %s limit %s `, "%s", "%s"))
 	xargs = append(xargs, offset, limit)
 
 	xholder := make([]interface{}, len(xargs))
@@ -332,7 +332,7 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 	return
 }
 
-func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, to time.Time, offset int, limit int, xtx ...*sql.Tx) (xcnt int64, xdata []*domain.Model, err error) {
+func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, to time.Time, orderBy string, offset int, limit int, xtx ...*sql.Tx) (xcnt int64, xdata []*domain.Model, err error) {
 	var (
 		exec  light.Execer = db
 		xbuf  bytes.Buffer
@@ -341,7 +341,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
+	xbuf.WriteString(fmt.Sprintf(`select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32 from models where name like %s `, "%s"))
 	xargs = append(xargs, m.Name)
 	if m.Flag != false {
 		if len(ss) != 0 {
@@ -350,31 +350,31 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 				if i != 0 {
 					xbuf.WriteString(", ")
 				}
-				xbuf.WriteString(`%s `)
+				xbuf.WriteString(fmt.Sprintf(`%s `, "%s"))
 				xargs = append(xargs, v)
 			}
 			xbuf.WriteString(`) `)
 		}
-		xbuf.WriteString(`and flag=%s `)
+		xbuf.WriteString(fmt.Sprintf(`and flag=%s `, "%s"))
 		xargs = append(xargs, m.Flag)
 	}
 	if len(m.Slice) != 0 {
-		xbuf.WriteString(`and slice && %s `)
+		xbuf.WriteString(fmt.Sprintf(`and slice && %s `, "%s"))
 		xargs = append(xargs, pq.Array(m.Slice))
 	}
 	if !from.IsZero() && !to.IsZero() {
-		xbuf.WriteString(`and time between %s and %s `)
+		xbuf.WriteString(fmt.Sprintf(`and time between %s and %s `, "%s", "%s"))
 		xargs = append(xargs, from, to)
 	}
 	if !from.IsZero() && to.IsZero() {
-		xbuf.WriteString(`and time >= %s `)
+		xbuf.WriteString(fmt.Sprintf(`and time >= %s `, "%s"))
 		xargs = append(xargs, from)
 	}
 	if from.IsZero() && !to.IsZero() {
-		xbuf.WriteString(`and time <= %s `)
+		xbuf.WriteString(fmt.Sprintf(`and time <= %s `, "%s"))
 		xargs = append(xargs, to)
 	}
-	xbuf.WriteString(`order by id offset %s limit %s `)
+	xbuf.WriteString(fmt.Sprintf(`order by %s offset %s limit %s `, orderBy, "%s", "%s"))
 	xargs = append(xargs, offset, limit)
 
 	xholder := make([]interface{}, len(xargs))

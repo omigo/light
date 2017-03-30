@@ -39,17 +39,28 @@ import (
                         if {{.Cond}} {
                     {{- end}}
                             {{- if .Prepare}}
-                                xbuf.WriteString(`{{.Prepare}} `)
+                                {{- if .Args}}
+                                    xbuf.WriteString(fmt.Sprintf(`{{.Prepare}} `
+                                    {{- range .Args}},
+                                        {{- if .Hashtag }} {{- .Var}}
+                                        {{- else}} "%s"
+                                        {{- end}}
+                                    {{- end}} ))
+                                {{- else }}
+                                    xbuf.WriteString(`{{.Prepare}} `)
+                                {{- end}}
+
                             {{- end}}
 
                             {{- if .Args}}
                                 xargs = append(xargs
                             {{- end}}
-                            {{- range .Args}},
-                                {{- if eq .Name "uint32"}}light.Time({{.Var}})
-                                {{- else if .PGArray}}pq.Array({{.Var}})
-                                {{- else if .Complex}}light.JSON({{.Var}})
-                                {{- else}}{{- .Var}}
+                            {{- range .Args}}
+                                {{- if .Hashtag}}
+                                {{- else if eq .Name "uint32"}} ,light.Time({{.Var}})
+                                {{- else if .PGArray}} ,pq.Array({{.Var}})
+                                {{- else if .Complex}} ,light.JSON({{.Var}})
+                                {{- else}} ,{{- .Var}}
                                 {{- end}}
                             {{- end}}
                             {{- if .Args}} ) {{- end}}

@@ -77,7 +77,7 @@ type ModelMapper interface {
 	// [ and time between ${from} and ${to} ]
 	// [{ !from.IsZero() && to.IsZero() } and time >= ${from} ]
 	// [{ from.IsZero() && !to.IsZero() } and time <= ${to} ]
-	// order by id
+	// order by #{orderBy}
 	// offset ${offset} limit ${limit}
-	Page(m *domain.Model, ss []enum.Status, from, to time.Time, offset, limit int, tx ...*sql.Tx) (int64, []*domain.Model, error)
+	Page(m *domain.Model, ss []enum.Status, from, to time.Time, orderBy string, offset, limit int, tx ...*sql.Tx) (int64, []*domain.Model, error)
 }

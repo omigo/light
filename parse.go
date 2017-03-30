@@ -34,7 +34,6 @@ func ParseGoFile(pkg *Package) {
 	pkg.Path = info.Pkg.Path()
 	pkg.Name = info.Pkg.Name()
 	parseImports(pkg, info.Files[0].Imports)
-	log.Warn(pkg.Imports)
 
 	for k, v := range info.Defs {
 		if k.Obj == nil || k.Obj.Kind != ast.Typ {
@@ -85,7 +84,6 @@ func ParseGoFile(pkg *Package) {
 func parseImports(pkg *Package, imports []*ast.ImportSpec) {
 	for _, spec := range imports {
 		imp := spec.Path.Value
-		log.Warn(imp)
 		// TODO must fix package name conflict
 		if imp[0] == '"' {
 			i := strings.LastIndex(imp, "/")
@@ -99,7 +97,6 @@ func parseImports(pkg *Package, imports []*ast.ImportSpec) {
 			i := strings.Index(imp, " ")
 			pkg.Imports[imp[:i]] = imp[i+1 : len(imp)-1]
 		}
-		log.Warn(pkg.Imports)
 	}
 }
 
