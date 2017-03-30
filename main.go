@@ -73,6 +73,7 @@ func main() {
 			}
 		}
 	}
+	os.Remove(outFile)
 
 	pkg := &Package{
 		Source:  goFile,
