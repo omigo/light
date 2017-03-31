@@ -94,6 +94,24 @@ func varTypesExpr(vts []*VarType) string {
 	return strings.Join(elems, ", ")
 }
 
+type Fragment struct {
+	Cond    string     `json:"Cond,omitempty"`
+	Stmt    string     `json:"Stmt,omitempty"`
+	Prepare string     `json:"Prepare,omitempty"`
+	Args    []*VarType `json:"Args,omitempty"`
+
+	Range     *VarType `json:"Range,omitempty"`
+	Index     *VarType `json:"Index,omitempty"`
+	Iterator  *VarType `json:"Iterator,omitempty"`
+	Seperator string   `json:"Seperator,omitempty"`
+
+	Fragments []*Fragment `json:"Fragments,omitempty"`
+
+	Bracket bool `json:"Bracket,omitempty"`
+
+	Hashtag bool `json:"Hashtag,omitempty"`
+}
+
 type VarType struct {
 	// ms []*model.Model
 	Var string `json:"Var,omitempty"` //  ms
@@ -112,8 +130,6 @@ type VarType struct {
 
 	Deep   bool       `json:"Deep,omitempty"` //  深入解析这个类型
 	Fields []*VarType `json:"Fields,omitempty"`
-
-	Hashtag bool `json:"Hashtag,omitempty"`
 }
 
 func (vt *VarType) PGArray() bool {
@@ -187,20 +203,4 @@ func (vt *VarType) Expr() string {
 		pkg = vt.Pkg + "."
 	}
 	return fmt.Sprintf("%s %s%s%s%s%s", vt.Var, vt.Array, vt.Slice, vt.Pointer, pkg, vt.Name)
-}
-
-type Fragment struct {
-	Cond    string     `json:"Cond,omitempty"`
-	Stmt    string     `json:"Stmt,omitempty"`
-	Prepare string     `json:"Prepare,omitempty"`
-	Args    []*VarType `json:"Args,omitempty"`
-
-	Range     *VarType `json:"Range,omitempty"`
-	Index     *VarType `json:"Index,omitempty"`
-	Iterator  *VarType `json:"Iterator,omitempty"`
-	Seperator string   `json:"Seperator,omitempty"`
-
-	Fragments []*Fragment `json:"Fragments,omitempty"`
-
-	Bracket bool `json:"Bracket,omitempty"`
 }

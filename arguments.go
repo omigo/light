@@ -81,12 +81,10 @@ func fillRange(m *Method, f *Fragment) {
 
 				tmp := *param
 				tmp.Var = f.Range.Var
-				tmp.Hashtag = f.Range.Hashtag
 				*f.Range = tmp
 
 				iter := tmp
 				iter.Var = f.Iterator.Var
-				tmp.Hashtag = f.Iterator.Hashtag
 				iter.Slice = ""
 				iter.Array = ""
 				*f.Iterator = iter
@@ -103,12 +101,10 @@ func fillRange(m *Method, f *Fragment) {
 
 						tmp := *field
 						tmp.Var = f.Range.Var
-						tmp.Hashtag = f.Range.Hashtag
 						*f.Range = tmp
 
 						iter := tmp
 						iter.Var = f.Iterator.Var
-						tmp.Hashtag = f.Iterator.Hashtag
 						iter.Slice = ""
 						iter.Array = ""
 						*f.Iterator = iter
@@ -154,7 +150,6 @@ func fillArgs(m *Method, f *Fragment) {
 						if field.Var == sel[1] {
 							tmp := *field
 							tmp.Var = vt.Var
-							tmp.Hashtag = vt.Hashtag
 							*vt = tmp
 						}
 					}
@@ -174,7 +169,6 @@ func fillArgs(m *Method, f *Fragment) {
 				case 1:
 					tmp := *param
 					tmp.Var = vt.Var
-					tmp.Hashtag = vt.Hashtag
 					*vt = tmp
 
 				case 2:
@@ -185,7 +179,6 @@ func fillArgs(m *Method, f *Fragment) {
 						if field.Var == sel[1] {
 							tmp := *field
 							tmp.Var = vt.Var
-							tmp.Hashtag = vt.Hashtag
 							*vt = tmp
 						}
 					}

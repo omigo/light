@@ -40,8 +40,7 @@ func splitToFragments(doc string) (fs []*Fragment) {
 						Cond: "",
 						Stmt: part,
 					}
-					fs = append(fs, f)
-					extractArgs(f)
+					fs = extractArgs(fs, f)
 				}
 			}
 			left++
@@ -59,8 +58,7 @@ func splitToFragments(doc string) (fs []*Fragment) {
 						if f.Range == nil {
 							log.Panicf("miss statement: %s", part)
 						}
-						fs = append(fs, f)
-						extractArgs(f)
+						fs = extractArgs(fs, f)
 					} else {
 						nests := splitToFragments(sub)
 						if len(nests) == 0 {
@@ -91,8 +89,7 @@ func splitToFragments(doc string) (fs []*Fragment) {
 			Cond: "",
 			Stmt: part,
 		}
-		fs = append(fs, f)
-		extractArgs(f)
+		fs = extractArgs(fs, f)
 	}
 
 	return fs
@@ -146,7 +143,8 @@ func checkRange(cond, sub string) (f *Fragment) {
 	return
 }
 
-func extractArgs(f *Fragment) {
+func extractArgs(fs []*Fragment, f *Fragment) []*Fragment {
+	fs = append(fs, f)
 	buf := &bytes.Buffer{}
 
 	quote, left, last := false, 0, -1
@@ -187,23 +185,28 @@ func extractArgs(f *Fragment) {
 				buf.WriteString("%s")
 				last = i
 			} else if left == -1 {
-
-				a := &VarType{
-					Var:     strings.TrimSpace(f.Stmt[last+1 : i]),
+				fs = append(fs, &Fragment{
+					Stmt:    strings.TrimSpace(f.Stmt[last-1 : i+1]),
 					Hashtag: true,
-				}
-				f.Args = append(f.Args, a)
-
-				buf.WriteString("%s")
-				last = i
-
-				log.Debug(buf.String())
+					Args: []*VarType{
+						{
+							Var: strings.TrimSpace(f.Stmt[last+1 : i]),
+						},
+					},
+				})
+				fs = extractArgs(fs, &Fragment{
+					Stmt: strings.TrimSpace(f.Stmt[i+1:]),
+				})
+				f.Stmt = strings.TrimSpace(f.Stmt[:last-1])
+				f.Prepare = strings.TrimSpace(buf.String())
+				return fs
 			}
 
 			left = 0
 		}
 	}
-	buf.WriteString(f.Stmt[last+1:])
+	buf.WriteString(strings.TrimSpace(f.Stmt[last+1:]))
 
 	f.Prepare = buf.String()
+	return fs
 }
