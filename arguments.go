@@ -23,16 +23,13 @@ func fillCond(f *Fragment) {
 			cs = append(cs, getCond(arg))
 		}
 		for _, x := range f.Fragments {
-			if x.Range != nil {
-				cs = append(cs, fmt.Sprintf("len(%s) != 0", x.Range.Var))
-				continue
-			}
 			x.Bracket = true
 			fillCond(x)
-			cs = append(cs, x.Cond)
+			if x.Cond != "" {
+				cs = append(cs, x.Cond)
+			}
 		}
 		f.Cond = strings.Join(cs, " && ")
-		f.Cond = strings.Trim(f.Cond, " &")
 	}
 }
 
