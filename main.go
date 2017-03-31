@@ -31,7 +31,7 @@ examples:
 }
 
 func main() {
-	// log.SetLevel(log.Linfo)
+	log.SetLevel(log.Linfo)
 	log.SetFormat("2006-01-02 15:04:05.999 info examples/main.go:88 message")
 
 	dbVar := flag.String("dbvar", "db", "variable of db to open transaction and execute SQL statements")
@@ -92,7 +92,7 @@ func main() {
 
 	ParseGoFile(pkg)
 	Prepare(pkg)
-	log.JSONIndent(pkg)
+	// log.JSONIndent(pkg)
 
 	paths := strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator))
 	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "postgresql.pq.gotemplate")

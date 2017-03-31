@@ -144,30 +144,6 @@ func checkRange(cond, sub string) (f *Fragment) {
 }
 
 func extractArgs(fs []*Fragment, f *Fragment) []*Fragment {
-	// args 去重，如 name like ${query} or mobile like ${query}
-	defer func() {
-		if len(f.Args) < 2 {
-			return
-		}
-
-		last := 1
-		for i := 1; i < len(f.Args); i++ {
-			j := 0
-			for ; j < last; j++ {
-				if f.Args[j].Var == f.Args[i].Var {
-					break
-				}
-			}
-			if j == last {
-				if last != i {
-					f.Args[last] = f.Args[i]
-				}
-				last++
-			}
-		}
-		f.Args = f.Args[:last]
-	}()
-
 	fs = append(fs, f)
 	buf := &bytes.Buffer{}
 

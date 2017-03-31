@@ -29,6 +29,27 @@ func fillCond(f *Fragment) {
 				cs = append(cs, x.Cond)
 			}
 		}
+
+		// 去重
+		if len(cs) > 1 {
+			last := 1
+			for i := 1; i < len(cs); i++ {
+				j := 0
+				for ; j < last; j++ {
+					if cs[j] == cs[i] {
+						break
+					}
+				}
+				if j == last {
+					if last != i {
+						cs[last] = cs[i]
+					}
+					last++
+				}
+			}
+			cs = cs[:last]
+		}
+
 		f.Cond = strings.Join(cs, " && ")
 	}
 }
