@@ -6,7 +6,7 @@ import (
 	"github.com/arstd/log"
 )
 
-func Prepare(pkg *Package) {
+func prepare(pkg *Package) {
 	for _, intf := range pkg.Interfaces {
 		for _, m := range intf.Methods {
 			addPathToImports(pkg, m)

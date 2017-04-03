@@ -63,15 +63,19 @@ More
 # light -h
 usage: light [flags] [file.go]
 	//go:generate light [flags] [file.go]
-examples:
-	light -force -dbvar=db.DB -dbpath=github.com/arstd/light/example/mapper
-	light -force -dbvar=db2.DB -dbpath=github.com/arstd/light/example/mapper
 
   -dbpath string
     	path of db to open transaction and execute SQL statements
   -dbvar string
     	variable of db to open transaction and execute SQL statements (default "db")
-  -force
-    	force to regenerate, even sourceimpl.go file newer than source.go file
+  -quick
+    	if true, use go/types to parse dependences, much fast when built pkg cached; 
+        if false, use go/loader parse source and dependences, much slow (default true)
+  -skip
+    	skip generate if sourceimpl.go file newer than source.go file (default true)
   -v	variable of db to open transaction and execute SQL statements
+
+examples:
+	light -force -dbvar=db.DB -dbpath=github.com/arstd/light/example/mapper
+	light -force -dbvar=db2.DB -dbpath=github.com/arstd/light/example/mapper
 ```

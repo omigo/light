@@ -20,7 +20,6 @@ const (
 
 type Package struct {
 	Source string
-	Path   string
 	Name   string
 
 	DBVar string
@@ -43,6 +42,7 @@ func (pkg *Package) ImportsExpr() string {
 }
 
 type Interface struct {
+	Doc  string
 	Name string
 
 	Methods []*Method

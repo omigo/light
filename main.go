@@ -36,7 +36,8 @@ func main() {
 
 	dbVar := flag.String("dbvar", "db", "variable of db to open transaction and execute SQL statements")
 	dbPath := flag.String("dbpath", "", "path of db to open transaction and execute SQL statements")
-	force := flag.Bool("force", false, "force to regenerate, even sourceimpl.go file newer than source.go file")
+	skip := flag.Bool("skip", true, "skip generate if sourceimpl.go file newer than source.go file")
+	quick := flag.Bool("quick", true, "if true, use go/types to parse dependences, much fast when built pkg cached; \n        if false, use go/loader parse source and dependences, much slow")
 	version := flag.Bool("v", false, "variable of db to open transaction and execute SQL statements")
 	flag.Usage = usage
 
@@ -48,7 +49,7 @@ func main() {
 
 	goFile := os.Getenv("GOFILE")
 	if goFile == "" {
-		if flag.NArg() > 1 {
+		if flag.NArg() > 0 {
 			goFile = flag.Arg(0)
 			if !strings.HasSuffix(goFile, ".go") {
 				fmt.Println("file suffix must match *.go")
@@ -61,7 +62,7 @@ func main() {
 	fmt.Printf("Found  go file: %s\n", goFile)
 
 	outFile := goFile[:len(goFile)-3] + "impl.go"
-	if !*force {
+	if *skip {
 		outStat, err := os.Stat(outFile)
 		if err != nil {
 			// log.Info(err)
@@ -90,8 +91,13 @@ func main() {
 		pkg.Imports[ss[0]] = strings.Trim(*dbPath, `'"`)
 	}
 
-	ParseGoFile(pkg)
-	Prepare(pkg)
+	if *quick {
+		parseGoFile(pkg)
+	} else {
+		parseGoFileByLoader(pkg)
+	}
+
+	prepare(pkg)
 	// log.JSONIndent(pkg)
 
 	paths := strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator))

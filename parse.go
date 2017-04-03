@@ -1,69 +1,103 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
+	"go/importer"
 	"go/parser"
+	"go/token"
 	"go/types"
+	"os/exec"
 	"regexp"
 	"strings"
 
 	"github.com/arstd/log"
-
-	"golang.org/x/tools/go/loader"
 )
 
-var parsed = map[string]*VarType{}
-
-func ParseGoFile(pkg *Package) {
+func parseGoFile(pkg *Package) {
 	defer func() { parsed = nil }()
 
-	conf := loader.Config{
-		ParserMode:          parser.ParseComments,
-		TypeCheckFuncBodies: func(path string) bool { return false },
-	}
-	conf.CreateFromFilenames("arstd/light", pkg.Source)
-	prog, err := conf.Load()
+	goBuild(pkg.Source)
+
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, pkg.Source, nil, parser.ParseComments)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	pkgInfos := prog.InitialPackages()
-	info := pkgInfos[0]
+	pkg.Name = f.Name.Name
+	parseImports(pkg, f.Imports)
 
-	pkg.Path = info.Pkg.Path()
-	pkg.Name = info.Pkg.Name()
-	parseImports(pkg, info.Files[0].Imports)
+	parseComments(pkg, f)
 
-	for k, v := range info.Defs {
+	parseTypes(pkg, fset, f)
+}
+
+func goBuild(goFile string) {
+	log.Debugf("go build -i -v  %s", goFile)
+	cmd := exec.Command("go", "build", "-i", "-v", goFile)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Panic(err)
+	}
+	if bytes.HasSuffix(out, []byte("command-line-arguments\n")) {
+		fmt.Printf("%s", out[:len(out)-23])
+	} else {
+		fmt.Printf("%s", out)
+	}
+}
+
+func parseComments(pkg *Package, f *ast.File) {
+	for _, decl := range f.Decls {
+		if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
+			for _, spec := range genDecl.Specs {
+				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+					if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
+						itf := &Interface{
+							Doc:  getDoc(genDecl.Doc),
+							Name: typeSpec.Name.Name,
+						}
+						pkg.Interfaces = append(pkg.Interfaces, itf)
+
+						for _, field := range interfaceType.Methods.List {
+							m := &Method{
+								Name: field.Names[0].Name,
+								Doc:  getDoc(field.Doc),
+							}
+							itf.Methods = append(itf.Methods, m)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func parseTypes(pkg *Package, fset *token.FileSet, f *ast.File) {
+	info := types.Info{
+		Defs: make(map[*ast.Ident]types.Object),
+	}
+	conf := types.Config{Importer: importer.Default()}
+	_, err := conf.Check(pkg.Name, fset, []*ast.File{f}, &info)
+	if err != nil {
+		panic(err)
+	}
+
+	for k, obj := range info.Defs {
 		if k.Obj == nil || k.Obj.Kind != ast.Typ {
 			continue
 		}
-		typeSpec, ok := k.Obj.Decl.(*ast.TypeSpec)
-		if !ok {
-			continue
-		}
-		interfaceType, ok := typeSpec.Type.(*ast.InterfaceType)
-		if !ok {
-			continue
-		}
-
-		itf := &Interface{
-			Name: typeSpec.Name.Name,
-		}
-		pkg.Interfaces = append(pkg.Interfaces, itf)
-
-		// get method name and doc
-		for _, x := range interfaceType.Methods.List {
-			m := &Method{
-				Name: x.Names[0].Name,
-				Doc:  getDoc(x.Doc),
+		var itf *Interface
+		for _, x := range pkg.Interfaces {
+			if x.Name == k.Name {
+				itf = x
+				break
 			}
-			itf.Methods = append(itf.Methods, m)
 		}
 
 		// get method name and params/returns
-		itfType, _ := v.Type().Underlying().(*types.Interface)
+		itfType, _ := obj.Type().Underlying().(*types.Interface)
 		for i := 0; i < itfType.NumMethods(); i++ {
 			x := itfType.Method(i)
 			var m *Method
