@@ -205,7 +205,7 @@ func extractArgs(fs []*Fragment, f *Fragment) []*Fragment {
 			left = 0
 		}
 	}
-	buf.WriteString(strings.TrimSpace(f.Stmt[last+1:]))
+	buf.WriteString(f.Stmt[last+1:])
 
 	f.Prepare = buf.String()
 	return fs

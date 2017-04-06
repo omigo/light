@@ -98,7 +98,7 @@ func main() {
 	}
 
 	prepare(pkg)
-	// log.JSONIndent(pkg)
+	log.JSONIndent(pkg)
 
 	paths := strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator))
 	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "postgresql.pq.gotemplate")
