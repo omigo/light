@@ -117,9 +117,9 @@ import (
                 var xrows *sql.Rows
                 xrows, err = exec.Query(xquery, xargs...)
                 if err != nil {
-                    log.Error(err)
                     log.Error(xquery)
                     log.Error(xargs...)
+                    log.Error(err)
                     return
                 }
                 defer xrows.Close()
@@ -151,9 +151,9 @@ import (
             {{- else if eq .Kind "count"}}
                 err = exec.QueryRow(xquery, xargs...).Scan(&{{.Return.Var}})
                 if err != nil {
-                    log.Error(err)
                     log.Error(xquery)
                     log.Error(xargs...)
+                    log.Error(err)
                 }
                 return
             {{- /* end count method */}}
@@ -170,9 +170,9 @@ import (
 
                 err = exec.QueryRow(xtquery, xtargs...).Scan(&{{(index .Results 0).Var}})
                 if err != nil {
-                    log.Error(err)
                     log.Error(xquery)
                     log.Error(xargs...)
+                    log.Error(err)
                     return
                 }
                 if {{(index .Results 0).Var}} == 0 {
@@ -185,9 +185,9 @@ import (
                 var xrows *sql.Rows
                 xrows, err = exec.Query(xquery, xargs...)
                 if err != nil {
-                    log.Error(err)
                     log.Error(xquery)
                     log.Error(xargs...)
+                    log.Error(err)
                     return
                 }
                 defer xrows.Close()

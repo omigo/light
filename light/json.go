@@ -18,6 +18,9 @@ type JSONWapper struct {
 }
 
 func (b JSONWapper) Value() (driver.Value, error) {
+	if b.a == nil {
+		return []byte(""), nil
+	}
 	return json.Marshal(b.a)
 }
 
