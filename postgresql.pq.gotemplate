@@ -160,7 +160,7 @@ import (
 
             {{- else if eq .Kind "page"}}
 
-                xfindex := strings.LastIndex(xquery, " from ")
+                xfindex := strings.Index(xquery, " from ")
                 xobindex := strings.LastIndex(xquery, "order by")
                 xtquery := `select count(*)` + xquery[xfindex:xobindex]
                 xdcnt := strings.Count(xquery[xobindex:], "$")
@@ -170,8 +170,8 @@ import (
 
                 err = exec.QueryRow(xtquery, xtargs...).Scan(&{{(index .Results 0).Var}})
                 if err != nil {
-                    log.Error(xquery)
-                    log.Error(xargs...)
+                    log.Error(xtquery)
+                    log.Error(xtargs...)
                     log.Error(err)
                     return
                 }
