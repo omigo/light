@@ -8,7 +8,7 @@ import (
 	"github.com/arstd/light/example/enum"
 )
 
-//go:generate light -force
+//go:generate light -skip=false
 
 // ModelMapper 示例接口
 type ModelMapper interface {

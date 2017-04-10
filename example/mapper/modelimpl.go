@@ -228,9 +228,9 @@ func (*ModelMapperImpl) Count(m *domain.Model, ss []enum.Status, xtx ...*sql.Tx)
 
 	err = exec.QueryRow(xquery, xargs...).Scan(&xcnt)
 	if err != nil {
-		log.Error(err)
 		log.Error(xquery)
 		log.Error(xargs...)
+		log.Error(err)
 	}
 	return
 }
@@ -308,9 +308,9 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 	var xrows *sql.Rows
 	xrows, err = exec.Query(xquery, xargs...)
 	if err != nil {
-		log.Error(err)
 		log.Error(xquery)
 		log.Error(xargs...)
+		log.Error(err)
 		return
 	}
 	defer xrows.Close()
@@ -385,7 +385,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	}
 	xquery := fmt.Sprintf(xbuf.String(), xholder...)
 
-	xfindex := strings.LastIndex(xquery, " from ")
+	xfindex := strings.Index(xquery, " from ")
 	xobindex := strings.LastIndex(xquery, "order by")
 	xtquery := `select count(*)` + xquery[xfindex:xobindex]
 	xdcnt := strings.Count(xquery[xobindex:], "$")
@@ -395,9 +395,9 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 
 	err = exec.QueryRow(xtquery, xtargs...).Scan(&xcnt)
 	if err != nil {
+		log.Error(xtquery)
+		log.Error(xtargs...)
 		log.Error(err)
-		log.Error(xquery)
-		log.Error(xargs...)
 		return
 	}
 	if xcnt == 0 {
@@ -410,9 +410,9 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	var xrows *sql.Rows
 	xrows, err = exec.Query(xquery, xargs...)
 	if err != nil {
-		log.Error(err)
 		log.Error(xquery)
 		log.Error(xargs...)
+		log.Error(err)
 		return
 	}
 	defer xrows.Close()

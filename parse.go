@@ -31,6 +31,9 @@ func parseGoFile(pkg *Package) {
 
 	parseComments(pkg, f)
 
+	// ast.Print(fset, f)
+	// printer.Fprint(os.Stdout, fset, f)
+
 	parseTypes(pkg, fset, f)
 }
 
