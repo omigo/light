@@ -59,7 +59,7 @@ func main() {
 			flag.Usage()
 		}
 	}
-	fmt.Printf("Found  go file: %s\n", goFile)
+	fmt.Printf("Found source file %s.\n", goFile)
 
 	outFile := goFile[:len(goFile)-3] + "impl.go"
 	if *skip {
@@ -69,7 +69,7 @@ func main() {
 		} else {
 			goStat, _ := os.Stat(goFile)
 			if !outStat.ModTime().Before(goStat.ModTime()) {
-				fmt.Printf("Generated file: %s, skip!\n", outFile)
+				fmt.Print("Skip!\n")
 				return
 			}
 		}
@@ -128,5 +128,5 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	fmt.Printf("Generated file: %s\n", outFile)
+	fmt.Printf("Generate implementation file %s.\n", outFile)
 }
