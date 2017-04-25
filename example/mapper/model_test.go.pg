@@ -5,63 +5,79 @@ import (
 	"testing"
 	"time"
 
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
-
 	"github.com/arstd/light/example/domain"
 	"github.com/arstd/light/example/enum"
 	"github.com/arstd/log"
 )
 
-var mock sqlmock.Sqlmock
-
-func TestInit(t *testing.T) {
-	var err error
-	db, mock, err = sqlmock.New()
+func TestCreateTable(t *testing.T) {
+	_, err := db.Exec("drop table if exists models")
 	if err != nil {
-		t.Fatalf("mock error: '%s' ", err)
+		log.Error(err)
 	}
-	// defer db.Close()
+	_, err = db.Exec(`
+		create table models (
+			id serial primary key,
+			name text not null,
+			flag bool not null default false,
+			score decimal(3,1) not null default 0.0,
 
-	mock.ExpectQuery(`insert into .+ returning id`).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+			map jsonb not null default '{}',
+			time timestamptz not null default now(),
+			xarray text[] not null,
+			slice text[] not null,
 
-	mock.ExpectBegin()
-	mock.ExpectQuery(`insert into .+ returning id`).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-	mock.ExpectCommit()
+			status smallint not null default 0,
+			state text not null default '',
 
-	mock.ExpectExec(`insert into .+ values\s*\(.+?\)(\s*,\s*\(.+?\))+`).
-		WillReturnResult(sqlmock.NewResult(3, 3))
-
-	rows := sqlmock.NewRows([]string{"id", "name", "flag", "score", "map",
-		"time", "xarray", "slice", "status", "pointer", "struct_slice", "uint32"}).
-		AddRow(1, "name", true, 1.23, `{"a": 1}`, time.Now(),
-			`{1,2,3}`, `{"Slice Elem 1","Slice Elem 2"}`,
-			enum.StatusNormal, `{"Name": "Pointer"}`,
-			`[{"Name": "StructSlice"}]`, uint32(time.Now().Unix()))
-
-	mock.ExpectQuery(`select`).WillReturnRows(rows)
-
-	mock.ExpectExec(`update`).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-
-	mock.ExpectExec(`delete`).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-
-	mock.ExpectQuery(`select count`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-
-	mock.ExpectQuery(`select.+offset.+`).
-		WillReturnRows(rows)
-
-	mock.ExpectQuery(`select count`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-	mock.ExpectQuery(`select.+offset.+`).
-		WillReturnRows(rows)
+			pointer jsonb not null default '{}',
+			struct_slice jsonb not null default '[]',
+			uint32 timestamptz not null default now()
+		)
+	`)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 var mapper ModelMapper = &ModelMapperImpl{}
 var id int = 1
+
+func TestModelMapperInsertTx(t *testing.T) {
+	m := &domain.Model{
+		Name:  "name",
+		Flag:  true,
+		Score: 1.23,
+
+		Map:   map[string]interface{}{"a": 1},
+		Time:  time.Now().Add(time.Hour),
+		Array: []int64{1, 2, 3},
+		Slice: []string{"Slice Elem 1", "Slice Elem 2"},
+
+		Status:  enum.StatusNormal,
+		Pointer: &domain.Model{Name: "Pointer"},
+		StructSlice: []*domain.Model{
+			{Name: "StructSlice"},
+		},
+
+		Uint32: uint32(time.Now().Unix()),
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Error(err)
+	}
+	defer tx.Commit()
+
+	err = mapper.Insert(m, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatalf("insert error: %s", err)
+	}
+
+	id = m.Id
+	log.Infof("id=%d", m.Id)
+}
 
 func TestModelMapperInsert(t *testing.T) {
 	m := &domain.Model{
@@ -91,42 +107,6 @@ func TestModelMapperInsert(t *testing.T) {
 	log.Infof("id=%d", m.Id)
 }
 
-func TestModelMapperInsertTx(t *testing.T) {
-	m := &domain.Model{
-		Name:  "name",
-		Flag:  true,
-		Score: 1.23,
-
-		Map:   map[string]interface{}{"a": 1},
-		Time:  time.Now().Add(time.Hour),
-		Array: []int64{1, 2, 3},
-		Slice: []string{"Slice Elem 1", "Slice Elem 2"},
-
-		Status:  enum.StatusNormal,
-		Pointer: &domain.Model{Name: "Pointer"},
-		StructSlice: []*domain.Model{
-			{Name: "StructSlice"},
-		},
-
-		Uint32: uint32(time.Now().Unix()),
-	}
-
-	tx, err := db.Begin()
-	if err != nil {
-		t.Error(err)
-	}
-	defer tx.Commit()
-
-	err = mapper.Insert(m)
-	if err != nil {
-		tx.Rollback()
-		t.Fatalf("insert error: %s", err)
-	}
-
-	id = m.Id
-	log.Infof("id=%d", m.Id)
-}
-
 func TestModelMapperBatchInsert(t *testing.T) {
 	m := &domain.Model{
 		Name:  "name",
@@ -146,20 +126,32 @@ func TestModelMapperBatchInsert(t *testing.T) {
 
 		Uint32: uint32(time.Now().Unix()),
 	}
-	a, err := mapper.BatchInsert([]*domain.Model{m, m, m})
+	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+	defer RollbackTx(tx)
+	a, err := mapper.BatchInsert([]*domain.Model{m, m, m}, tx)
 	if err != nil {
 		t.Fatalf("insert error: %s", err)
 	}
 
+	CommitTx(tx)
 	log.Infof("affect %d rows", a)
 }
 
 func TestModelMapperGet(t *testing.T) {
-	m, err := mapper.Get(id)
+	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+	defer RollbackTx(tx)
+	m, err := mapper.Get(id, tx)
 	if err != nil {
 		t.Fatalf("get error: %s", err)
 	}
 
+	CommitTx(tx)
 	log.Info(json.Marshal(m))
 }
 
@@ -181,20 +173,33 @@ func TestModelMapperUpdate(t *testing.T) {
 		},
 		Uint32: 32,
 	}
-
-	a, err := mapper.Update(m)
+	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+	defer RollbackTx(tx)
+	a, err := mapper.Update(m, tx)
 	if err != nil {
 		t.Fatalf("update error: %s", err)
 	}
 
+	CommitTx(tx)
 	log.Infof("affected=%d", a)
 }
 
 func TestModelMapperDelete(t *testing.T) {
-	a, err := mapper.Delete(id)
+	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+	defer RollbackTx(tx)
+	a, err := mapper.Delete(id, tx)
+	CommitTx(tx)
+
 	if err != nil {
 		t.Fatalf("delete error: %s", err)
 	}
+
 	log.JSON(a)
 }
 
@@ -205,11 +210,17 @@ func TestModelMapperCount(t *testing.T) {
 		Status: enum.StatusNormal,
 		Slice:  []string{"Slice Elem 1", "Slice Elem Not Exist"},
 	}
-	count, err := mapper.Count(m, []enum.Status{enum.StatusNormal, enum.StatusDeleted})
+	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+	defer RollbackTx(tx)
+	count, err := mapper.Count(m, []enum.Status{enum.StatusNormal, enum.StatusDeleted}, tx)
 	if err != nil {
 		t.Fatalf("count(%+v) error: %s", m, err)
 	}
 
+	CommitTx(tx)
 	log.Info(count)
 }
 
@@ -221,11 +232,17 @@ func TestModelMapperList(t *testing.T) {
 		Slice: []string{"Slice Elem 1", "Slice Elem Not Exist"},
 	}
 	ss := []enum.Status{enum.StatusNormal, enum.StatusDeleted}
-	ms, err := mapper.List(m, ss, time.Now().AddDate(0, 0, -1), time.Now(), 0, 20)
+	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+	defer RollbackTx(tx)
+	ms, err := mapper.List(m, ss, time.Now().AddDate(0, 0, -1), time.Now(), 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}
 
+	CommitTx(tx)
 	log.Info(json.Marshal(ms))
 }
 
@@ -237,15 +254,17 @@ func TestModelMapperPage(t *testing.T) {
 		Slice: []string{"Slice Elem 1", "Slice Elem Not Exist"},
 	}
 	ss := []enum.Status{enum.StatusNormal, enum.StatusDeleted}
-	cnt, ms, err := mapper.Page(m, ss, time.Now().AddDate(0, 0, -1), time.Now(), "id desc", 0, 20)
+	tx, err := BeginTx()
+	if err != nil {
+		t.Fatalf("insert error: %s", err)
+	}
+	defer RollbackTx(tx)
+	cnt, ms, err := mapper.Page(m, ss, time.Now().AddDate(0, 0, -1), time.Now(), "id desc", 0, 20, tx)
 	if err != nil {
 		t.Fatalf("list(%+v) error: %s", m, err)
 	}
 
+	CommitTx(tx)
 	log.Info(cnt)
 	log.Info(json.Marshal(ms))
-}
-
-func TestClean(t *testing.T) {
-	db.Close()
 }

@@ -13,7 +13,7 @@ const url = "postgres://postgres:@127.0.0.1:5432/test?sslmode=disable"
 
 var db *sql.DB
 
-func init() {
+func Init() {
 	var err error
 	db, err = sql.Open("postgres", url)
 	if err != nil {
@@ -32,16 +32,4 @@ func connect() (err error) {
 
 	log.Infof("successfully connect to %s", url)
 	return nil
-}
-
-func BeginTx() (*sql.Tx, error) {
-	return db.Begin()
-}
-
-func CommitTx(tx *sql.Tx) error {
-	return tx.Commit()
-}
-
-func RollbackTx(tx *sql.Tx) error {
-	return tx.Rollback()
 }
