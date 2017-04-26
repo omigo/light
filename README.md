@@ -69,7 +69,7 @@ usage: light [flags] [file.go]
   -dbvar string
     	variable of db to open transaction and execute SQL statements (default "db")
   -quick
-    	if true, use go/types to parse dependences, much fast when built pkg cached; 
+    	if true, use go/types to parse dependences, much fast when built pkg cached;
         if false, use go/loader parse source and dependences, much slow (default true)
   -skip
     	skip generate if sourceimpl.go file newer than source.go file (default true)
