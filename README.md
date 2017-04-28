@@ -40,9 +40,9 @@ type ModelMapper interface {
 	// [ and time between ${from} and ${to} ]
 	// [{ !from.IsZero() && to.IsZero() } and time >= ${from} ]
 	// [{ from.IsZero() && !to.IsZero() } and time <= ${to} ]
-	// order by id
+	// order by #{sortBy}
 	// offset ${offset} limit ${limit}
-	Page(m *domain.Model, ss []enum.Status, from, to time.Time, offset, limit int, tx ...*sql.Tx) (total int64, data []*domain.Model, err error)
+	Page(m *domain.Model, sortBy string, ss []enum.Status, from, to time.Time, offset, limit int, tx ...*sql.Tx) (total int64, data []*domain.Model, err error)
 }
 ```
 
@@ -77,5 +77,5 @@ usage: light [flags] [file.go]
 
 examples:
 	light -force -dbvar=db.DB -dbpath=github.com/arstd/light/example/mapper
-	light -force -dbvar=db2.DB -dbpath=github.com/arstd/light/example/mapper
+	light -force -dbvar=alias.DB -dbpath=github.com/arstd/light/example/mapper
 ```

@@ -29,7 +29,7 @@ func checkLastParamTx(m *Method) {
 		vt.Slice = "..."
 		vt.Var = "xtx"
 	} else {
-		log.Panicf("last param expect `txs ...*sql.Tx`, but `%s` not", m.Name)
+		log.Panicf("last param expect `tx ...*sql.Tx`, but `%s` not", m.Name)
 	}
 }
 

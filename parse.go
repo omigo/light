@@ -41,13 +41,13 @@ func goBuild(goFile string) {
 	log.Debugf("go build -i -v  %s", goFile)
 	cmd := exec.Command("go", "build", "-i", "-v", goFile)
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Panic(err)
-	}
 	if bytes.HasSuffix(out, []byte("command-line-arguments\n")) {
 		fmt.Printf("%s", out[:len(out)-23])
 	} else {
 		fmt.Printf("%s", out)
+	}
+	if err != nil {
+		log.Panic(err)
 	}
 }
 

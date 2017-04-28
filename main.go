@@ -76,11 +76,13 @@ func main() {
 	}
 	os.Remove(outFile)
 
+	*dbVar = strings.Trim(*dbVar, `'"`)
 	pkg := &Package{
 		Source:  goFile,
 		DBVar:   *dbVar,
 		Imports: map[string]string{},
 	}
+	*dbPath = strings.Trim(*dbPath, `'"`)
 	if *dbPath != "" {
 		ss := strings.Split(*dbVar, ".")
 		if len(ss) != 2 {
