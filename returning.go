@@ -58,6 +58,8 @@ func getFieldsReturings(m *Method, idx int) (rs []*VarType) {
 	for i, f := range fs {
 		fs := strings.Split(f, " ")
 		f = fs[len(fs)-1]
+		fs = strings.Split(f, ".")
+		f = fs[len(fs)-1]
 		f = strings.TrimSpace(f)
 		// TODO model index
 		for _, vt := range m.Results[idx].Fields {
