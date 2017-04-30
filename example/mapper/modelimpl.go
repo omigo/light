@@ -341,7 +341,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`select id, name, flag, score, map, time, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
+	xbuf.WriteString(`select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
 	xargs = append(xargs, m.Name)
 	if m.Flag != false {
 		if len(ss) != 0 {
@@ -421,7 +421,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	for xrows.Next() {
 		xe := &domain.Model{}
 		xdata = append(xdata, xe)
-		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, light.JSON(&xe.Map), &xe.Time, pq.Array(&xe.Slice), &xe.Status, light.JSON(&xe.Pointer), light.JSON(&xe.StructSlice), light.Time(&xe.Uint32)}
+		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, light.JSON(&xe.Map), &xe.Time, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, light.JSON(&xe.Pointer), light.JSON(&xe.StructSlice), light.Time(&xe.Uint32)}
 		err = xrows.Scan(xdest...)
 		if err != nil {
 			log.Error(err)

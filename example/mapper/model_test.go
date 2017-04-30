@@ -2,62 +2,22 @@ package mapper
 
 import (
 	"encoding/json"
+	"flag"
 	"testing"
 	"time"
-
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
 	"github.com/arstd/light/example/domain"
 	"github.com/arstd/light/example/enum"
 	"github.com/arstd/log"
 )
 
-var mock sqlmock.Sqlmock
-
 func TestInit(t *testing.T) {
-	var err error
-	db, mock, err = sqlmock.New()
-	if err != nil {
-		t.Fatalf("mock error: '%s' ", err)
+	var args = flag.Args()
+	if len(args) > 0 && args[0] == "pg" {
+		initPG()
+	} else {
+		initSQLMock(t)
 	}
-	// defer db.Close()
-
-	mock.ExpectQuery(`insert into .+ returning id`).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-
-	mock.ExpectBegin()
-	mock.ExpectQuery(`insert into .+ returning id`).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-	mock.ExpectCommit()
-
-	mock.ExpectExec(`insert into .+ values\s*\(.+?\)(\s*,\s*\(.+?\))+`).
-		WillReturnResult(sqlmock.NewResult(3, 3))
-
-	rows := sqlmock.NewRows([]string{"id", "name", "flag", "score", "map",
-		"time", "xarray", "slice", "status", "pointer", "struct_slice", "uint32"}).
-		AddRow(1, "name", true, 1.23, `{"a": 1}`, time.Now(),
-			`{1,2,3}`, `{"Slice Elem 1","Slice Elem 2"}`,
-			enum.StatusNormal, `{"Name": "Pointer"}`,
-			`[{"Name": "StructSlice"}]`, uint32(time.Now().Unix()))
-
-	mock.ExpectQuery(`select`).WillReturnRows(rows)
-
-	mock.ExpectExec(`update`).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-
-	mock.ExpectExec(`delete`).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-
-	mock.ExpectQuery(`select count`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-
-	mock.ExpectQuery(`select.+offset.+`).
-		WillReturnRows(rows)
-
-	mock.ExpectQuery(`select count`).
-		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(3))
-	mock.ExpectQuery(`select.+offset.+`).
-		WillReturnRows(rows)
 }
 
 var mapper ModelMapper = &ModelMapperImpl{}
@@ -209,7 +169,6 @@ func TestModelMapperCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("count(%+v) error: %s", m, err)
 	}
-
 	log.Info(count)
 }
 
