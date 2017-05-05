@@ -58,7 +58,7 @@ func (*ModelMapperImpl) BatchInsert(ms []*domain.Model, xtx ...*sql.Tx) (xa int6
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values `)
+	xbuf.WriteString(`insert into models(name, flag, score, map, time, xarray as array, slice, status, pointer, struct_slice, uint32) values `)
 	for i, m := range ms {
 		if i != 0 {
 			xbuf.WriteString(", ")
@@ -94,7 +94,7 @@ func (*ModelMapperImpl) Get(id int, xtx ...*sql.Tx) (xobj *domain.Model, err err
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where id=%s `)
+	xbuf.WriteString(`select id, name, flag, score, map, time, xarray as array, slice, status, pointer, struct_slice, uint32 from models where id=%s `)
 	xargs = append(xargs, id)
 
 	xholder := make([]interface{}, len(xargs))
@@ -244,7 +244,7 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
+	xbuf.WriteString(`select id, name, flag, score, map, time, xarray as array, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
 	xargs = append(xargs, m.Name)
 	if len(ss) != 0 && m.Flag && !from.IsZero() && to.IsZero() {
 		if len(ss) != 0 {
@@ -341,7 +341,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	if len(xtx) > 0 {
 		exec = xtx[0]
 	}
-	xbuf.WriteString(`select id, name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
+	xbuf.WriteString(`select id, name, flag, score, map, time, xarray as array, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
 	xargs = append(xargs, m.Name)
 	if m.Flag != false {
 		if len(ss) != 0 {
