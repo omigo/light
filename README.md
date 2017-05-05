@@ -27,7 +27,7 @@ light [![Build Status](https://travis-ci.org/arstd/light.svg?branch=master)](htt
 
 	go get -u -v github.com/arstd/light
 
-1. 按规范编写接口，并在方法上写 SQL 语言 [example/mapper/model.go](example/mapper/model.go)
+1. 按规范编写接口，并在方法上写 SQL 语句 [example/mapper/model.go](example/mapper/model.go)
 
 ```go
 package persist
