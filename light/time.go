@@ -6,38 +6,20 @@ import (
 	"time"
 )
 
-// ugly code....
-
 func Time(a interface{}) interface {
 	driver.Valuer
 	sql.Scanner
 } {
 	switch v := a.(type) {
 	case uint32:
-		if v == 0 {
-			return nil
-		}
 		return &TimeWapper{Uint32: &v, Time: time.Unix(int64(v), 0), Valid: true}
-
 	case int32:
-		if v == 0 {
-			return nil
-		}
 		return &TimeWapper{Int32: &v, Time: time.Unix(int64(v), 0), Valid: true}
 	case int:
-		if v == 0 {
-			return nil
-		}
 		return &TimeWapper{Int: &v, Time: time.Unix(int64(v), 0), Valid: true}
 	case uint64:
-		if v == 0 {
-			return nil
-		}
 		return &TimeWapper{Uint64: &v, Time: time.Unix(int64(v), 0), Valid: true}
 	case int64:
-		if v == 0 {
-			return nil
-		}
 		return &TimeWapper{Int64: &v, Time: time.Unix(v, 0), Valid: true}
 
 	case *uint32:
