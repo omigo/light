@@ -57,10 +57,10 @@ func fillCond(f *Fragment) {
 func getCond(arg *VarType) string {
 	if arg.Slice != "" || arg.Array != "" || arg.Name == "map" {
 		return fmt.Sprintf("len(%s) != 0", arg.Var)
-	} else if arg.Path == "time" && arg.Name == "Time" {
-		return fmt.Sprintf("!%s.IsZero()", arg.Var)
 	} else if arg.Pointer != "" {
 		return fmt.Sprintf("%s != nil", arg.Var)
+	} else if arg.Path == "time" && arg.Name == "Time" {
+		return fmt.Sprintf("!%s.IsZero()", arg.Var)
 	} else {
 		typ := arg.Alias
 		if typ == "" {
@@ -144,10 +144,6 @@ func fillRange(m *Method, f *Fragment) {
 func fillArgs(m *Method, f *Fragment) {
 	for _, vt := range f.Args {
 		sel := strings.Split(vt.Var, ".")
-
-		if sel[0] == "i" {
-			log.JSON("i", f)
-		}
 
 		if f.Range != nil {
 			if sel[0] == f.Index.Var {

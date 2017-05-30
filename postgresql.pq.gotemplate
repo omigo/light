@@ -16,10 +16,12 @@ import (
 {{- range .Interfaces}}
     {{- $itf := .}}
 
-    type {{$itf.Name}}Impl struct{}
+    var {{$itf.Title}} {{$itf.Name}} = &{{$itf.Title}}Impl{}
+
+    type {{$itf.Title}}Impl struct{}
 
     {{- range .Methods}}
-        func (*{{$itf.Name}}Impl) {{.Name}}({{.ParamsExpr}})({{.ResultsExpr}}) {
+        func (*{{$itf.Title}}Impl) {{.Name}}({{.ParamsExpr}})({{.ResultsExpr}}) {
             var (
                 exec  light.Execer = {{$.DBVar}}
                 xbuf  bytes.Buffer
@@ -77,7 +79,7 @@ import (
 
             {{- if ne .Kind "page"}}
                 log.Debug(xquery)
-                log.Debug(xargs...)
+                log.JSON(xargs...)
             {{end}}
 
             {{- if or (eq .Kind "batch") (eq .Kind "update") (eq .Kind "delete")}}
@@ -166,7 +168,7 @@ import (
                 xdcnt := strings.Count(xquery[xobindex:], "$")
                 xtargs := xargs[:len(xargs)-xdcnt]
                 log.Debug(xtquery)
-                log.Debug(xtargs...)
+                log.JSON(xtargs...)
 
                 err = exec.QueryRow(xtquery, xtargs...).Scan(&{{(index .Results 0).Var}})
                 if err != nil {
@@ -180,7 +182,7 @@ import (
                 }
 
                 log.Debug(xquery)
-                log.Debug(xargs...)
+                log.JSON(xargs...)
 
                 var xrows *sql.Rows
                 xrows, err = exec.Query(xquery, xargs...)

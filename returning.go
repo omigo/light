@@ -23,7 +23,7 @@ func getReturnings(m *Method) (rs []*VarType) {
 }
 
 func getInsertReturnings(m *Method) (rs []*VarType) {
-	log.JSONIndent(m)
+	// log.JSONIndent(m)
 	stmt := m.Fragments[len(m.Fragments)-1].Stmt
 
 	fs := strings.Split(stmt[(strings.Index(stmt, "returning ")+len("returning ")):], ",")

@@ -31,7 +31,7 @@ examples:
 }
 
 func main() {
-	log.SetLevel(log.Linfo)
+	// log.SetLevel(log.Linfo)
 	log.SetFormat("2006-01-02 15:04:05.999 info examples/main.go:88 message")
 
 	dbVar := flag.String("dbvar", "db", "variable of db to open transaction and execute SQL statements")
@@ -100,7 +100,7 @@ func main() {
 	}
 
 	prepare(pkg)
-	log.JSONIndent(pkg)
+	// log.JSONIndent(pkg)
 
 	paths := strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator))
 	tmplFile := filepath.Join(paths[0], "src", "github.com/arstd/light", "postgresql.pq.gotemplate")
@@ -121,6 +121,7 @@ func main() {
 	}
 
 	ioutil.WriteFile(outFile, buf.Bytes(), 0644)
+	fmt.Printf("Generate implementation file %s.\n", outFile)
 
 	pretty, err := imports.Process(outFile, buf.Bytes(), nil)
 	if err != nil {
@@ -130,5 +131,4 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	fmt.Printf("Generate implementation file %s.\n", outFile)
 }

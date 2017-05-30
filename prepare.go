@@ -9,6 +9,7 @@ import (
 func prepare(pkg *Package) {
 	for _, intf := range pkg.Interfaces {
 		for _, m := range intf.Methods {
+
 			addPathToImports(pkg, m)
 			m.Kind = getMethodKind(m)
 
@@ -34,24 +35,31 @@ func checkLastParamTx(m *Method) {
 }
 
 func addPathToImports(pkg *Package, m *Method) {
-	// TODO conflict
 	for _, p := range m.Params {
 		if p.Path != "" {
-			pkg.Imports[p.Path[strings.LastIndex(p.Path, "/")+1:]] = p.Path
+			if _, ok := pkg.Imports[p.Path]; !ok {
+				pkg.Imports[p.Path] = ""
+			}
 		}
 		for _, f := range p.Fields {
 			if f.Path != "" {
-				pkg.Imports[f.Path[strings.LastIndex(f.Path, "/")+1:]] = f.Path
+				if _, ok := pkg.Imports[p.Path]; !ok {
+					pkg.Imports[f.Path] = ""
+				}
 			}
 		}
 	}
 	for _, p := range m.Results {
 		if p.Path != "" {
-			pkg.Imports[p.Path[strings.LastIndex(p.Path, "/")+1:]] = p.Path
+			if _, ok := pkg.Imports[p.Path]; !ok {
+				pkg.Imports[p.Path] = ""
+			}
 		}
 		for _, f := range p.Fields {
 			if f.Path != "" {
-				pkg.Imports[f.Path[strings.LastIndex(f.Path, "/")+1:]] = f.Path
+				if _, ok := pkg.Imports[p.Path]; !ok {
+					pkg.Imports[f.Path] = ""
+				}
 			}
 		}
 	}

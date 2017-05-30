@@ -70,8 +70,8 @@ func parseGoFileByLoader(pkg *Package) {
 			}
 
 			y := x.Type().(*types.Signature)
-			m.Params = getTypeValues(y.Params())
-			m.Results = getTypeValues(y.Results())
+			m.Params = getTypeValues(pkg, y.Params())
+			m.Results = getTypeValues(pkg, y.Results())
 		}
 	}
 }

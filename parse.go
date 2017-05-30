@@ -25,20 +25,22 @@ func parseGoFile(pkg *Package) {
 	if err != nil {
 		log.Panic(err)
 	}
+	// ast.Print(fset, f)
 
 	pkg.Name = f.Name.Name
 	parseImports(pkg, f.Imports)
 
+	// log.JSONIndent(pkg)
+
 	parseComments(pkg, f)
 
-	// ast.Print(fset, f)
 	// printer.Fprint(os.Stdout, fset, f)
 
 	parseTypes(pkg, fset, f)
 }
 
 func goBuild(goFile string) {
-	log.Debugf("go build -i -v  %s", goFile)
+	// log.Debugf("go build -i -v  %s", goFile)
 	cmd := exec.Command("go", "build", "-i", "-v", goFile)
 	out, err := cmd.CombinedOutput()
 	if bytes.HasSuffix(out, []byte("command-line-arguments\n")) {
@@ -112,28 +114,22 @@ func parseTypes(pkg *Package, fset *token.FileSet, f *ast.File) {
 			}
 
 			y := x.Type().(*types.Signature)
-			m.Params = getTypeValues(y.Params())
-			m.Results = getTypeValues(y.Results())
+			m.Params = getTypeValues(pkg, y.Params())
+			m.Results = getTypeValues(pkg, y.Results())
 		}
 	}
 }
 
 func parseImports(pkg *Package, imports []*ast.ImportSpec) {
 	for _, spec := range imports {
-		imp := spec.Path.Value
-		// TODO must fix package name conflict
-		if imp[0] == '"' {
-			i := strings.LastIndex(imp, "/")
-			if i == -1 {
-				i = 1
-			} else {
-				i++
-			}
-			pkg.Imports[imp[i:len(imp)-1]] = imp[1 : len(imp)-1]
-		} else {
-			i := strings.Index(imp, " ")
-			pkg.Imports[imp[:i]] = imp[i+1 : len(imp)-1]
+		var short string
+		if spec.Name != nil {
+			short = spec.Name.Name
 		}
+		path := spec.Path.Value
+		path = path[1 : len(path)-1]
+
+		pkg.Imports[path] = short
 	}
 }
 
@@ -147,14 +143,14 @@ func getDoc(cg *ast.CommentGroup) (comment string) {
 	return strings.TrimSpace(comment)
 }
 
-func getTypeValues(tuple *types.Tuple) (vts []*VarType) {
+func getTypeValues(p *Package, tuple *types.Tuple) (vts []*VarType) {
 	for i := 0; i < tuple.Len(); i++ {
 		x := tuple.At(i)
 		vt := &VarType{
 			Var:  x.Name(),
 			Deep: true,
 		}
-		parseType(x.Type(), vt)
+		parseType(p, x.Type(), vt)
 
 		vts = append(vts, vt)
 	}
@@ -162,9 +158,9 @@ func getTypeValues(tuple *types.Tuple) (vts []*VarType) {
 	return vts
 }
 
-func parseType(t types.Type, vt *VarType) {
+func parseType(p *Package, t types.Type, vt *VarType) {
 	tt := t.String()
-	log.JSON(tt, vt)
+	// log.JSON(tt, vt)
 
 	// TODO not deep use deep, but no reverse
 	k := fmt.Sprintf("%s%t", tt, vt.Deep)
@@ -183,14 +179,17 @@ func parseType(t types.Type, vt *VarType) {
 				return
 			}
 			vt.Path = t.Obj().Pkg().Path()
-			vt.Pkg = t.Obj().Pkg().Name()
+			vt.Pkg = p.Imports[vt.Path]
+			if vt.Pkg == "" {
+				vt.Pkg = t.Obj().Pkg().Name()
+			}
 		}
 
 		if tt == "database/sql.Tx" || tt == "time.Time" {
 			vt.Deep = false
 			return
 		}
-		parseType(t.Underlying(), vt)
+		parseType(p, t.Underlying(), vt)
 
 	case *types.Basic:
 		if vt.Name != "" {
@@ -200,15 +199,15 @@ func parseType(t types.Type, vt *VarType) {
 		}
 
 	case *types.Pointer:
-		parseType(t.Elem(), vt)
+		parseType(p, t.Elem(), vt)
 		vt.Pointer = "*"
 
 	case *types.Array:
-		parseType(t.Elem(), vt)
+		parseType(p, t.Elem(), vt)
 		vt.Array = fmt.Sprintf("[%d]", t.Len())
 
 	case *types.Slice:
-		parseType(t.Elem(), vt)
+		parseType(p, t.Elem(), vt)
 		vt.Slice = "[]"
 
 	case *types.Map:
@@ -220,23 +219,28 @@ func parseType(t types.Type, vt *VarType) {
 		if !vt.Deep {
 			return
 		}
-		parseStruct(t, vt)
+		parseStruct(p, t, vt)
 
 	default:
 		log.Warnf("unimplement %#v", t)
 	}
 
 	tmp := *vt
+	var hasPath string
+	if tmp.Path != "" {
+		hasPath = "."
+	}
+	k = tmp.Slice + tmp.Pointer + tmp.Path + hasPath + tmp.Name + fmt.Sprintf("%t", tmp.Deep)
 	parsed[k] = &tmp
 }
 
-func parseStruct(t *types.Struct, x *VarType) {
+func parseStruct(p *Package, t *types.Struct, x *VarType) {
 	for i := 0; i < t.NumFields(); i++ {
 		f := t.Field(i)
 		vt := &VarType{
 			Var: f.Name(),
 		}
-		parseType(f.Type(), vt)
+		parseType(p, f.Type(), vt)
 
 		vt.Tag = getLightTag(t.Tag(i))
 		setTag(vt)

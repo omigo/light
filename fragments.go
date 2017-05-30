@@ -10,7 +10,7 @@ import (
 )
 
 func splitToFragments(doc string) (fs []*Fragment) {
-	log.Debug(doc)
+	// log.Debug(doc)
 
 	ignore, left, last := false, 0, -1
 	for i, c := range doc {

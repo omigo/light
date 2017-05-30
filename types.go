@@ -31,12 +31,8 @@ type Package struct {
 
 func (pkg *Package) ImportsExpr() string {
 	s := make([]string, 0, len(pkg.Imports))
-	for k, v := range pkg.Imports {
-		if strings.HasSuffix("/"+v, "/"+k) {
-			s = append(s, `"`+v+`"`)
-		} else {
-			s = append(s, k+` "`+v+`"`)
-		}
+	for path, short := range pkg.Imports {
+		s = append(s, short+` "`+path+`"`)
 	}
 	return strings.Join(s, "\n")
 }
@@ -48,8 +44,11 @@ type Interface struct {
 	Methods []*Method
 }
 
-func (itf *Interface) ImplName() string {
-	return itf.Name + "Impl"
+func (i *Interface) Title() string {
+	if i.Name[0] == 'I' {
+		return i.Name[1:]
+	}
+	return i.Name + "s"
 }
 
 type Method struct {
@@ -191,7 +190,7 @@ func (vt *VarType) MakeExpr() string {
 }
 
 func (vt *VarType) Complex() bool {
-	if len(vt.Fields) > 0 || vt.Pointer != "" || vt.Slice != "" || vt.Array != "" || vt.Name == "map" {
+	if len(vt.Fields) > 0 || vt.Slice != "" || vt.Array != "" || vt.Name == "map" {
 		return true
 	}
 	return false
