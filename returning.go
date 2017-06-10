@@ -26,7 +26,14 @@ func getInsertReturnings(m *Method) (rs []*VarType) {
 	// log.JSONIndent(m)
 	stmt := m.Fragments[len(m.Fragments)-1].Stmt
 
-	fs := strings.Split(stmt[(strings.Index(stmt, "returning ")+len("returning ")):], ",")
+	log.Print(m.Name, stmt)
+
+	idx := strings.Index(stmt, "returning ")
+	if idx == -1 {
+		return nil
+	}
+
+	fs := strings.Split(stmt[(idx+len("returning ")):], ",")
 	rs = make([]*VarType, len(fs))
 	for i, f := range fs {
 		f = strings.TrimSpace(f)

@@ -25,3 +25,6 @@ _testmain.go
 
 # generated files
 #example/mapper/modelimpl.go
+
+
+vendor/

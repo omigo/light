@@ -1,0 +1,20 @@
+package: github.com/arstd/light
+import:
+- package: github.com/arstd/log
+  version: 3b70b5527d8a0128e731b98333d42beb754e39c5
+- package: github.com/lib/pq
+  version: 8837942c3e09574accbc5f150e2c5e057189cace
+  subpackages:
+  - oid
+- package: golang.org/x/tools
+  version: e011c1062a41d0e2614279f1dc8cf7f1bf6aaac3
+  repo: https://github.com/golang/tools.git
+  vcs: git
+  subpackages:
+  - go/ast/astutil
+  - go/buildutil
+  - go/loader
+  - imports
+testImport:
+- package: gopkg.in/DATA-DOG/go-sqlmock.v1
+  version: ^1.2.0

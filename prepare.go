@@ -98,7 +98,9 @@ func getMethodKind(m *Method) MethodKind {
 		}
 
 	case "update":
-		if len(m.Results) == 2 && m.Results[0].Name == "int64" {
+		if len(m.Results) == 1 {
+			return Insert
+		} else if len(m.Results) == 2 && m.Results[0].Name == "int64" {
 			return Update
 		} else {
 			log.Panicf("method '%s' for 'update' must only return '(int64, error)'", m.Name)
