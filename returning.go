@@ -26,8 +26,6 @@ func getInsertReturnings(m *Method) (rs []*VarType) {
 	// log.JSONIndent(m)
 	stmt := m.Fragments[len(m.Fragments)-1].Stmt
 
-	log.Print(m.Name, stmt)
-
 	idx := strings.Index(stmt, "returning ")
 	if idx == -1 {
 		return nil
