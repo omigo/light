@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"time"
+
+	"github.com/arstd/log"
 )
 
 func Time(a interface{}) interface {
@@ -33,6 +35,31 @@ func Time(a interface{}) interface {
 	case *int64:
 		return &TimeWapper{Int64: v}
 
+	case **uint32:
+		if *v == (*uint32)(nil) {
+			*v = new(uint32)
+		}
+		return &TimeWapper{Uint32: *v}
+	case **int32:
+		if *v == (*int32)(nil) {
+			*v = new(int32)
+		}
+		return &TimeWapper{Int32: *v}
+	case **int:
+		if *v == (*int)(nil) {
+			*v = new(int)
+		}
+		return &TimeWapper{Int: *v}
+	case **uint64:
+		if *v == (*uint64)(nil) {
+			*v = new(uint64)
+		}
+		return &TimeWapper{Uint64: *v}
+	case **int64:
+		if *v == (*int64)(nil) {
+			*v = new(int64)
+		}
+		return &TimeWapper{Int64: *v}
 	default:
 		panic("type not implemented")
 	}
@@ -57,6 +84,8 @@ func (b TimeWapper) Value() (driver.Value, error) {
 }
 
 func (b *TimeWapper) Scan(src interface{}) error {
+	log.Debugf("%v, %s", b, src)
+
 	if src == nil {
 		return nil
 	}

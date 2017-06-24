@@ -23,13 +23,10 @@ import (
     {{- range .Methods}}
         func (*{{$itf.Title}}Impl) {{.Name}}({{.ParamsExpr}})({{.ResultsExpr}}) {
             var (
-                exec  light.Execer = {{$.DBVar}}
+                exec  light.Execer = light.GetExecer({{$.DBVar}}, xtx)
                 xbuf  bytes.Buffer
                 xargs []interface{}
             )
-            if len(xtx) > 0 {
-                exec = xtx[0]
-            }
             {{- block "fragments" .Fragments}}
                 {{- range .}}
                     {{- if .Hashtag}}
