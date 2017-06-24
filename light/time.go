@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"time"
-
-	"github.com/arstd/log"
 )
 
 func Time(a interface{}) interface {
@@ -84,8 +82,6 @@ func (b TimeWapper) Value() (driver.Value, error) {
 }
 
 func (b *TimeWapper) Scan(src interface{}) error {
-	log.Debugf("%v, %s", b, src)
-
 	if src == nil {
 		return nil
 	}
