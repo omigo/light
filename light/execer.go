@@ -10,3 +10,10 @@ type Execer interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
+
+func GetExecer(db *sql.DB, txs []*sql.Tx) Execer {
+	if len(txs) > 0 {
+		return txs[0]
+	}
+	return db
+}

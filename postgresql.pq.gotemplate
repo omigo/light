@@ -52,7 +52,7 @@ import (
                                     xargs = append(xargs
                                 {{- end}}
                                 {{- range .Args}}
-                                    {{- if eq .Name "uint32"}} ,light.Time({{.Var}})
+                                    {{- if eq .Name "uint64"}} ,light.Time({{.Var}})
                                     {{- else if .PGArray}} ,pq.Array({{.Var}})
                                     {{- else if .Complex}} ,light.JSON({{.Var}})
                                     {{- else}} ,{{- .Var}}
@@ -100,7 +100,7 @@ import (
                 {{- $Return := .Return}}
                 xdest := []interface{}{
                 {{- range $i, $r := .Returnings}}
-                    {{- if eq $r.Name "uint32"}}light.Time(&{{$Return.Var}}.{{$r.Var}}),
+                    {{- if eq $r.Name "uint64"}}light.Time(&{{$Return.Var}}.{{$r.Var}}),
                     {{- else if .PGArray}}pq.Array(&{{$Return.Var}}.{{$r.Var}}),
                     {{- else if .Complex}}light.JSON(&{{$Return.Var}}.{{$r.Var}}),
                     {{- else}}&{{$Return.Var}}.{{$r.Var}},
@@ -132,7 +132,7 @@ import (
                     {{.Return.Var}} = append({{.Return.Var}}, xe)
                     xdest := []interface{}{
                     {{- range $i, $r := .Returnings}}
-                        {{- if eq $r.Name "uint32"}}light.Time(&xe.{{$r.Var}}),
+                        {{- if eq $r.Name "uint64"}}light.Time(&xe.{{$r.Var}}),
                         {{- else if .PGArray}}pq.Array(&xe.{{$r.Var}}),
                         {{- else if .Complex}}light.JSON(&xe.{{$r.Var}}),
                         {{- else}}&xe.{{$r.Var}},
@@ -200,7 +200,7 @@ import (
                     {{.Return.Var}} = append({{.Return.Var}}, xe)
                     xdest := []interface{}{
                     {{- range $i, $r := .Returnings}}
-                        {{- if eq $r.Name "uint32"}}light.Time(&xe.{{$r.Var}}),
+                        {{- if eq $r.Name "uint64"}}light.Time(&xe.{{$r.Var}}),
                         {{- else if .PGArray}}pq.Array(&xe.{{$r.Var}}),
                         {{- else if .Complex}}light.JSON(&xe.{{$r.Var}}),
                         {{- else}}&xe.{{$r.Var}},
