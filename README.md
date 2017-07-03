@@ -25,14 +25,16 @@ light [![Build Status](https://travis-ci.org/arstd/light.svg?branch=master)](htt
 
 0. 安装 `light`
 
-	go get -u -v github.com/arstd/light
+```
+go get -u -v github.com/arstd/light
 
-	或者
+# or
 
-	git clone git@github.com:arstd/light.git $GOPATH/src/github.com/arstd/light
-	cd $GOPATH/src/github.com/arstd/light
-	glide install # glide 安装依赖，无需翻墙
-	go install -v # 生成可执行程序到 $GOPATH/bin（需确保这个目录在 $PATH 中）
+git clone git@github.com:arstd/light.git $GOPATH/src/github.com/arstd/light
+cd $GOPATH/src/github.com/arstd/light
+glide install # glide 安装依赖，无需翻墙
+go install -v # 生成可执行程序到 $GOPATH/bin（需确保这个目录在 $PATH 中）
+```
 
 1. 按规范编写接口，并在方法上写 SQL 语句 [example/mapper/model.go](example/mapper/model.go)
 
