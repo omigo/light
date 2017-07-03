@@ -58,23 +58,45 @@ func getCond(arg *VarType) string {
 	if arg.Slice != "" || arg.Array != "" || arg.Name == "map" {
 		return fmt.Sprintf("len(%s) != 0", arg.Var)
 	} else if arg.Pointer != "" {
-		return fmt.Sprintf("%s != nil", arg.Var)
-	} else if arg.Path == "time" && arg.Name == "Time" {
-		return fmt.Sprintf("!%s.IsZero()", arg.Var)
-	} else {
+		cond := fmt.Sprintf("%s != nil", arg.Var)
 		typ := arg.Alias
+		aliasStart, aliasEnd := "", ""
 		if typ == "" {
 			typ = arg.Name
+		} else {
+			aliasStart = arg.Alias + "("
+			aliasEnd = ")"
 		}
 		switch typ {
 		case "int", "int8", "int16", "int32", "int64",
 			"uint", "uint8", "uint16", "uint32", "uint64",
 			"byte", "rune", "float32", "float64":
-			return arg.Var + " != 0"
+			return cond + " && " + aliasStart + "*" + arg.Var + aliasEnd + " != 0"
 		case "string":
-			return arg.Var + ` != ""`
+			return cond + " && " + aliasStart + "*" + arg.Var + aliasEnd + ` != ""`
 		case "bool":
-			return arg.Var
+			return cond + " && " + aliasStart + "*" + arg.Var + aliasEnd
+		}
+	} else if arg.Path == "time" && arg.Name == "Time" {
+		return fmt.Sprintf("!%s.IsZero()", arg.Var)
+	} else {
+		typ := arg.Alias
+		aliasStart, aliasEnd := "", ""
+		if typ == "" {
+			typ = arg.Name
+		} else {
+			aliasStart = arg.Alias + "("
+			aliasEnd = ")"
+		}
+		switch typ {
+		case "int", "int8", "int16", "int32", "int64",
+			"uint", "uint8", "uint16", "uint32", "uint64",
+			"byte", "rune", "float32", "float64":
+			return aliasStart + arg.Var + aliasEnd + " != 0"
+		case "string":
+			return aliasStart + arg.Var + aliasEnd + ` != ""`
+		case "bool":
+			return aliasStart + arg.Var + aliasEnd
 		}
 	}
 	log.Panic("unimplemented")

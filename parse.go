@@ -165,6 +165,14 @@ func parseType(p *Package, t types.Type, vt *VarType) {
 	// TODO not deep use deep, but no reverse
 	k := fmt.Sprintf("%s%t", tt, vt.Deep)
 	if v, ok := parsed[k]; ok {
+		if vt.Name != "" {
+			if v.Alias != "" {
+				vt.Alias = v.Alias
+			} else {
+				vt.Alias = v.Name
+			}
+			return
+		}
 		tmp := *v
 		tmp.Var = vt.Var
 		*vt = tmp
@@ -189,9 +197,11 @@ func parseType(p *Package, t types.Type, vt *VarType) {
 			vt.Deep = false
 			return
 		}
+
 		parseType(p, t.Underlying(), vt)
 
 	case *types.Basic:
+		log.Debug(vt, t.Name())
 		if vt.Name != "" {
 			vt.Alias = t.Name()
 		} else {
