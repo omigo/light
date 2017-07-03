@@ -7,6 +7,7 @@ import (
     "bytes"
     "encoding/json"
     "fmt"
+    "database/sql"
     "github.com/arstd/log"
     "github.com/arstd/light/light"
 	"github.com/lib/pq"
@@ -105,6 +106,11 @@ import (
                 {{- end}} }
                 err = exec.QueryRow(xquery, xargs...).Scan(xdest...)
                 if err != nil {
+                    {{- if eq .Kind "get"}}
+                        if err == sql.ErrNoRows {
+                            return nil, nil
+                        }
+                    {{- end}}
             		log.Error(err)
             		log.Error(xquery)
             		log.Error(xargs...)
