@@ -21,15 +21,12 @@ type ModelMapperImpl struct{}
 
 func (*ModelMapperImpl) Insert(m *domain.Model, xtx ...*sql.Tx) (err error) {
 	var (
-		exec  light.Execer = db
+		exec  light.Execer = light.GetExecer(db, xtx)
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	if len(xtx) > 0 {
-		exec = xtx[0]
-	}
 	xbuf.WriteString(`insert into models(name, flag, score, map, time, xarray, slice, status, pointer, struct_slice, uint32) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id `)
-	xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32))
+	xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), m.Uint32)
 
 	xholder := make([]interface{}, len(xargs))
 	for i := range xargs {
@@ -37,7 +34,7 @@ func (*ModelMapperImpl) Insert(m *domain.Model, xtx ...*sql.Tx) (err error) {
 	}
 	xquery := fmt.Sprintf(xbuf.String(), xholder...)
 	log.Debug(xquery)
-	log.Debug(xargs...)
+	log.JSON(xargs...)
 
 	xdest := []interface{}{&m.Id}
 	err = exec.QueryRow(xquery, xargs...).Scan(xdest...)
@@ -51,20 +48,17 @@ func (*ModelMapperImpl) Insert(m *domain.Model, xtx ...*sql.Tx) (err error) {
 
 func (*ModelMapperImpl) BatchInsert(ms []*domain.Model, xtx ...*sql.Tx) (xa int64, err error) {
 	var (
-		exec  light.Execer = db
+		exec  light.Execer = light.GetExecer(db, xtx)
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	if len(xtx) > 0 {
-		exec = xtx[0]
-	}
 	xbuf.WriteString(`insert into models(name, flag, score, map, time, xarray as array, slice, status, pointer, struct_slice, uint32) values `)
 	for i, m := range ms {
 		if i != 0 {
 			xbuf.WriteString(", ")
 		}
 		xbuf.WriteString(`(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) `)
-		xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32))
+		xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Array), pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), m.Uint32)
 	}
 
 	xholder := make([]interface{}, len(xargs))
@@ -73,7 +67,7 @@ func (*ModelMapperImpl) BatchInsert(ms []*domain.Model, xtx ...*sql.Tx) (xa int6
 	}
 	xquery := fmt.Sprintf(xbuf.String(), xholder...)
 	log.Debug(xquery)
-	log.Debug(xargs...)
+	log.JSON(xargs...)
 
 	var xres sql.Result
 	xres, err = exec.Exec(xquery, xargs...)
@@ -81,19 +75,17 @@ func (*ModelMapperImpl) BatchInsert(ms []*domain.Model, xtx ...*sql.Tx) (xa int6
 		log.Error(xquery)
 		log.Error(xargs...)
 		log.Error(err)
+		return
 	}
 	return xres.RowsAffected()
 }
 
 func (*ModelMapperImpl) Get(id int, xtx ...*sql.Tx) (xobj *domain.Model, err error) {
 	var (
-		exec  light.Execer = db
+		exec  light.Execer = light.GetExecer(db, xtx)
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	if len(xtx) > 0 {
-		exec = xtx[0]
-	}
 	xbuf.WriteString(`select id, name, flag, score, map, time, xarray as array, slice, status, pointer, struct_slice, uint32 from models where id=%s `)
 	xargs = append(xargs, id)
 
@@ -103,12 +95,15 @@ func (*ModelMapperImpl) Get(id int, xtx ...*sql.Tx) (xobj *domain.Model, err err
 	}
 	xquery := fmt.Sprintf(xbuf.String(), xholder...)
 	log.Debug(xquery)
-	log.Debug(xargs...)
+	log.JSON(xargs...)
 
 	xobj = &domain.Model{}
-	xdest := []interface{}{&xobj.Id, &xobj.Name, &xobj.Flag, &xobj.Score, light.JSON(&xobj.Map), &xobj.Time, pq.Array(&xobj.Array), pq.Array(&xobj.Slice), &xobj.Status, light.JSON(&xobj.Pointer), light.JSON(&xobj.StructSlice), light.Time(&xobj.Uint32)}
+	xdest := []interface{}{&xobj.Id, &xobj.Name, &xobj.Flag, &xobj.Score, light.JSON(&xobj.Map), &xobj.Time, pq.Array(&xobj.Array), pq.Array(&xobj.Slice), &xobj.Status, light.JSON(&xobj.Pointer), light.JSON(&xobj.StructSlice), &xobj.Uint32}
 	err = exec.QueryRow(xquery, xargs...).Scan(xdest...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		log.Error(err)
 		log.Error(xquery)
 		log.Error(xargs...)
@@ -118,15 +113,12 @@ func (*ModelMapperImpl) Get(id int, xtx ...*sql.Tx) (xobj *domain.Model, err err
 
 func (*ModelMapperImpl) Update(m *domain.Model, xtx ...*sql.Tx) (xa int64, err error) {
 	var (
-		exec  light.Execer = db
+		exec  light.Execer = light.GetExecer(db, xtx)
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	if len(xtx) > 0 {
-		exec = xtx[0]
-	}
 	xbuf.WriteString(`update models set name=%s, flag=%s, score=%s, map=%s, time=%s, slice=%s, status=%s, pointer=%s, struct_slice=%s, uint32=%s where id=%s `)
-	xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), light.Time(m.Uint32), m.Id)
+	xargs = append(xargs, m.Name, m.Flag, m.Score, light.JSON(m.Map), m.Time, pq.Array(m.Slice), m.Status, light.JSON(m.Pointer), light.JSON(m.StructSlice), m.Uint32, m.Id)
 
 	xholder := make([]interface{}, len(xargs))
 	for i := range xargs {
@@ -134,7 +126,7 @@ func (*ModelMapperImpl) Update(m *domain.Model, xtx ...*sql.Tx) (xa int64, err e
 	}
 	xquery := fmt.Sprintf(xbuf.String(), xholder...)
 	log.Debug(xquery)
-	log.Debug(xargs...)
+	log.JSON(xargs...)
 
 	var xres sql.Result
 	xres, err = exec.Exec(xquery, xargs...)
@@ -142,19 +134,17 @@ func (*ModelMapperImpl) Update(m *domain.Model, xtx ...*sql.Tx) (xa int64, err e
 		log.Error(xquery)
 		log.Error(xargs...)
 		log.Error(err)
+		return
 	}
 	return xres.RowsAffected()
 }
 
 func (*ModelMapperImpl) Delete(id int, xtx ...*sql.Tx) (xa int64, err error) {
 	var (
-		exec  light.Execer = db
+		exec  light.Execer = light.GetExecer(db, xtx)
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	if len(xtx) > 0 {
-		exec = xtx[0]
-	}
 	xbuf.WriteString(`delete from models where id=%s `)
 	xargs = append(xargs, id)
 
@@ -164,7 +154,7 @@ func (*ModelMapperImpl) Delete(id int, xtx ...*sql.Tx) (xa int64, err error) {
 	}
 	xquery := fmt.Sprintf(xbuf.String(), xholder...)
 	log.Debug(xquery)
-	log.Debug(xargs...)
+	log.JSON(xargs...)
 
 	var xres sql.Result
 	xres, err = exec.Exec(xquery, xargs...)
@@ -172,19 +162,17 @@ func (*ModelMapperImpl) Delete(id int, xtx ...*sql.Tx) (xa int64, err error) {
 		log.Error(xquery)
 		log.Error(xargs...)
 		log.Error(err)
+		return
 	}
 	return xres.RowsAffected()
 }
 
 func (*ModelMapperImpl) Count(m *domain.Model, ss []enum.Status, xtx ...*sql.Tx) (xcnt int64, err error) {
 	var (
-		exec  light.Execer = db
+		exec  light.Execer = light.GetExecer(db, xtx)
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	if len(xtx) > 0 {
-		exec = xtx[0]
-	}
 	xbuf.WriteString(`select count(*) from models where name like %s `)
 	xargs = append(xargs, m.Name)
 	if m.Flag {
@@ -224,7 +212,7 @@ func (*ModelMapperImpl) Count(m *domain.Model, ss []enum.Status, xtx ...*sql.Tx)
 	}
 	xquery := fmt.Sprintf(xbuf.String(), xholder...)
 	log.Debug(xquery)
-	log.Debug(xargs...)
+	log.JSON(xargs...)
 
 	err = exec.QueryRow(xquery, xargs...).Scan(&xcnt)
 	if err != nil {
@@ -237,13 +225,10 @@ func (*ModelMapperImpl) Count(m *domain.Model, ss []enum.Status, xtx ...*sql.Tx)
 
 func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, to time.Time, offset int, limit int, xtx ...*sql.Tx) (xdata []*domain.Model, err error) {
 	var (
-		exec  light.Execer = db
+		exec  light.Execer = light.GetExecer(db, xtx)
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	if len(xtx) > 0 {
-		exec = xtx[0]
-	}
 	xbuf.WriteString(`select id, name, flag, score, map, time, xarray as array, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
 	xargs = append(xargs, m.Name)
 	if len(ss) != 0 && m.Flag && !from.IsZero() && to.IsZero() {
@@ -303,7 +288,7 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 	}
 	xquery := fmt.Sprintf(xbuf.String(), xholder...)
 	log.Debug(xquery)
-	log.Debug(xargs...)
+	log.JSON(xargs...)
 
 	var xrows *sql.Rows
 	xrows, err = exec.Query(xquery, xargs...)
@@ -319,7 +304,7 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 	for xrows.Next() {
 		xe := &domain.Model{}
 		xdata = append(xdata, xe)
-		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, light.JSON(&xe.Map), &xe.Time, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, light.JSON(&xe.Pointer), light.JSON(&xe.StructSlice), light.Time(&xe.Uint32)}
+		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, light.JSON(&xe.Map), &xe.Time, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, light.JSON(&xe.Pointer), light.JSON(&xe.StructSlice), &xe.Uint32}
 		err = xrows.Scan(xdest...)
 		if err != nil {
 			log.Error(err)
@@ -334,13 +319,10 @@ func (*ModelMapperImpl) List(m *domain.Model, ss []enum.Status, from time.Time, 
 
 func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, to time.Time, orderBy string, offset int, limit int, xtx ...*sql.Tx) (xcnt int64, xdata []*domain.Model, err error) {
 	var (
-		exec  light.Execer = db
+		exec  light.Execer = light.GetExecer(db, xtx)
 		xbuf  bytes.Buffer
 		xargs []interface{}
 	)
-	if len(xtx) > 0 {
-		exec = xtx[0]
-	}
 	xbuf.WriteString(`select id, name, flag, score, map, time, xarray as array, slice, status, pointer, struct_slice, uint32 from models where name like %s `)
 	xargs = append(xargs, m.Name)
 	if m.Flag != false {
@@ -391,7 +373,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	xdcnt := strings.Count(xquery[xobindex:], "$")
 	xtargs := xargs[:len(xargs)-xdcnt]
 	log.Debug(xtquery)
-	log.Debug(xtargs...)
+	log.JSON(xtargs...)
 
 	err = exec.QueryRow(xtquery, xtargs...).Scan(&xcnt)
 	if err != nil {
@@ -405,7 +387,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	}
 
 	log.Debug(xquery)
-	log.Debug(xargs...)
+	log.JSON(xargs...)
 
 	var xrows *sql.Rows
 	xrows, err = exec.Query(xquery, xargs...)
@@ -421,7 +403,7 @@ func (*ModelMapperImpl) Page(m *domain.Model, ss []enum.Status, from time.Time, 
 	for xrows.Next() {
 		xe := &domain.Model{}
 		xdata = append(xdata, xe)
-		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, light.JSON(&xe.Map), &xe.Time, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, light.JSON(&xe.Pointer), light.JSON(&xe.StructSlice), light.Time(&xe.Uint32)}
+		xdest := []interface{}{&xe.Id, &xe.Name, &xe.Flag, &xe.Score, light.JSON(&xe.Map), &xe.Time, pq.Array(&xe.Array), pq.Array(&xe.Slice), &xe.Status, light.JSON(&xe.Pointer), light.JSON(&xe.StructSlice), &xe.Uint32}
 		err = xrows.Scan(xdest...)
 		if err != nil {
 			log.Error(err)

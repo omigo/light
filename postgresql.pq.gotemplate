@@ -17,8 +17,6 @@ import (
 {{- range .Interfaces}}
     {{- $itf := .}}
 
-    var {{$itf.Title}} {{$itf.Name}} = &{{$itf.Title}}Impl{}
-
     type {{$itf.Title}}Impl struct{}
 
     {{- range .Methods}}

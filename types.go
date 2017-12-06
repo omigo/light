@@ -48,7 +48,7 @@ func (i *Interface) Title() string {
 	if i.Name[0] == 'I' {
 		return i.Name[1:]
 	}
-	return i.Name + "s"
+	return i.Name
 }
 
 type Method struct {
@@ -190,7 +190,8 @@ func (vt *VarType) MakeExpr() string {
 }
 
 func (vt *VarType) Complex() bool {
-	if len(vt.Fields) > 0 || vt.Slice != "" || vt.Array != "" || vt.Name == "map" {
+	if len(vt.Fields) > 0 || vt.Slice != "" || vt.Array != "" ||
+		vt.Name == "map" || (vt.Pointer == "*" && vt.Name[0] >= 'A') {
 		return true
 	}
 	return false
