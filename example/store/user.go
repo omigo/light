@@ -41,6 +41,7 @@ type User interface {
 	// // [and phone like ${u.Phone}]
 	// // and status != ${u.Status}
 	// // [and updated > ${u.Updated}]
+	// // order by updated desc
 	// // limit ${(page-1)*size}, ${size}
 	// Page(u *model.User, page int, size int) (int64, []*model.User, error)
 }

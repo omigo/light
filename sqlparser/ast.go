@@ -1,24 +1,18 @@
 package sqlparser
 
-type Stmt interface {
-	Type() Token
-}
-
-type SelectStmt struct {
+type Statement struct {
+	Type   Token
+	Table  string
 	Fields []string
 
-	Fragments []*Fragment
-
-	Offset string
-	Limit  string
+	Fragments []*Fragment `json:"fragments,omitempty"`
 }
 
-func (*SelectStmt) Type() Token { return SELECT }
-
 type Fragment struct {
-	cond      bool
-	Cond      string
-	Stmt      string
-	Variables []string
-	Fragments []*Fragment
+	Condition string `json:"cond,omitempty"`
+
+	Statement string   `json:"stmt,omitempty"`
+	Variables []string `json:"variables,omitempty"`
+
+	Fragments []*Fragment `json:"fragments,omitempty"`
 }

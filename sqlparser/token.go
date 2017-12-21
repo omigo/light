@@ -18,8 +18,8 @@ const (
 	DOLLAR            = '$'
 	ASTERISK          = '*'
 	COMMA             = ','
-	LEFT_PARENTHESIS  = ')'
-	RIGHT_PARENTHESIS = '('
+	LEFT_PARENTHESIS  = '('
+	RIGHT_PARENTHESIS = ')'
 	LEFT_BRACKET      = '['
 	RIGHT_BRACKET     = ']'
 	LEFT_BRACES       = '{'
@@ -36,6 +36,19 @@ const (
 	SELECT
 	FROM
 	WHERE
+	AND
+	OR
+	LIKE
+	NOT
+	EXISTS
+	GROUP
+	BY
+	ORDER
+	HAVING
+	IS
+	NULL
+	ASC
+	DESC
 	LIMIT
 )
 
@@ -49,6 +62,19 @@ var tokens = []string{
 	SELECT: "SELECT",
 	FROM:   "FROM",
 	WHERE:  "WHERE",
+	AND:    "AND",
+	OR:     "OR",
+	LIKE:   "LIKE",
+	NOT:    "NOT",
+	EXISTS: "EXISTS",
+	GROUP:  "GROUP",
+	BY:     "BY",
+	ORDER:  "ORDER",
+	HAVING: "HAVING",
+	IS:     "IS",
+	NULL:   "NULL",
+	ASC:    "ASC",
+	DESC:   "DESC",
 	LIMIT:  "LIMIT",
 }
 
