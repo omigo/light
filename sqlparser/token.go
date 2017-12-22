@@ -15,17 +15,32 @@ const (
 
 	// Misc characters
 	DOT               = '.'
+	NUMBER            = '#'
 	DOLLAR            = '$'
 	ASTERISK          = '*'
 	COMMA             = ','
+	EQUAL             = '='
 	LEFT_PARENTHESIS  = '('
 	RIGHT_PARENTHESIS = ')'
 	LEFT_BRACKET      = '['
 	RIGHT_BRACKET     = ']'
 	LEFT_BRACES       = '{'
 	RIGHT_BRACES      = '}'
-	EQUAL             = '='
+)
 
+func isSymbol(ch rune) bool {
+	switch Token(ch) {
+	case DOT, NUMBER, DOLLAR, ASTERISK, COMMA, EQUAL,
+		LEFT_PARENTHESIS, RIGHT_PARENTHESIS,
+		LEFT_BRACKET, RIGHT_BRACKET,
+		LEFT_BRACES, RIGHT_BRACES:
+		return true
+	default:
+		return false
+	}
+}
+
+const (
 	// Keywords
 	INSERT = 128 + iota
 	INTO
@@ -33,6 +48,9 @@ const (
 	UPDATE
 	SET
 	DELETE
+	CREATE
+	TABLE
+	IF
 	SELECT
 	FROM
 	WHERE
@@ -59,6 +77,9 @@ var tokens = []string{
 	UPDATE: "UPDATE",
 	SET:    "SET",
 	DELETE: "DELETE",
+	CREATE: "CREATE",
+	TABLE:  "TABLE",
+	IF:     "IF",
 	SELECT: "SELECT",
 	FROM:   "FROM",
 	WHERE:  "WHERE",

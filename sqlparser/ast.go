@@ -12,6 +12,7 @@ type Fragment struct {
 	Condition string `json:"cond,omitempty"`
 
 	Statement string   `json:"stmt,omitempty"`
+	Replacers []string `json:"replacers,omitempty"`
 	Variables []string `json:"variables,omitempty"`
 
 	Fragments []*Fragment `json:"fragments,omitempty"`

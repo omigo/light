@@ -63,12 +63,10 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 	}
 
 	// Otherwise read the individual character.
-	switch Token(ch) {
-	case EOF:
+	switch {
+	case Token(ch) == EOF:
 		return EOF, ""
-	case LEFT_PARENTHESIS, LEFT_BRACKET, LEFT_BRACES,
-		RIGHT_PARENTHESIS, RIGHT_BRACKET, RIGHT_BRACES,
-		ASTERISK, COMMA, DOLLAR, DOT, EQUAL:
+	case isSymbol(ch):
 		return Token(ch), string(ch)
 	default:
 		return IDENT, string(ch)

@@ -1,6 +1,7 @@
 package sqlparser
 
 import (
+	"bytes"
 	"io"
 	"strings"
 )
@@ -36,8 +37,14 @@ func (p *Parser) Parse() (s *Statement, err error) {
 	case DELETE:
 		s, err = p.ParseDelete()
 
+	case CREATE:
+		s, err = p.ParseCreate()
+
 	default:
 		panic("sql error, must start with SELECT/INSERT/UPDATE/DELETE")
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	if len(s.Fragments) > 0 {
@@ -102,7 +109,32 @@ func (p *Parser) scanVariable() (v string) {
 	}
 }
 
-func (p *Parser) scanCond() (v string) {
+func (p *Parser) scanReplacer() (v string) {
+	tok, lit := p.scanIgnoreWhitespace()
+	if tok != NUMBER {
+		panic("replacer must start with #")
+	}
+	tok, lit = p.scanIgnoreWhitespace()
+	if tok != LEFT_BRACES {
+		panic("replacer must wraped by #{...}")
+	}
+
+	for {
+		tok, lit = p.scan()
+		switch tok {
+		default:
+			v += lit
+		case WS:
+			// ingnore
+		case RIGHT_BRACES:
+			return
+		case EOF:
+			panic("expect more words")
+		}
+	}
+}
+
+func (p *Parser) scanCondition() (v string) {
 	tok, lit := p.scan()
 	if tok != LEFT_BRACES {
 		p.unscan()
@@ -121,4 +153,100 @@ func (p *Parser) scanCond() (v string) {
 			panic("expect more words")
 		}
 	}
+}
+
+func (p *Parser) scanFragments() (fs []*Fragment) {
+	// scan fragment
+	for {
+		f, lastToken := p.parseFragment()
+		if f != nil {
+			fs = append(fs, f)
+		}
+		if lastToken == EOF {
+			break
+		}
+	}
+	return fs
+}
+
+func (p *Parser) parseFragment() (*Fragment, Token) {
+	var inner bool
+	var buf bytes.Buffer
+
+	tok, lit := p.scanIgnoreWhitespace()
+	if tok == LEFT_BRACKET {
+		inner = true
+	} else if tok == RIGHT_BRACKET {
+		p.unscan()
+		return nil, EOF
+	} else if tok == ORDER {
+		buf.WriteString(strings.ToUpper(lit))
+	} else {
+		p.unscan()
+	}
+
+	f := Fragment{}
+	f.Condition = p.scanCondition()
+	if f.Condition == "" && inner {
+		f.Condition = "-"
+	}
+
+	for {
+		tok, lit = p.scan()
+		switch tok {
+		default:
+			buf.WriteString(lit)
+
+		case WS:
+			buf.WriteRune(space)
+
+		case NUMBER:
+			p.unscan()
+			lit = p.scanReplacer()
+			f.Replacers = append(f.Replacers, lit)
+			buf.WriteString("%v")
+
+		case DOLLAR:
+			p.unscan()
+			lit = p.scanVariable()
+			f.Variables = append(f.Variables, lit)
+			buf.WriteRune(question)
+
+		case LEFT_BRACKET:
+			p.unscan()
+			if inner {
+				stmt := strings.TrimSpace(buf.String())
+				buf.Reset()
+				if len(stmt) > 0 {
+					innerFirst := Fragment{Statement: stmt, Variables: f.Variables}
+					f.Variables = nil
+					f.Fragments = append(f.Fragments, &innerFirst)
+				}
+				f.Fragments = append(f.Fragments, p.scanFragments()...)
+			}
+			goto END
+
+		case RIGHT_BRACKET, ORDER, EOF:
+			p.unscan()
+			goto END
+		}
+	}
+
+END:
+	tok, lit = p.scanIgnoreWhitespace()
+	if inner {
+		if tok != RIGHT_BRACKET {
+			panic("expect ], but got " + lit + ", " + buf.String())
+		}
+	} else {
+		p.unscan()
+		if tok == RIGHT_BRACKET {
+			tok = EOF
+		}
+	}
+	f.Statement = strings.TrimSpace(buf.String())
+	if len(f.Statement) > 0 {
+		f.Statement += " "
+	}
+	return &f, tok
 }

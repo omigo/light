@@ -1,9 +1,7 @@
 package sqlparser
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
 )
 
 // Parse parses a SQL SELECT statement.
@@ -47,95 +45,4 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 
 	// Return the successfully parsed statement.
 	return &stmt, nil
-}
-
-func (p *Parser) scanFragments() (fs []*Fragment) {
-	// scan fragment
-	for {
-		f, lastToken := p.parseFragment()
-		if f != nil {
-			fs = append(fs, f)
-		}
-		if lastToken == EOF {
-			break
-		}
-	}
-	return fs
-}
-
-func (p *Parser) parseFragment() (*Fragment, Token) {
-	var inner bool
-	var buf bytes.Buffer
-
-	tok, lit := p.scanIgnoreWhitespace()
-	if tok == LEFT_BRACKET {
-		inner = true
-	} else if tok == RIGHT_BRACKET {
-		p.unscan()
-		return nil, EOF
-	} else if tok == ORDER {
-		buf.WriteString(strings.ToUpper(lit))
-	} else {
-		p.unscan()
-	}
-
-	f := Fragment{}
-	f.Condition = p.scanCond()
-	if f.Condition == "" && inner {
-		f.Condition = "-"
-	}
-
-	for {
-		tok, lit = p.scan()
-
-		switch tok {
-		default:
-			buf.WriteString(lit)
-
-		case WS:
-			buf.WriteRune(space)
-
-		case DOLLAR:
-			p.unscan()
-			lit = p.scanVariable()
-			f.Variables = append(f.Variables, lit)
-			buf.WriteRune(question)
-
-		case LEFT_BRACKET:
-			p.unscan()
-			if inner {
-				stmt := strings.TrimSpace(buf.String())
-				buf.Reset()
-				if len(stmt) > 0 {
-					innerFirst := Fragment{Statement: stmt, Variables: f.Variables}
-					f.Variables = nil
-					f.Fragments = append(f.Fragments, &innerFirst)
-				}
-				f.Fragments = append(f.Fragments, p.scanFragments()...)
-			}
-			goto END
-
-		case RIGHT_BRACKET, ORDER, EOF:
-			p.unscan()
-			goto END
-		}
-	}
-
-END:
-	tok, lit = p.scanIgnoreWhitespace()
-	if inner {
-		if tok != RIGHT_BRACKET {
-			panic("expect ], but got " + lit + ", " + buf.String())
-		}
-	} else {
-		p.unscan()
-		if tok == RIGHT_BRACKET {
-			tok = EOF
-		}
-	}
-	f.Statement = strings.TrimSpace(buf.String())
-	if len(f.Statement) > 0 {
-		f.Statement += " "
-	}
-	return &f, tok
 }
