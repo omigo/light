@@ -17,7 +17,7 @@ func TestParseUpdateStmt(t *testing.T) {
 	    updated=CURRENT_TIMESTAMP
 	WHERE id=${u.Id}`
 
-	p := Parser{s: NewScanner(bytes.NewBufferString(sql))}
+	p := NewParser(bytes.NewBufferString(sql))
 	stmt, err := p.Parse()
 	if err != nil {
 		t.Fatal(err)

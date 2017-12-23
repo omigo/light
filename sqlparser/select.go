@@ -1,6 +1,7 @@
 package sqlparser
 
 import (
+	"bytes"
 	"fmt"
 )
 
@@ -40,8 +41,18 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 	} else {
 		stmt.Table = lit
 	}
+	p.unscan()
 
 	stmt.Fragments = p.scanFragments()
+
+	buf := bytes.NewBufferString("SELECT ")
+	for _, v := range stmt.Fields {
+		buf.WriteString(v)
+		buf.WriteByte(',')
+	}
+	buf.Truncate(buf.Len() - 1)
+	buf.WriteString(" FROM ")
+	stmt.Fragments[0].Statement = buf.String() + stmt.Fragments[0].Statement
 
 	// Return the successfully parsed statement.
 	return &stmt, nil

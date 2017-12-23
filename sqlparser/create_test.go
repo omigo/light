@@ -12,7 +12,7 @@ func TestParseCreate(t *testing.T) {
 			cid text, platform text, version text
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8 `
 
-	p := Parser{s: NewScanner(bytes.NewBufferString(sql))}
+	p := NewParser(bytes.NewBufferString(sql))
 	stmt, err := p.Parse()
 	if err != nil {
 		t.Fatal(err)

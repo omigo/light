@@ -16,14 +16,9 @@ func (p *Parser) ParseDelete() (*Statement, error) {
 		return nil, fmt.Errorf("found %q, expected FROM", lit)
 	}
 
-	// First token should be a "<table>" keyword.
-	if tok, lit := p.scanIgnoreWhitespace(); tok != IDENT {
-		return nil, fmt.Errorf("found %q, expected IDENT", lit)
-	} else {
-		stmt.Table = lit
-	}
-
 	stmt.Fragments = p.scanFragments()
+
+	stmt.Fragments[0].Statement = "DELETE FROM " + stmt.Fragments[0].Statement
 
 	// Return the successfully parsed statement.
 	return &stmt, nil

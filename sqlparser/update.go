@@ -10,14 +10,11 @@ func (p *Parser) ParseUpdate() (*Statement, error) {
 	if tok, lit := p.scanIgnoreWhitespace(); tok != UPDATE {
 		return nil, fmt.Errorf("found %q, expected UPDATE", lit)
 	}
-	if tok, lit := p.scanIgnoreWhitespace(); tok != IDENT {
-		return nil, fmt.Errorf("found %q, expected IDENT", lit)
-	} else {
-		stmt.Table = lit
-	}
+	p.unscan()
 
 	stmt.Fragments = p.scanFragments()
 
+	stmt.Fragments[0].Statement = "UPDATE " + stmt.Fragments[0].Statement
 	// Return the successfully parsed statement.
 	return &stmt, nil
 }

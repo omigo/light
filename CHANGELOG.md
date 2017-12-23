@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### TODO
 - more test case, and more covering.
 - Generate implemented file by method signature and sql AST.
-- Support CREATE statement.
-- Replacers #{...} like Variables ${...}.
 ### Added
 - Parse go source file by go/types(get signatures) and go/parser(get comments).
 - Parse sql (comment) to generate Statement AST.
+- Support CREATE statement.
+- Replacers #{...} like Variables ${...}.

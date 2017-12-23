@@ -1,10 +1,10 @@
 package main
 
 import (
-	"go/parser"
-	"go/token"
 	"os"
 
+	"github.com/arstd/light/generator"
+	"github.com/arstd/light/goparser"
 	"github.com/arstd/log"
 )
 
@@ -14,21 +14,9 @@ func main() {
 		src = "/Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.go"
 	}
 
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, src, nil, parser.ParseComments)
-	if err != nil {
-		log.Panic(err)
-	}
-	// ast.Print(fset, f)
+	store := goparser.Parse(src)
 
-	store := &Store{Package: f.Name.Name, Imports: map[string]string{}}
+	log.JSONIndent(store)
 
-	goBuild(src)
-
-	extractDocs(store, f)
-	parseTypes(store, fset, f)
-
-	// log.JSONIndent(store)
-
-	Generate(store)
+	generator.Generate(store)
 }

@@ -17,6 +17,8 @@ func (p *Parser) ParseCreate() (*Statement, error) {
 
 	stmt.Fragments = p.scanFragments()
 
+	stmt.Fragments[0].Statement = "CREATE TABLE " + stmt.Fragments[0].Statement
+
 	// Return the successfully parsed statement.
 	return &stmt, nil
 }

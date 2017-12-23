@@ -1,4 +1,4 @@
-package main
+package goparser
 
 import (
 	"go/types"
@@ -26,7 +26,7 @@ func (s *Store) MethodByName(name string) *Method {
 }
 
 type Method struct {
-	Store *Store
+	Store *Store `json:"-"`
 
 	Name string // Insert
 	Doc  string // insert into users ...
@@ -36,16 +36,20 @@ type Method struct {
 }
 
 type Tuple struct {
-	Store *Store
+	Store *Store `json:"-"`
 	*types.Tuple
 }
 
-func (t *Tuple) List() []*Var {
-	list := make([]*Var, t.Len())
+func (t *Tuple) String() string {
+	var ss []string
 	for i := 0; i < t.Len(); i++ {
-		list[i] = &Var{t.Store, t.At(i), ""}
+		ss = append(ss, t.At(i).String())
 	}
-	return list
+	return strings.Join(ss, ", ")
+}
+
+func (t *Tuple) At(i int) *Var {
+	return &Var{t.Store, t.Tuple.At(i), ""}
 }
 
 func (t *Tuple) VarByName(name string) *Var {
@@ -57,7 +61,7 @@ func (t *Tuple) VarByName(name string) *Var {
 	for i := 0; i < t.Len(); i++ {
 		x := t.At(i)
 		if x.Name() == parts[0] {
-			v = &Var{t.Store, x, ""}
+			v = x
 			break
 		}
 	}
@@ -65,49 +69,74 @@ func (t *Tuple) VarByName(name string) *Var {
 		panic(name + " not exist")
 	}
 
-	if len(parts) == 2 {
-		panic(name + " to long")
-	}
+	switch len(parts) {
+	case 1:
+		return v
 
-	return v
-}
-
-func (t *Tuple) LightByName(name string) *Var {
-	if name == "" {
-		panic("name must not blank")
-	}
-	parts := strings.Split(name, ".")
-	var v *Var
-	for i := 0; i < t.Len(); i++ {
-		x := t.At(i)
-		if x.Name() == parts[0] {
-			v = &Var{t.Store, x, ""}
-			break
+	case 2:
+		s := underlying(v.Type())
+		for i := 0; i < s.NumFields(); i++ {
+			x := s.Field(i)
+			if x.Name() == parts[1] {
+				return &Var{t.Store, x, s.Tag(i)}
+			}
 		}
-	}
-	if v == nil {
-		panic(name + " not exist")
-	}
 
-	if len(parts) != 2 {
-		panic(name + " not short")
+	default:
 	}
-
-	s := underlying(v.Type())
-	for i := 0; i < s.NumFields(); i++ {
-		x := s.Field(i)
-		if x.Name() == parts[1] {
-			return &Var{t.Store, x, s.Tag(i)}
-		}
-	}
-
-	panic(name + " not exist")
+	panic(name + " to long")
 }
 
 type Var struct {
-	Store *Store
+	Store *Store `json:"-"`
 	*types.Var
 	Tag string
+}
+
+func (v *Var) NotDefault(name string) string {
+	switch u := v.Type().(type) {
+	case *types.Named:
+		if u.String() == "time.Time" {
+			return "!" + name + ".IsZero()"
+		}
+		return `name != ""`
+
+	case *types.Basic:
+		switch u.Kind() {
+		case types.String:
+			return `name != ""`
+		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
+			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64,
+			types.Float32, types.Float64:
+			return "name != 0"
+		case types.Bool:
+			return "name"
+		case types.Uintptr, types.UnsafePointer:
+			return "name != nil"
+		default:
+			panic(reflect.TypeOf(u))
+		}
+
+	case *types.Pointer:
+		return "name != nil"
+
+	case *types.Struct:
+		return "name != nil"
+
+	default:
+		panic(" unimplement " + reflect.TypeOf(u).String() + u.String())
+	}
+}
+
+func (v *Var) Value(name string) string {
+	if v.Wrap() == "" {
+		return name
+	}
+	return v.Wrap() + "(&" + name + ")"
+}
+
+func (v *Var) Scan(name string) string {
+	panic("unimplemented")
 }
 
 func (v *Var) Nullable() bool {
@@ -122,8 +151,9 @@ func (v *Var) Pointer() bool {
 
 func (v *Var) Wrap() string {
 	switch u := v.Type().(type) {
-	case *types.Pointer:
+	case *types.Pointer, *types.Named:
 		return ""
+
 	case *types.Basic:
 		if v.Nullable() {
 			switch u.Kind() {
@@ -132,13 +162,15 @@ func (v *Var) Wrap() string {
 			case types.String:
 				return "light.String"
 			default:
-				panic(u.Kind())
+				log.Warn(u)
+				return ""
 			}
 		} else {
 			return ""
 		}
+
 	default:
-		panic(u.String())
+		panic(reflect.TypeOf(u))
 	}
 }
 
@@ -147,9 +179,6 @@ func underlying(t types.Type) *types.Struct {
 	case *types.Named:
 		return underlying(u.Underlying())
 
-	//
-	// case *types.Basic:
-	//
 	case *types.Pointer:
 		return underlying(u.Elem())
 
@@ -164,9 +193,6 @@ func underlying(t types.Type) *types.Struct {
 func (v *Var) String() string {
 	typ := typeString(v.Store, v.Type())
 	name := v.Name()
-	if name == "" {
-		name = strings.ToLower(typ)[:1]
-	}
 	return name + " " + typ
 }
 
@@ -190,6 +216,9 @@ func typeString(store *Store, t types.Type) string {
 
 	case *types.Struct:
 		return u.String()
+
+	case *types.Slice:
+		return "[]" + typeString(store, u.Elem())
 
 	default:
 		panic(" unimplement " + reflect.TypeOf(u).String())

@@ -22,7 +22,7 @@ func TestParseSelectStmt(t *testing.T) {
 		order by updated desc
     	limit ${(page-1)*size}, ${size}`
 
-	p := Parser{s: NewScanner(bytes.NewBufferString(sql))}
+	p := NewParser(bytes.NewBufferString(sql))
 	stmt, err := p.Parse()
 	if err != nil {
 		t.Fatal(err)

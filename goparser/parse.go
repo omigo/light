@@ -1,10 +1,11 @@
-package main
+package goparser
 
 import (
 	"bytes"
 	"fmt"
 	"go/ast"
 	"go/importer"
+	"go/parser"
 	"go/token"
 	"go/types"
 	"os/exec"
@@ -12,6 +13,25 @@ import (
 
 	"github.com/arstd/log"
 )
+
+func Parse(src string) *Store {
+
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, src, nil, parser.ParseComments)
+	if err != nil {
+		log.Panic(err)
+	}
+	// ast.Print(fset, f)
+
+	store := &Store{Package: f.Name.Name, Imports: map[string]string{}}
+
+	goBuild(src)
+
+	extractDocs(store, f)
+	parseTypes(store, fset, f)
+
+	return store
+}
 
 func goBuild(src string) {
 	// log.Debugf("go build -i -v  %s", goFile)

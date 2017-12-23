@@ -27,3 +27,30 @@ func (*UserStore) Insert(u *model.User) (i int64, e error) {
 	}
 	return res.LastInsertId()
 }
+
+func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, error) {
+	var buf bytes.Buffer
+	var args []interface{}
+	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated FROM users WHERE username LIKE ? `)
+	args = append(args, light.String(&u.Username))
+	if u.Phone != "" {
+		buf.WriteString(`AND address = ?`)
+		args = append(args, u.Address)
+		if u.Phone != "" {
+			buf.WriteString(`AND phone LIKE ? `)
+			args = append(args, light.String(&u.Phone))
+		}
+		buf.WriteString(`AND created > ? `)
+		args = append(args, u.Created)
+	}
+	buf.WriteString(`AND status != ? `)
+	args = append(args, light.Uint8(&u.Status))
+	if !u.Updated.IsZero() {
+		buf.WriteString(`AND updated > ? `)
+		args = append(args, u.Updated)
+	}
+	buf.WriteString(`AND birthday IS NOT NULL `)
+	args = append(args)
+	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ?`)
+	args = append(args, offset, size)
+}

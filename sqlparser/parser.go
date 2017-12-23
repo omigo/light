@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+func Parse(doc string) (s *Statement, err error) {
+	return NewParser(bytes.NewBufferString(doc)).Parse()
+}
+
 // Parser represents a parser.
 type Parser struct {
 	s   *Scanner
