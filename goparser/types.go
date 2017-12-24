@@ -4,8 +4,6 @@ import (
 	"go/types"
 	"reflect"
 	"strings"
-
-	"github.com/arstd/log"
 )
 
 type Store struct {
@@ -33,6 +31,11 @@ type Method struct {
 
 	Params  *Tuple
 	Results *Tuple
+}
+
+func (m *Method) Signature() string {
+	return "func (*" + m.Store.Name + "Store)" + m.Name +
+		"(" + m.Params.String() + ")(" + m.Results.String() + "){\n"
 }
 
 type Tuple struct {
@@ -87,10 +90,39 @@ func (t *Tuple) VarByName(name string) *Var {
 	panic(name + " to long")
 }
 
+func (t *Tuple) Result() *Var {
+	switch t.Len() {
+	case 1:
+		panic("unimplemented")
+	case 2:
+		return t.At(0)
+	case 3:
+		return t.At(1)
+	default:
+		panic(t.Len())
+	}
+}
+
 type Var struct {
 	Store *Store `json:"-"`
 	*types.Var
 	Tag string
+}
+
+func (v *Var) VarByTag(field string) *Var {
+	s := underlying(v.Type())
+	for i := 0; i < s.NumFields(); i++ {
+		tag := s.Tag(i)
+		idx := strings.Index(tag, `db:"`)
+		if idx == -1 {
+			panic("unimplemented")
+		}
+		t := tag[idx+4:]
+		if strings.HasPrefix(t, field+" ") {
+			return &Var{v.Store, s.Field(i), s.Tag(i)}
+		}
+	}
+	panic(field + " not found")
 }
 
 func (v *Var) NotDefault(name string) string {
@@ -99,29 +131,29 @@ func (v *Var) NotDefault(name string) string {
 		if u.String() == "time.Time" {
 			return "!" + name + ".IsZero()"
 		}
-		return `name != ""`
+		return name + ` != ""`
 
 	case *types.Basic:
 		switch u.Kind() {
 		case types.String:
-			return `name != ""`
+			return name + ` != ""`
 		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
 			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64,
 			types.Float32, types.Float64:
-			return "name != 0"
+			return name + ` != 0`
 		case types.Bool:
-			return "name"
+			return name
 		case types.Uintptr, types.UnsafePointer:
-			return "name != nil"
+			return name + " != nil"
 		default:
 			panic(reflect.TypeOf(u))
 		}
 
 	case *types.Pointer:
-		return "name != nil"
+		return name + " != nil"
 
 	case *types.Struct:
-		return "name != nil"
+		return name + " != nil"
 
 	default:
 		panic(" unimplement " + reflect.TypeOf(u).String() + u.String())
@@ -136,17 +168,15 @@ func (v *Var) Value(name string) string {
 }
 
 func (v *Var) Scan(name string) string {
-	panic("unimplemented")
+	s := v.Value(name)
+	if strings.HasPrefix(s, "light") {
+		return s
+	}
+	return "&" + s
 }
 
 func (v *Var) Nullable() bool {
-	log.Error("umimplemented")
-	return true
-}
-
-func (v *Var) Pointer() bool {
-	_, ok := v.Type().(*types.Pointer)
-	return ok
+	return !strings.Contains(v.Tag, "NOT NULL")
 }
 
 func (v *Var) Wrap() string {
@@ -162,7 +192,6 @@ func (v *Var) Wrap() string {
 			case types.String:
 				return "light.String"
 			default:
-				log.Warn(u)
 				return ""
 			}
 		} else {
@@ -180,6 +209,9 @@ func underlying(t types.Type) *types.Struct {
 		return underlying(u.Underlying())
 
 	case *types.Pointer:
+		return underlying(u.Elem())
+
+	case *types.Slice:
 		return underlying(u.Elem())
 
 	case *types.Struct:

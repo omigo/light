@@ -17,7 +17,7 @@ type Status = uint8
 type User struct {
 	Id       uint64     `db:"id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY"`
 	Username string     `db:"username VARCHAR(32) NOT NULL UNIQUE"`
-	Phone    string     `db:"Phone VARCHAR(32)"`
+	Phone    string     `db:"phone VARCHAR(32)"`
 	Address  *string    `db:"address VARCHAR(256)"`
 	Status   Status     `db:"status TINYINT UNSIGNED"`
 	Birthday *time.Time `db:"birthday DATE"`

@@ -19,7 +19,7 @@ func Generate(store *goparser.Store) {
 			panic(err)
 		}
 
-		writeSignature(buf, m)
+		buf.WriteString(m.Signature())
 
 		genCondition(stmt, m)
 		log.JSONIndent(stmt)
@@ -34,19 +34,6 @@ func Generate(store *goparser.Store) {
 	}
 
 	buf.WriteTo(os.Stdout)
-}
-
-func writeSignature(buf *bytes.Buffer, m *goparser.Method) {
-	w := buf.WriteString
-	w("func (*")
-	w(m.Store.Name)
-	w("Store)")
-	w(m.Name)
-	w("(")
-	w(m.Params.String())
-	w(")(")
-	w(m.Results.String())
-	w("){\n")
 }
 
 func genCondition(stmt *sqlparser.Statement, m *goparser.Method) {

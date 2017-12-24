@@ -27,12 +27,11 @@ func (*UserStore) Insert(u *model.User) (i int64, e error) {
 	}
 	return res.LastInsertId()
 }
-
 func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated FROM users WHERE username LIKE ? `)
-	args = append(args, light.String(&u.Username))
+	args = append(args, u.Username)
 	if u.Phone != "" {
 		buf.WriteString(`AND address = ?`)
 		args = append(args, u.Address)
@@ -50,7 +49,37 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 		args = append(args, u.Updated)
 	}
 	buf.WriteString(`AND birthday IS NOT NULL `)
-	args = append(args)
 	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ?`)
 	args = append(args, offset, size)
+	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		log.Error(query)
+		log.Error(args)
+		log.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+	var data []*model.User
+	for rows.Next() {
+		xu := new(model.User)
+		data = append(data, xu)
+		xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+		err = rows.Scan(xdst...)
+		if err != nil {
+			log.Error(query)
+			log.Error(args)
+			log.Error(err)
+			return nil, err
+		}
+	}
+	if err = rows.Err(); err != nil {
+		log.Error(query)
+		log.Error(args)
+		log.Error(err)
+		return nil, err
+	}
+	return data, nil
 }
