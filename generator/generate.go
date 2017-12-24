@@ -38,7 +38,7 @@ func Generate(store *goparser.Store) []byte {
 		default:
 			panic("unimplemented " + m.Doc)
 		}
-		buf.WriteString("}\n")
+		buf.WriteString("}\n\n")
 	}
 
 	header := writeHeader(store)
@@ -80,37 +80,4 @@ func deepGenCondition(f *sqlparser.Fragment, m *goparser.Method) {
 		cs = append(cs, v.Condition)
 	}
 	f.Condition = strings.Join(cs, " && ")
-}
-
-func writeFragment(buf *bytes.Buffer, m *goparser.Method, v *sqlparser.Fragment) {
-	w := buf.WriteString
-	wln := func(s string) { buf.WriteString(s + "\n") }
-
-	if v.Condition != "" {
-		w("if ")
-		w(v.Condition)
-		wln(" {")
-	}
-
-	if v.Statement != "" {
-		w("buf.WriteString(`")
-		w(v.Statement)
-		wln("`)")
-		if len(v.Variables) > 0 {
-			w("args = append(args")
-			for _, name := range v.Variables {
-				w(", ")
-				w(m.Params.VarByName(name).Value(name))
-			}
-			wln(")")
-		}
-	} else {
-		for _, x := range v.Fragments {
-			writeFragment(buf, m, x)
-		}
-	}
-
-	if v.Condition != "" {
-		wln("}")
-	}
 }

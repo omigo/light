@@ -99,7 +99,7 @@ func TestUserList(t *testing.T) {
 		Username: "ad%",
 		Updated:  time.Now().Add(-time.Hour),
 	}
-	data, err := store.List(u)
+	data, err := store.List(u, 2, 2)
 	if err != nil {
 		log.Error(err)
 	}

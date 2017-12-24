@@ -17,10 +17,6 @@ func writeInsert(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 		writeFragment(buf, m, f)
 	}
 
-	wln("query := buf.String()")
-	wln("log.Debug(query)")
-	wln("log.Debug(args...)")
-
 	writeExec(wln)
 }
 

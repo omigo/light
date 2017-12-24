@@ -18,9 +18,6 @@ func (*UserStore) Insert(u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
 	res, err := db.Exec(query, args...)
 	if err != nil {
 		log.Error(query)
@@ -30,6 +27,7 @@ func (*UserStore) Insert(u *model.User) (int64, error) {
 	}
 	return res.LastInsertId()
 }
+
 func (*UserStore) Update(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
@@ -59,9 +57,6 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
 	res, err := db.Exec(query, args...)
 	if err != nil {
 		log.Error(query)
@@ -71,6 +66,7 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 	}
 	return res.LastInsertId()
 }
+
 func (*UserStore) Delete(id uint64) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
@@ -88,6 +84,7 @@ func (*UserStore) Delete(id uint64) (int64, error) {
 	}
 	return res.LastInsertId()
 }
+
 func (*UserStore) Get(id uint64) (*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
@@ -96,35 +93,19 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	rows, err := db.Query(query, args...)
+	row := db.QueryRow(query, args...)
+	xu := new(model.User)
+	xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+	err := row.Scan(xdst...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
 		return nil, err
 	}
-	defer rows.Close()
-	var data []*model.User
-	for rows.Next() {
-		xu := new(model.User)
-		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
-		err = rows.Scan(xdst...)
-		if err != nil {
-			log.Error(query)
-			log.Error(args...)
-			log.Error(err)
-			return nil, err
-		}
-	}
-	if err = rows.Err(); err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
-		return nil, err
-	}
-	return data, nil
+	return xu, nil
 }
+
 func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
@@ -181,6 +162,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 	}
 	return data, nil
 }
+
 func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
@@ -206,9 +188,10 @@ func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User,
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
-		return nil, err
+		return 0, nil, err
 	}
 	defer rows.Close()
+	var total int64
 	var data []*model.User
 	for rows.Next() {
 		xu := new(model.User)
@@ -219,14 +202,14 @@ func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User,
 			log.Error(query)
 			log.Error(args...)
 			log.Error(err)
-			return nil, err
+			return 0, nil, err
 		}
 	}
 	if err = rows.Err(); err != nil {
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
-		return nil, err
+		return 0, nil, err
 	}
-	return data, nil
+	return total, data, nil
 }

@@ -180,6 +180,11 @@ func (v *Var) Nullable() bool {
 	return !strings.Contains(v.Tag, "NOT NULL")
 }
 
+func (v *Var) IsSlice() bool {
+	_, ok := v.Type().(*types.Slice)
+	return ok
+}
+
 func (v *Var) Wrap() string {
 	switch u := v.Type().(type) {
 	case *types.Pointer, *types.Named:
@@ -227,6 +232,14 @@ func (v *Var) String() string {
 	typ := typeString(v.Store, v.Type())
 	name := v.Name()
 	return name + " " + typ
+}
+
+func (v *Var) TypeName() string {
+	return strings.TrimLeft(v.String(), " *")
+}
+
+func (v *Var) ElemTypeName() string {
+	return strings.TrimLeft(v.String(), " []*")
 }
 
 func typeString(store *Store, t types.Type) string {
