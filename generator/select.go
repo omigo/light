@@ -18,12 +18,20 @@ func writeSelect(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 	}
 
 	if m.Results.Len() == 3 {
-		writePage(buf, m, stmt)
-	} else if m.Results.Len() == 2 {
-		if m.Results.At(0).IsSlice() {
-			writeList(buf, m, stmt)
-		} else {
-			writeGet(buf, m, stmt)
+		for _, f := range stmt.Fragments[1 : len(stmt.Fragments)-1] {
+			writeFragment(buf, m, f)
 		}
+		writePage(buf, m, stmt)
+		return
+	}
+
+	for _, f := range stmt.Fragments {
+		writeFragment(buf, m, f)
+	}
+
+	if m.Results.At(0).IsSlice() {
+		writeList(buf, m, stmt)
+	} else {
+		writeGet(buf, m, stmt)
 	}
 }

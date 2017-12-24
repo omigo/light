@@ -88,7 +88,11 @@ func (*UserStore) Delete(id uint64) (int64, error) {
 func (*UserStore) Get(id uint64) (*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated FROM users WHERE id=?`)
+	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated`)
+	buf.WriteString(`FROM users WHERE id=?`)
+	args = append(args, id)
+	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated`)
+	buf.WriteString(`FROM users WHERE id=?`)
 	args = append(args, id)
 	query := buf.String()
 	log.Debug(query)
@@ -109,7 +113,30 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated FROM users WHERE username LIKE ? `)
+	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated`)
+	buf.WriteString(`FROM users WHERE username LIKE ? `)
+	args = append(args, u.Username)
+	if u.Phone != "" {
+		buf.WriteString(`AND address = ?`)
+		args = append(args, u.Address)
+		if u.Phone != "" {
+			buf.WriteString(`AND phone LIKE ? `)
+			args = append(args, light.String(&u.Phone))
+		}
+		buf.WriteString(`AND created > ? `)
+		args = append(args, u.Created)
+	}
+	buf.WriteString(`AND status != ? `)
+	args = append(args, light.Uint8(&u.Status))
+	if !u.Updated.IsZero() {
+		buf.WriteString(`AND updated > ? `)
+		args = append(args, u.Updated)
+	}
+	buf.WriteString(`AND birthday IS NOT NULL `)
+	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ?`)
+	args = append(args, offset, size)
+	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated`)
+	buf.WriteString(`FROM users WHERE username LIKE ? `)
 	args = append(args, u.Username)
 	if u.Phone != "" {
 		buf.WriteString(`AND address = ?`)
@@ -166,7 +193,8 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated FROM users WHERE username LIKE ? `)
+	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated`)
+	buf.WriteString(`FROM users WHERE username LIKE ? `)
 	args = append(args, u.Username)
 	if u.Phone != "" {
 		buf.WriteString(`AND phone LIKE ? `)
@@ -180,7 +208,34 @@ func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User,
 	}
 	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ?`)
 	args = append(args, page, size)
-	query := buf.String()
+	buf.WriteString(`FROM users WHERE username LIKE ? `)
+	args = append(args, u.Username)
+	if u.Phone != "" {
+		buf.WriteString(`AND phone LIKE ? `)
+		args = append(args, light.String(&u.Phone))
+	}
+	buf.WriteString(`AND status != ? `)
+	args = append(args, light.Uint8(&u.Status))
+	if !u.Updated.IsZero() {
+		buf.WriteString(`AND updated > ? `)
+		args = append(args, u.Updated)
+	}
+
+	var total int64
+	totalQuery := "SELECT count(1) " + buf.String()
+	log.Debug(totalQuery)
+	log.Debug(args...)
+	err := db.QueryRow(totalQuery, args...).Scan(&total)
+	if err != nil {
+		log.Error(totalQuery)
+		log.Error(args...)
+		log.Error(err)
+		return 0, nil, err
+	}
+
+	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ?`)
+	args = append(args, page, size)
+	query := `SELECT id,username,phone,address,status,birthday,created,updated` + buf.String()
 	log.Debug(query)
 	log.Debug(args...)
 	rows, err := db.Query(query, args...)
@@ -191,7 +246,6 @@ func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User,
 		return 0, nil, err
 	}
 	defer rows.Close()
-	var total int64
 	var data []*model.User
 	for rows.Next() {
 		xu := new(model.User)

@@ -11,7 +11,24 @@ func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 	w := buf.WriteString
 	wln := func(s string) { buf.WriteString(s + "\n") }
 
-	wln("query := buf.String()")
+	wln("\nvar total int64")
+	wln(`totalQuery := "SELECT count(1) "+ buf.String()`)
+	wln(`log.Debug(totalQuery)
+	log.Debug(args...)
+	err := db.QueryRow(totalQuery, args...).Scan(&total)
+		if err != nil {
+			log.Error(totalQuery)
+			log.Error(args...)
+			log.Error(err)
+			return 0, nil, err
+		}
+	`)
+
+	writeFragment(buf, m, stmt.Fragments[len(stmt.Fragments)-1])
+
+	w("query := `")
+	w(stmt.Fragments[0].Statement)
+	wln("`+ buf.String()")
 	wln("log.Debug(query)")
 	wln("log.Debug(args...)")
 
@@ -23,8 +40,6 @@ func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 	wln("return 0, nil, err")
 	wln("}")
 	wln("defer rows.Close()")
-
-	wln("var total int64")
 
 	v := m.Results.Result()
 
