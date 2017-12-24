@@ -2,15 +2,13 @@ package generator
 
 import (
 	"bytes"
-	"os"
 	"strings"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
-	"github.com/arstd/log"
 )
 
-func Generate(store *goparser.Store) {
+func Generate(store *goparser.Store) []byte {
 	buf := bytes.NewBuffer(make([]byte, 0, 65536))
 	for _, m := range store.Methods {
 		p := sqlparser.NewParser(bytes.NewBufferString(m.Doc))
@@ -22,18 +20,30 @@ func Generate(store *goparser.Store) {
 		buf.WriteString(m.Signature())
 
 		genCondition(stmt, m)
-		log.JSONIndent(stmt)
+		// log.JSONIndent(stmt)
+
 		switch stmt.Type {
 		case sqlparser.SELECT:
 			writeSelect(buf, m, stmt)
 
+		case sqlparser.INSERT:
+			writeInsert(buf, m, stmt)
+
+		case sqlparser.UPDATE:
+			writeUpdate(buf, m, stmt)
+
+		case sqlparser.DELETE:
+			writeDelete(buf, m, stmt)
+
 		default:
 			panic("unimplemented " + m.Doc)
 		}
-		buf.WriteByte('}')
+		buf.WriteString("}\n")
 	}
 
-	buf.WriteTo(os.Stdout)
+	header := writeHeader(store)
+	buf.WriteTo(header)
+	return header.Bytes()
 }
 
 func genCondition(stmt *sqlparser.Statement, m *goparser.Method) {
@@ -70,4 +80,37 @@ func deepGenCondition(f *sqlparser.Fragment, m *goparser.Method) {
 		cs = append(cs, v.Condition)
 	}
 	f.Condition = strings.Join(cs, " && ")
+}
+
+func writeFragment(buf *bytes.Buffer, m *goparser.Method, v *sqlparser.Fragment) {
+	w := buf.WriteString
+	wln := func(s string) { buf.WriteString(s + "\n") }
+
+	if v.Condition != "" {
+		w("if ")
+		w(v.Condition)
+		wln(" {")
+	}
+
+	if v.Statement != "" {
+		w("buf.WriteString(`")
+		w(v.Statement)
+		wln("`)")
+		if len(v.Variables) > 0 {
+			w("args = append(args")
+			for _, name := range v.Variables {
+				w(", ")
+				w(m.Params.VarByName(name).Value(name))
+			}
+			wln(")")
+		}
+	} else {
+		for _, x := range v.Fragments {
+			writeFragment(buf, m, x)
+		}
+	}
+
+	if v.Condition != "" {
+		wln("}")
+	}
 }

@@ -7,6 +7,7 @@ import (
 )
 
 type Store struct {
+	Source  string
 	Package string            // store
 	Imports map[string]string // fmt database/sql
 	Name    string            // User

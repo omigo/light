@@ -23,7 +23,15 @@ func Parse(src string) *Store {
 	}
 	// ast.Print(fset, f)
 
-	store := &Store{Package: f.Name.Name, Imports: map[string]string{}}
+	store := &Store{
+		Source:  src,
+		Package: f.Name.Name,
+		Imports: map[string]string{
+			"bytes": "",
+			"github.com/arstd/light/light": "",
+			"github.com/arstd/log":         "",
+		},
+	}
 
 	goBuild(src)
 

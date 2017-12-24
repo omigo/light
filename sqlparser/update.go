@@ -4,7 +4,7 @@ import "fmt"
 
 // Parse parses a SQL UPDATE statement.
 func (p *Parser) ParseUpdate() (*Statement, error) {
-	stmt := Statement{}
+	stmt := Statement{Type: UPDATE}
 
 	// First token should be a "UPDATE" keyword.
 	if tok, lit := p.scanIgnoreWhitespace(); tok != UPDATE {

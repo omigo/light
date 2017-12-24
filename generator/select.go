@@ -17,43 +17,10 @@ func writeSelect(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 		writeFragment(buf, m, f)
 	}
 
-	writeExec(buf, m, stmt)
+	writeList(buf, m, stmt)
 }
 
-func writeFragment(buf *bytes.Buffer, m *goparser.Method, v *sqlparser.Fragment) {
-	w := buf.WriteString
-	wln := func(s string) { buf.WriteString(s + "\n") }
-
-	if v.Condition != "" {
-		w("if ")
-		w(v.Condition)
-		wln(" {")
-	}
-
-	if v.Statement != "" {
-		w("buf.WriteString(`")
-		w(v.Statement)
-		wln("`)")
-		if len(v.Variables) > 0 {
-			w("args = append(args")
-			for _, name := range v.Variables {
-				w(", ")
-				w(m.Params.VarByName(name).Value(name))
-			}
-			wln(")")
-		}
-	} else {
-		for _, x := range v.Fragments {
-			writeFragment(buf, m, x)
-		}
-	}
-
-	if v.Condition != "" {
-		wln("}")
-	}
-}
-
-func writeExec(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
+func writeList(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
 	w := buf.WriteString
 	wln := func(s string) { buf.WriteString(s + "\n") }
 
@@ -64,7 +31,7 @@ func writeExec(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 	wln("rows, err := db.Query(query, args...)")
 	wln("if err != nil {")
 	wln("log.Error(query)")
-	wln("log.Error(args)")
+	wln("log.Error(args...)")
 	wln("log.Error(err)")
 	wln("return nil, err")
 	wln("}")
@@ -88,14 +55,14 @@ func writeExec(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 	wln("err = rows.Scan(xdst...)")
 	wln("if err != nil {")
 	wln("log.Error(query)")
-	wln("log.Error(args)")
+	wln("log.Error(args...)")
 	wln("log.Error(err)")
 	wln("return nil, err")
 	wln("}")
 	wln("}")
 	wln("if err = rows.Err(); err != nil {")
 	wln("log.Error(query)")
-	wln("log.Error(args)")
+	wln("log.Error(args...)")
 	wln("log.Error(err)")
 	wln("return nil, err")
 	wln("}")
