@@ -44,7 +44,12 @@ type User interface {
 	// select id, username, phone, address, status, birthday, created, updated
 	// from users
 	// where username like ${u.Username}
-	// [and phone like ${u.Phone}]
+	// [
+	// 	and address = ${u.Address}
+	// 	[and phone like ${u.Phone}]
+	// 	and created > ${u.Created}
+	// ]
+	// and birthday is not null
 	// and status != ${u.Status}
 	// [and updated > ${u.Updated}]
 	// order by updated desc

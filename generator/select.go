@@ -13,10 +13,6 @@ func writeSelect(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 	wln("var buf bytes.Buffer")
 	wln("var args []interface{}")
 
-	for _, f := range stmt.Fragments {
-		writeFragment(buf, m, f)
-	}
-
 	if m.Results.Len() == 3 {
 		for _, f := range stmt.Fragments[1 : len(stmt.Fragments)-1] {
 			writeFragment(buf, m, f)
@@ -28,7 +24,6 @@ func writeSelect(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 	for _, f := range stmt.Fragments {
 		writeFragment(buf, m, f)
 	}
-
 	if m.Results.At(0).IsSlice() {
 		writeList(buf, m, stmt)
 	} else {

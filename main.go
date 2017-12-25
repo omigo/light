@@ -26,7 +26,7 @@ func main() {
 	dst := src[:len(src)-3] + ".light.go"
 	err := ioutil.WriteFile(dst, content, 0666)
 	log.Fataln(err)
-	fmt.Printf("Generated file %s.\n", dst)
+	fmt.Printf("Generated file %s\n", dst)
 
 	pretty, err := imports.Process(dst, content, nil)
 	log.Fataln(err)

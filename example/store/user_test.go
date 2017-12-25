@@ -98,8 +98,9 @@ func TestUserList(t *testing.T) {
 	u := &model.User{
 		Username: "ad%",
 		Updated:  time.Now().Add(-time.Hour),
+		Status:   0,
 	}
-	data, err := store.List(u, 2, 2)
+	data, err := store.List(u, 0, 2)
 	if err != nil {
 		log.Error(err)
 	}
@@ -111,7 +112,7 @@ func TestUserPage(t *testing.T) {
 		Username: "ad%",
 		Updated:  time.Now().Add(-time.Hour),
 	}
-	total, data, err := store.Page(u, 2, 1)
+	total, data, err := store.Page(u, 0, 1)
 	if err != nil {
 		log.Error(err)
 	}

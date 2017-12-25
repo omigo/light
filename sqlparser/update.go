@@ -13,8 +13,5 @@ func (p *Parser) ParseUpdate() (*Statement, error) {
 	p.unscan()
 
 	stmt.Fragments = p.scanFragments()
-
-	stmt.Fragments[0].Statement = "UPDATE " + stmt.Fragments[0].Statement
-	// Return the successfully parsed statement.
 	return &stmt, nil
 }

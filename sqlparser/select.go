@@ -34,6 +34,7 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 		}
 		buf.WriteByte(',')
 	}
+	buf.WriteByte(' ')
 
 	// First token should be a "FROM" keyword.
 	if tok, lit := p.scanIgnoreWhitespace(); tok != FROM {
@@ -44,6 +45,5 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 	stmt.Fragments = append(stmt.Fragments, &Fragment{Statement: buf.String()})
 	stmt.Fragments = append(stmt.Fragments, p.scanFragments()...)
 
-	// Return the successfully parsed statement.
 	return &stmt, nil
 }

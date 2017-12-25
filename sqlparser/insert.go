@@ -8,16 +8,10 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 
 	// First token should be a "INSERT" keyword.
 	if tok, lit := p.scanIgnoreWhitespace(); tok != INSERT {
-		return nil, fmt.Errorf("found %q, expected INSEST", lit)
+		return nil, fmt.Errorf("found %q, expected INSERT", lit)
 	}
-	if tok, lit := p.scanIgnoreWhitespace(); tok != INTO {
-		return nil, fmt.Errorf("found %q, expected INTO", lit)
-	}
+	p.unscan()
 
 	stmt.Fragments = p.scanFragments()
-
-	stmt.Fragments[0].Statement = "INSEST INTO " + stmt.Fragments[0].Statement
-
-	// Return the successfully parsed statement.
 	return &stmt, nil
 }

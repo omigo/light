@@ -10,16 +10,8 @@ func (p *Parser) ParseDelete() (*Statement, error) {
 	if tok, lit := p.scanIgnoreWhitespace(); tok != DELETE {
 		return nil, fmt.Errorf("found %q, expected DELETE", lit)
 	}
-
-	// First token should be a "FROM" keyword.
-	if tok, lit := p.scanIgnoreWhitespace(); tok != FROM {
-		return nil, fmt.Errorf("found %q, expected FROM", lit)
-	}
+	p.unscan()
 
 	stmt.Fragments = p.scanFragments()
-
-	stmt.Fragments[0].Statement = "DELETE FROM " + stmt.Fragments[0].Statement
-
-	// Return the successfully parsed statement.
 	return &stmt, nil
 }

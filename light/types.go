@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"reflect"
+	"strconv"
 )
 
 type ValueScanner interface {
@@ -26,6 +27,13 @@ func String(v *string) ValueScanner {
 //  use plain if database return null, plain is blank
 type istring struct {
 	S *string
+}
+
+func (s *istring) String() string {
+	if s.S != nil {
+		return *s.S
+	}
+	return ""
 }
 
 // Scan implements the Scanner interface.
@@ -64,6 +72,13 @@ type iuint8 struct {
 	S *uint8
 }
 
+func (s *iuint8) String() string {
+	if s.S != nil {
+		return strconv.FormatInt(int64(*s.S), 10)
+	}
+	return "0"
+}
+
 // Scan implements the Scanner interface.
 func (s *iuint8) Scan(value interface{}) error {
 	if value == nil {
@@ -86,7 +101,7 @@ func (s iuint8) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	if *s.S == 0 {
-		return nil, nil
+		return int64(0), nil
 	}
 	return int64(*s.S), nil
 }
