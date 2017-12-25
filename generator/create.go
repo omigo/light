@@ -7,7 +7,7 @@ import (
 	"github.com/arstd/light/sqlparser"
 )
 
-func writeInsert(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
+func writeCreate(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
 	wln := func(s string) { buf.WriteString(s + "\n") }
 
 	wln("var buf bytes.Buffer")
@@ -21,12 +21,11 @@ func writeInsert(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 	wln("log.Debug(query)")
 	wln("log.Debug(args...)")
 
-	wln("res, err := db.Exec(query, args...)")
+	wln("_, err := db.Exec(query, args...)")
 	wln("if err != nil {")
 	wln("log.Error(query)")
 	wln("log.Error(args...)")
 	wln("log.Error(err)")
-	wln("return 0, err")
 	wln("}")
-	wln("return res.LastInsertId()")
+	wln("return err")
 }

@@ -35,6 +35,9 @@ func Generate(store *goparser.Store) []byte {
 		case sqlparser.DELETE:
 			writeDelete(buf, m, stmt)
 
+		case sqlparser.CREATE:
+			writeCreate(buf, m, stmt)
+
 		default:
 			panic("unimplemented " + m.Doc)
 		}

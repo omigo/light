@@ -12,57 +12,32 @@ var store = &UserStore{}
 
 var id uint64
 
+func TestUserCreate(t *testing.T) {
+	err := store.Create()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestUserInsert(t *testing.T) {
 	u := &model.User{
 		Username: "admin" + time.Now().Format("150405"),
 	}
-	a, err := store.Insert(u)
+	id0, err := store.Insert(u)
 	if err != nil {
 		t.Error(err)
 	}
-	log.Json(a)
-	id = uint64(a)
-}
-
-func TestUserDelete(t *testing.T) {
-	a, err := store.Delete(id)
-	if err != nil {
-		t.Error(err)
+	if id0 == 0 {
+		t.Errorf("expect id > 1, but %d", id0)
 	}
-	log.Json(a)
-}
-
-func TestUserInsert2(t *testing.T) {
-	addr := "address"
-	birth := time.Now()
-	u := &model.User{
-		Username: "admin2" + time.Now().Format("150405"),
-		Phone:    "phone",
-		Address:  &addr,
-		Status:   2,
-		Birthday: &birth,
-	}
-	a, err := store.Insert(u)
-	if err != nil {
-		t.Error(err)
-	}
-	log.Json(a)
-	id = uint64(a)
-}
-
-func TestUserDelete2(t *testing.T) {
-	a, err := store.Delete(id)
-	if err != nil {
-		t.Error(err)
-	}
-	log.Json(a)
+	id = uint64(id0)
 }
 
 func TestUserUpdate(t *testing.T) {
 	addr := "address3"
 	birth := time.Now()
 	u := &model.User{
-		Id:       1,
+		Id:       id,
 		Username: "admin3" + time.Now().Format("150405"),
 		Phone:    "phone3",
 		Address:  &addr,
@@ -73,25 +48,19 @@ func TestUserUpdate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	log.Json(a)
+	if a != 1 {
+		t.Errorf("expect affect 1 rows, but %d", a)
+	}
 }
 
 func TestUserGet(t *testing.T) {
-	var id uint64 = 1
 	u, err := store.Get(id)
 	if err != nil {
 		t.Error(err)
 	}
-	log.Json(u)
-}
-
-func TestUserGet2(t *testing.T) {
-	var id uint64 = 2
-	u, err := store.Get(id)
-	if err != nil {
-		log.Error(err)
+	if u == nil {
+		t.Error("expect get one record, but not")
 	}
-	log.Json(u)
 }
 
 func TestUserList(t *testing.T) {
@@ -104,7 +73,9 @@ func TestUserList(t *testing.T) {
 	if err != nil {
 		log.Error(err)
 	}
-	log.Json(data)
+	if len(data) == 0 {
+		t.Error("expect get one or more records, but not")
+	}
 }
 
 func TestUserPage(t *testing.T) {
@@ -116,5 +87,17 @@ func TestUserPage(t *testing.T) {
 	if err != nil {
 		log.Error(err)
 	}
-	log.Json(total, data)
+	if total == 0 || len(data) == 0 {
+		t.Error("expect get one or more records, but not")
+	}
+}
+
+func TestUserDelete(t *testing.T) {
+	a, err := store.Delete(id)
+	if err != nil {
+		t.Error(err)
+	}
+	if a != 1 {
+		t.Errorf("expect affect 1 rows, but %d", a)
+	}
 }

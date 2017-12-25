@@ -4,6 +4,18 @@ import "github.com/arstd/light/example/model"
 
 type User interface {
 
+	// CREATE TABLE IF NOT EXISTS users (
+	// 	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	// 	username VARCHAR(32) NOT NULL UNIQUE,
+	// 	Phone VARCHAR(32),
+	// 	address VARCHAR(256),
+	// 	status TINYINT UNSIGNED,
+	// 	birthday DATE,
+	// 	created TIMESTAMP default CURRENT_TIMESTAMP,
+	// 	updated TIMESTAMP default CURRENT_TIMESTAMP
+	// ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+	Create() error
+
 	// insert into users(username, phone, address, status, birthday, created, updated)
 	// values (${u.Username}, ${u.Phone}, ${u.Address}, ${u.Status}, ${u.Birthday},
 	//   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)

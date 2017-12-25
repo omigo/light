@@ -10,6 +10,22 @@ import (
 
 type UserStore struct{}
 
+func (*UserStore) Create() error {
+	var buf bytes.Buffer
+	var args []interface{}
+	buf.WriteString(`CREATE TABLE IF NOT EXISTS users ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birthday DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8`)
+	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
+	_, err := db.Exec(query, args...)
+	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+	}
+	return err
+}
+
 func (*UserStore) Insert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
@@ -64,7 +80,7 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 		log.Error(err)
 		return 0, err
 	}
-	return res.LastInsertId()
+	return res.RowsAffected()
 }
 
 func (*UserStore) Delete(id uint64) (int64, error) {
@@ -82,7 +98,7 @@ func (*UserStore) Delete(id uint64) (int64, error) {
 		log.Error(err)
 		return 0, err
 	}
-	return res.LastInsertId()
+	return res.RowsAffected()
 }
 
 func (*UserStore) Get(id uint64) (*model.User, error) {
