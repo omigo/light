@@ -144,15 +144,17 @@ func (p *Parser) scanCondition() (v string) {
 		p.unscan()
 		return ""
 	}
+
+	var buf bytes.Buffer
 	for {
 		tok, lit = p.scan()
 		switch tok {
 		default:
-			v += lit
+			buf.WriteString(lit)
 		case WS:
-			v += " "
+			buf.WriteString(" ")
 		case RIGHT_BRACES:
-			return
+			return buf.String()
 		case EOF:
 			panic("expect more words")
 		}

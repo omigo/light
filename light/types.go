@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func String(v *string) ValueScanner  { return &NullString{String0: v} }
+func String(v *string) ValueScanner  { return &NullString{Str: v} }
 func Uint8(v *uint8) ValueScanner    { return &NullUint8{Uint8: v} }
 func Int8(v *int8) ValueScanner      { return &NullInt8{Int8: v} }
 func Uint16(v *uint16) ValueScanner  { return &NullUint16{Uint16: v} }
@@ -29,17 +29,16 @@ type ValueScanner interface {
 // it can be used as a scan destination:
 //
 //  var plain string
-//  s := &String{S:&s}
-//  err := db.QueryRow("SELECT name FROM foo WHERE id=?", id).Scan(&s)
+//  err := db.QueryRow("SELECT name FROM foo WHERE id=?", id).Scan(&String{S:&s})
 //  ...
 //  use plain if database return null, plain is blank
 type NullString struct {
-	String0 *string
+	String_ *string
 }
 
 func (n *NullString) String() string {
-	if n.String0 != nil {
-		return *n.String0
+	if n.String_ != nil {
+		return *n.String_
 	}
 	return ""
 }
@@ -51,9 +50,9 @@ func (s *NullString) Scan(value interface{}) error {
 	}
 	switch v := value.(type) {
 	case []byte:
-		*s.String0 = string(v)
+		*s.String_ = string(v)
 	case *[]byte:
-		*s.String0 = string(*v)
+		*s.String_ = string(*v)
 	default:
 		panic("unsupported type " + reflect.TypeOf(v).String())
 	}

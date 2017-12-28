@@ -56,23 +56,25 @@ func genCondition(stmt *sqlparser.Statement, m *goparser.Method) {
 }
 
 func deepGenCondition(f *sqlparser.Fragment, m *goparser.Method) {
-	if f.Condition == "" {
-		return
-	}
-
 	if len(f.Fragments) == 0 {
-		var cs []string
-		for _, name := range f.Variables {
-			v := m.Params.VarByName(name)
-			d := v.NotDefault(name)
-			cs = append(cs, d)
+		if f.Condition == "-" {
+			var cs []string
+			for _, name := range f.Variables {
+				v := m.Params.VarByName(name)
+				d := v.NotDefault(name)
+				cs = append(cs, d)
+			}
+			f.Condition = strings.Join(cs, " && ")
 		}
-		f.Condition = strings.Join(cs, " && ")
 		return
 	}
 
 	for _, v := range f.Fragments {
 		deepGenCondition(v, m)
+	}
+
+	if f.Condition != "-" {
+		return
 	}
 
 	var cs []string

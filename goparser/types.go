@@ -70,9 +70,8 @@ func (t *Tuple) VarByName(name string) *Var {
 		}
 	}
 	if v == nil {
-		panic(name + " not exist")
+		panic("variable " + parts[0] + " not exist")
 	}
-
 	switch len(parts) {
 	case 1:
 		return v
@@ -85,10 +84,11 @@ func (t *Tuple) VarByName(name string) *Var {
 				return &Var{t.Store, x, s.Tag(i)}
 			}
 		}
+		panic("variable " + name + " not exist")
 
 	default:
+		panic("variable " + name + " to long")
 	}
-	panic(name + " to long")
 }
 
 func (t *Tuple) Result() *Var {
@@ -115,12 +115,18 @@ func (v *Var) VarByTag(field string) *Var {
 	for i := 0; i < s.NumFields(); i++ {
 		tag := s.Tag(i)
 		idx := strings.Index(tag, `db:"`)
-		if idx == -1 {
-			panic("unimplemented")
+		if idx != -1 {
+			t := tag[idx+4:]
+			if strings.HasPrefix(t, field+" ") {
+				return &Var{v.Store, s.Field(i), s.Tag(i)}
+			}
 		}
-		t := tag[idx+4:]
-		if strings.HasPrefix(t, field+" ") {
-			return &Var{v.Store, s.Field(i), s.Tag(i)}
+
+	}
+	for i := 0; i < s.NumFields(); i++ {
+		x := s.Field(i)
+		if strings.EqualFold(field, x.Name()) {
+			return &Var{v.Store, x, s.Tag(i)}
 		}
 	}
 	panic(field + " not found")
@@ -247,8 +253,11 @@ func typeString(store *Store, t types.Type) string {
 	case *types.Named:
 		if obj := u.Obj(); obj != nil {
 			if pkg := obj.Pkg(); pkg != nil {
-				store.Imports[pkg.Path()] = ""
-				return shortPkg(pkg.Path()) + "." + obj.Name()
+				path := pkg.Path()
+				if path != "" && path[0] != '/' {
+					store.Imports[pkg.Path()] = ""
+					return shortPkg(pkg.Path()) + "." + obj.Name()
+				}
 			}
 			return obj.Name()
 		}

@@ -15,7 +15,6 @@ import (
 )
 
 func Parse(src string) *Store {
-
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, src, nil, parser.ParseComments)
 	if err != nil {
@@ -36,14 +35,16 @@ func Parse(src string) *Store {
 	goBuild(src)
 
 	extractDocs(store, f)
-	parseTypes(store, fset, f)
+
+	parseTypes(store)
 
 	return store
 }
 
 func goBuild(src string) {
-	// log.Debugf("go build -i -v  %s", goFile)
-	cmd := exec.Command("go", "build", "-i", "-v", src)
+	cmd := exec.Command("go", "build", "-i")
+	idx := strings.LastIndex(src, "/")
+	cmd.Dir = src[:idx+1]
 	out, err := cmd.CombinedOutput()
 	if bytes.HasSuffix(out, []byte("command-line-arguments\n")) {
 		fmt.Printf("%s", out[:len(out)-23])
@@ -91,10 +92,27 @@ func getDoc(cg *ast.CommentGroup) (comment string) {
 	return strings.TrimSpace(comment)
 }
 
-func parseTypes(store *Store, fset *token.FileSet, f *ast.File) {
+func parseTypes(store *Store) {
+	fset := token.NewFileSet()
+	idx := strings.LastIndex(store.Source, "/")
+	path := store.Source[:idx+1]
+	pkgs, err := parser.ParseDir(fset, path, nil, 0)
+	if err != nil {
+		log.Panic(err)
+	}
+	// ast.Print(fset, f)
+
+	var files []*ast.File
+	for _, p := range pkgs {
+		for _, v := range p.Files {
+			files = append(files, v)
+		}
+	}
+
 	info := types.Info{Defs: make(map[*ast.Ident]types.Object)}
 	conf := types.Config{Importer: importer.Default()}
-	log.Fataln(conf.Check(store.Name, fset, []*ast.File{f}, &info))
+	_, err = conf.Check(path, fset, files, &info)
+	log.Fataln(err)
 
 	for k, obj := range info.Defs {
 		if k.Obj != nil && k.Name == store.Name && k.Obj.Kind == ast.Typ {
