@@ -8,7 +8,7 @@ import (
 	"github.com/arstd/log"
 )
 
-var store = &UserStore{}
+var store User = &UserStore{}
 
 var id uint64
 

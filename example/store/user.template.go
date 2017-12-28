@@ -19,12 +19,12 @@ import (
 // 	Updated  time.Time  `db:"updated TIMESTAMP default CURRENT_TIMESTAMP"`
 // }
 
-// type UserStore struct{}
+type UserStore0 struct{}
 
 // INSERT INTO users(username, phone, address, status, birthday, created, updated)
 // VALUES (${u.Username}, ${u.Phone}, ${u.Address}, ${u.Status}, ${u.Birthday},
 //   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-func (*UserStore) Insert0(u *model.User) (int64, error) {
+func (*UserStore0) Insert0(u *model.User) (int64, error) {
 	query := `insert into users(username, phone, address, status, birthday, created,
 		 updated) values (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
 	args := []interface{}{u.Username, light.String(&u.Phone), u.Address,
@@ -50,7 +50,7 @@ func (*UserStore) Insert0(u *model.User) (int64, error) {
 //     [birthday=${u.Birthday},]
 //     updated=CURRENT_TIMESTAMP
 // WHERE id=${u.Id}
-func (*UserStore) Update0(u *model.User) (int64, error) {
+func (*UserStore0) Update0(u *model.User) (int64, error) {
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
 	args := make([]interface{}, 0, 64)
 	buf.WriteString(`UPDATE users SET `)
@@ -88,7 +88,7 @@ func (*UserStore) Update0(u *model.User) (int64, error) {
 }
 
 // DELETE FROM users WHERE id=${id}
-func (*UserStore) Delete0(id uint64) (int64, error) {
+func (*UserStore0) Delete0(id uint64) (int64, error) {
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
 	args := make([]interface{}, 0, 64)
 	buf.WriteString(`DELETE FROM users WHERE id=? `)
@@ -110,7 +110,7 @@ func (*UserStore) Delete0(id uint64) (int64, error) {
 
 // SELECT *
 // FROM users WHERE id=${id}
-func (*UserStore) Get0(id uint64) (*model.User, error) {
+func (*UserStore0) Get0(id uint64) (*model.User, error) {
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
 	args := make([]interface{}, 0, 64)
 	buf.WriteString(`SELECT id, username, phone, address, status, birthday,
@@ -142,7 +142,7 @@ func (*UserStore) Get0(id uint64) (*model.User, error) {
 // [and phone like ${u.Phone}]
 // [and updated > ${u.Updated}]
 // limit 10
-func (*UserStore) List0(u *model.User) ([]*model.User, error) {
+func (*UserStore0) List0(u *model.User) ([]*model.User, error) {
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
 	args := make([]interface{}, 0, 64)
 	buf.WriteString(`SELECT id, username, phone, address, status, birthday,
@@ -205,7 +205,7 @@ func (*UserStore) List0(u *model.User) ([]*model.User, error) {
 // [and phone like ${u.Phone}]
 // [and updated > ${u.Updated}]
 // limit ${(page-1)*size}, ${size}
-func (*UserStore) Page0(u *model.User, page int, size int) (int64, []*model.User, error) {
+func (*UserStore0) Page0(u *model.User, page int, size int) (int64, []*model.User, error) {
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
 	args := make([]interface{}, 0, 64)
 	listStmt := "SELECT id, username, phone, address, status, birthday, created, updated "

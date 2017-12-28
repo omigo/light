@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func String(v *string) ValueScanner  { return &NullString{Str: v} }
+func String(v *string) ValueScanner  { return &NullString{String_: v} }
 func Uint8(v *uint8) ValueScanner    { return &NullUint8{Uint8: v} }
 func Int8(v *int8) ValueScanner      { return &NullInt8{Int8: v} }
 func Uint16(v *uint16) ValueScanner  { return &NullUint16{Uint16: v} }
@@ -61,13 +61,13 @@ func (s *NullString) Scan(value interface{}) error {
 
 // Value implements the driver Valuer interface.
 func (s NullString) Value() (driver.Value, error) {
-	if s.String0 == nil {
+	if s.String_ == nil {
 		return nil, nil
 	}
-	if *s.String0 == "" {
+	if *s.String_ == "" {
 		return nil, nil
 	}
-	return *s.String0, nil
+	return *s.String_, nil
 }
 
 type NullUint8 struct {
