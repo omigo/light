@@ -20,7 +20,7 @@ type conf struct {
 var Conf conf
 
 func init() {
-	Conf.LogLevel = "warn"
+	Conf.LogLevel = "trace"
 
 	Conf.DB.Dialect = "mysql"
 	Conf.DB.Host = "127.0.0.1"

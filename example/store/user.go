@@ -45,6 +45,10 @@ type User interface {
 	// 	and address = ${u.Address}
 	// 	[and phone like ${u.Phone}]
 	// 	and created > ${u.Created}
+	//  [{(u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1 }
+	//   [and birthday > ${u.Birthday}]
+	//   [and id > ${u.Id}]
+	//  ]
 	// ]
 	// and status != ${u.Status}
 	// [and updated > ${u.Updated}]

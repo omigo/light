@@ -120,6 +120,7 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 		log.Error(err)
 		return nil, err
 	}
+	log.Debug(xdst...)
 	return xu, nil
 }
 
@@ -129,7 +130,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated  `)
 	buf.WriteString(`FROM users WHERE username LIKE ?  `)
 	args = append(args, u.Username)
-	if u.Phone != "" {
+	if (u.Phone != "") || ((u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1) {
 		buf.WriteString(`AND address = ? `)
 		args = append(args, u.Address)
 		if u.Phone != "" {
@@ -138,6 +139,16 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 		}
 		buf.WriteString(`AND created > ?  `)
 		args = append(args, u.Created)
+		if (u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1 {
+			if u.Birthday != nil {
+				buf.WriteString(`AND birthday > ?  `)
+				args = append(args, u.Birthday)
+			}
+			if u.Id != 0 {
+				buf.WriteString(`AND id > ?  `)
+				args = append(args, u.Id)
+			}
+		}
 	}
 	buf.WriteString(`AND status != ?  `)
 	args = append(args, light.Uint8(&u.Status))
@@ -171,6 +182,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 			log.Error(err)
 			return nil, err
 		}
+		log.Debug(xdst...)
 	}
 	if err = rows.Err(); err != nil {
 		log.Error(query)
@@ -240,6 +252,7 @@ func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User,
 			log.Error(err)
 			return 0, nil, err
 		}
+		log.Debug(xdst...)
 	}
 	if err = rows.Err(); err != nil {
 		log.Error(query)

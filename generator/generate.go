@@ -62,7 +62,7 @@ func deepGenCondition(f *sqlparser.Fragment, m *goparser.Method) {
 			for _, name := range f.Variables {
 				v := m.Params.VarByName(name)
 				d := v.NotDefault(name)
-				cs = append(cs, d)
+				cs = append(cs, "("+d+")")
 			}
 			f.Condition = strings.Join(cs, " && ")
 		}
@@ -82,7 +82,7 @@ func deepGenCondition(f *sqlparser.Fragment, m *goparser.Method) {
 		if v.Condition == "" {
 			continue
 		}
-		cs = append(cs, v.Condition)
+		cs = append(cs, "("+v.Condition+")")
 	}
-	f.Condition = strings.Join(cs, " && ")
+	f.Condition = strings.Join(cs, " || ")
 }
