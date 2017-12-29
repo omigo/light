@@ -8,6 +8,7 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -96,7 +97,15 @@ func parseTypes(store *Store) {
 	fset := token.NewFileSet()
 	idx := strings.LastIndex(store.Source, "/")
 	path := store.Source[:idx+1]
-	pkgs, err := parser.ParseDir(fset, path, nil, 0)
+	pkgs, err := parser.ParseDir(fset, path, func(fi os.FileInfo) bool {
+		if strings.HasSuffix(fi.Name(), ".light.go") {
+			return false
+		}
+		if strings.HasSuffix(fi.Name(), "_test.go") {
+			return false
+		}
+		return true
+	}, 0)
 	if err != nil {
 		log.Panic(err)
 	}

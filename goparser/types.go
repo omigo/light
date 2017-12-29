@@ -141,19 +141,18 @@ func (v *Var) NotDefault(name string) string {
 		return name + ` != ""`
 
 	case *types.Basic:
-		switch u.Kind() {
-		case types.String:
+		bi := u.Info()
+		switch {
+		case bi&types.IsString == types.IsString:
 			return name + ` != ""`
-		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
-			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64,
-			types.Float32, types.Float64:
+		case bi&types.IsInteger == types.IsInteger:
 			return name + ` != 0`
-		case types.Bool:
+		case bi&types.IsFloat == types.IsFloat:
+			return name + ` != 0`
+		case bi&types.IsBoolean == types.IsBoolean:
 			return name
-		case types.Uintptr, types.UnsafePointer:
-			return name + " != nil"
 		default:
-			panic(reflect.TypeOf(u))
+			panic(u.Name())
 		}
 
 	case *types.Pointer:
@@ -200,9 +199,8 @@ func (v *Var) Wrap() string {
 		if v.Nullable() {
 			name := u.Name()
 			return "light." + strings.ToUpper(name[:1]) + name[1:]
-		} else {
-			return ""
 		}
+		return ""
 
 	default:
 		panic(reflect.TypeOf(u))

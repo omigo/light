@@ -68,6 +68,8 @@ const (
 	ASC
 	DESC
 	LIMIT
+	UNION
+	ALL
 )
 
 var tokens = []string{
@@ -97,6 +99,8 @@ var tokens = []string{
 	ASC:    "ASC",
 	DESC:   "DESC",
 	LIMIT:  "LIMIT",
+	UNION:  "UNION",
+	ALL:    "ALL",
 }
 
 var keywords map[string]Token

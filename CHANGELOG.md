@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### TODO
 - more test case, and more covering.
-- Generate implemented file by method signature and sql AST.
 - Replace  ${...} with ?
+- Range for sql in (${u.Cities}).
+- Expression for select fields.
 ### Added
 - Parse go source file by go/types(get signatures) and go/parser(get comments).
 - Parse sql (comment) to generate Statement AST.
 - Support CREATE statement.
 - Replacers #{...} like Variables ${...}.
+- Generate implemented file by method signature and sql AST.

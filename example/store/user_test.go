@@ -13,7 +13,7 @@ var store User = &UserStore{}
 var id uint64
 
 func TestUserCreate(t *testing.T) {
-	err := store.Create()
+	err := store.Create("users")
 	if err != nil {
 		t.Error(err)
 	}

@@ -2,6 +2,7 @@ package store
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/arstd/light/example/model"
 	"github.com/arstd/light/light"
@@ -10,10 +11,10 @@ import (
 
 type UserStore struct{}
 
-func (*UserStore) Create() error {
+func (*UserStore) Create(name string) error {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`CREATE TABLE IF NOT EXISTS users ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birthday DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 `)
+	fmt.Fprintf(&buf, `CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birthday DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 `, name)
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)

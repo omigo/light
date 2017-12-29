@@ -23,6 +23,9 @@ _testmain.go
 *.test
 *.prof
 
+# IDE
+.vscode/
+
 vendor/
 
 # generated files
