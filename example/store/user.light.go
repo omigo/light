@@ -69,7 +69,7 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 		args = append(args, u.Birthday)
 	}
 	buf.WriteString(`updated=CURRENT_TIMESTAMP WHERE id=? `)
-	args = append(args, u.Id)
+	args = append(args, light.Uint64(&u.Id))
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -87,7 +87,7 @@ func (*UserStore) Delete(id uint64) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString(`DELETE FROM users WHERE id=? `)
-	args = append(args, id)
+	args = append(args, light.Uint64(&id))
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -106,13 +106,13 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 	var args []interface{}
 	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated  `)
 	buf.WriteString(`FROM users WHERE id=? `)
-	args = append(args, id)
+	args = append(args, light.Uint64(&id))
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
 	row := db.QueryRow(query, args...)
 	xu := new(model.User)
-	xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+	xdst := []interface{}{light.Uint64(&xu.Id), &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
 	if err != nil {
 		log.Error(query)
@@ -146,7 +146,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 			}
 			if u.Id != 0 {
 				buf.WriteString(`AND id > ?  `)
-				args = append(args, u.Id)
+				args = append(args, light.Uint64(&u.Id))
 			}
 		}
 	}
@@ -158,7 +158,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 	}
 	buf.WriteString(`AND birthday IS NOT NULL  `)
 	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ? `)
-	args = append(args, offset, size)
+	args = append(args, light.Int(&offset), light.Int(&size))
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -174,7 +174,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+		xdst := []interface{}{light.Uint64(&xu.Id), &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
 			log.Error(query)
@@ -228,7 +228,7 @@ func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User,
 	}
 
 	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ? `)
-	args = append(args, page, size)
+	args = append(args, light.Int(&page), light.Int(&size))
 	query := `SELECT id,username,phone,address,status,birthday,created,updated ` + buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -244,7 +244,7 @@ func (*UserStore) Page(u *model.User, page int, size int) (int64, []*model.User,
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+		xdst := []interface{}{light.Uint64(&xu.Id), &xu.Username, light.String(&xu.Phone), &xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
 			log.Error(query)

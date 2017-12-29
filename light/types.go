@@ -8,16 +8,21 @@ import (
 	"time"
 )
 
-func String(v *string) ValueScanner  { return &NullString{String_: v} }
-func Uint8(v *uint8) ValueScanner    { return &NullUint8{Uint8: v} }
-func Int8(v *int8) ValueScanner      { return &NullInt8{Int8: v} }
-func Uint16(v *uint16) ValueScanner  { return &NullUint16{Uint16: v} }
-func Int16(v *int16) ValueScanner    { return &NullInt16{Int16: v} }
-func Uint32(v *uint32) ValueScanner  { return &NullUint32{Uint32: v} }
-func Int32(v *int32) ValueScanner    { return &NullInt32{Int32: v} }
-func Uint64(v *uint64) ValueScanner  { return &NullUint64{Uint64: v} }
-func Int64(v *int64) ValueScanner    { return &NullInt64{Int64: v} }
-func Time(v *time.Time) ValueScanner { return &NullTime{Time: v} }
+func String(v *string) ValueScanner   { return &NullString{String_: v} }
+func Uint8(v *uint8) ValueScanner     { return &NullUint8{Uint8: v} }
+func Byte(v *byte) ValueScanner       { return &NullByte{Byte: v} }
+func Int8(v *int8) ValueScanner       { return &NullInt8{Int8: v} }
+func Uint16(v *uint16) ValueScanner   { return &NullUint16{Uint16: v} }
+func Int16(v *int16) ValueScanner     { return &NullInt16{Int16: v} }
+func Uint32(v *uint32) ValueScanner   { return &NullUint32{Uint32: v} }
+func Int32(v *int32) ValueScanner     { return &NullInt32{Int32: v} }
+func Rune(v *rune) ValueScanner       { return &NullRune{Rune: v} }
+func Int(v *int) ValueScanner         { return &NullInt{Int: v} }
+func Uint64(v *uint64) ValueScanner   { return &NullUint64{Uint64: v} }
+func Int64(v *int64) ValueScanner     { return &NullInt64{Int64: v} }
+func Float32(v *float32) ValueScanner { return &NullFloat32{Float32: v} }
+func Float64(v *float64) ValueScanner { return &NullFloat64{Float64: v} }
+func Time(v *time.Time) ValueScanner  { return &NullTime{Time: v} }
 
 type ValueScanner interface {
 	driver.Valuer
@@ -70,6 +75,29 @@ func (s NullString) Value() (driver.Value, error) {
 	return *s.String_, nil
 }
 
+type NullInt struct {
+	Int *int
+}
+
+func (n *NullInt) String() string {
+	if n.Int != nil {
+		return strconv.FormatInt(int64(*n.Int), 10)
+	}
+	return "0"
+}
+func (n *NullInt) Scan(value interface{}) error {
+	if value != nil {
+		*n.Int = int(scan(value))
+	}
+	return nil
+}
+func (n NullInt) Value() (driver.Value, error) {
+	if n.Int == nil {
+		return nil, nil
+	}
+	return int64(*n.Int), nil
+}
+
 type NullUint8 struct {
 	Uint8 *uint8
 }
@@ -91,6 +119,29 @@ func (n NullUint8) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return int64(*n.Uint8), nil
+}
+
+type NullByte struct {
+	Byte *byte
+}
+
+func (n *NullByte) String() string {
+	if n.Byte != nil {
+		return strconv.FormatInt(int64(*n.Byte), 10)
+	}
+	return "0"
+}
+func (n *NullByte) Scan(value interface{}) error {
+	if value != nil {
+		*n.Byte = byte(scan(value))
+	}
+	return nil
+}
+func (n NullByte) Value() (driver.Value, error) {
+	if n.Byte == nil {
+		return nil, nil
+	}
+	return int64(*n.Byte), nil
 }
 
 type NullInt8 struct {
@@ -208,6 +259,29 @@ func (n NullInt32) Value() (driver.Value, error) {
 	return int64(*n.Int32), nil
 }
 
+type NullRune struct {
+	Rune *rune
+}
+
+func (n *NullRune) String() string {
+	if n.Rune != nil {
+		return strconv.FormatInt(int64(*n.Rune), 10)
+	}
+	return "0"
+}
+func (n *NullRune) Scan(value interface{}) error {
+	if value != nil {
+		*n.Rune = rune(scan(value))
+	}
+	return nil
+}
+func (n NullRune) Value() (driver.Value, error) {
+	if n.Rune == nil {
+		return nil, nil
+	}
+	return int64(*n.Rune), nil
+}
+
 type NullUint64 struct {
 	Uint64 *uint64
 }
@@ -251,7 +325,67 @@ func (n NullInt64) Value() (driver.Value, error) {
 	if n.Int64 == nil {
 		return nil, nil
 	}
-	return int64(*n.Int64), nil
+	return *n.Int64, nil
+}
+
+type NullFloat32 struct {
+	Float32 *float32
+}
+
+func (n *NullFloat32) String() string {
+	if n.Float32 != nil {
+		return strconv.FormatFloat(float64(*n.Float32), 'e', 2, 32)
+	}
+	return "0"
+}
+func (n *NullFloat32) Scan(value interface{}) error {
+	if value != nil {
+		switch v := value.(type) {
+		case float32:
+			*n.Float32 = v
+		case *float32:
+			*n.Float32 = *v
+		default:
+			panic("unsupported type " + reflect.TypeOf(v).String())
+		}
+	}
+	return nil
+}
+func (n NullFloat32) Value() (driver.Value, error) {
+	if n.Float32 == nil {
+		return nil, nil
+	}
+	return float64(*n.Float32), nil
+}
+
+type NullFloat64 struct {
+	Float64 *float64
+}
+
+func (n *NullFloat64) String() string {
+	if n.Float64 != nil {
+		return strconv.FormatFloat(*n.Float64, 'e', 2, 32)
+	}
+	return "0"
+}
+func (n *NullFloat64) Scan(value interface{}) error {
+	if value != nil {
+		switch v := value.(type) {
+		case float64:
+			*n.Float64 = v
+		case *float64:
+			*n.Float64 = *v
+		default:
+			panic("unsupported type " + reflect.TypeOf(v).String())
+		}
+	}
+	return nil
+}
+func (n NullFloat64) Value() (driver.Value, error) {
+	if n.Float64 == nil {
+		return nil, nil
+	}
+	return *n.Float64, nil
 }
 
 func scan(value interface{}) int64 {

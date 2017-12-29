@@ -198,14 +198,8 @@ func (v *Var) Wrap() string {
 
 	case *types.Basic:
 		if v.Nullable() {
-			switch u.Kind() {
-			case types.Uint8:
-				return "light.Uint8"
-			case types.String:
-				return "light.String"
-			default:
-				return ""
-			}
+			name := u.Name()
+			return "light." + strings.ToUpper(name[:1]) + name[1:]
 		} else {
 			return ""
 		}
