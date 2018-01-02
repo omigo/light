@@ -14,8 +14,9 @@ const (
 	IDENT // fields, table_name
 
 	// Misc characters
+	SPACE             = ' '
 	DOT               = '.'
-	NUMBER            = '#'
+	POUND             = '#'
 	DOLLAR            = '$'
 	ASTERISK          = '*'
 	COMMA             = ','
@@ -26,14 +27,15 @@ const (
 	RIGHT_BRACKET     = ']'
 	LEFT_BRACES       = '{'
 	RIGHT_BRACES      = '}'
+	QUESTION          = '?'
 )
 
 func isSymbol(ch rune) bool {
 	switch Token(ch) {
-	case DOT, NUMBER, DOLLAR, ASTERISK, COMMA, EQUAL,
+	case DOT, POUND, DOLLAR, ASTERISK, COMMA, EQUAL,
 		LEFT_PARENTHESIS, RIGHT_PARENTHESIS,
 		LEFT_BRACKET, RIGHT_BRACKET,
-		LEFT_BRACES, RIGHT_BRACES:
+		LEFT_BRACES, RIGHT_BRACES, QUESTION:
 		return true
 	default:
 		return false

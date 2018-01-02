@@ -115,7 +115,7 @@ func (p *Parser) scanVariable() (v string) {
 
 func (p *Parser) scanReplacer() (v string) {
 	tok, lit := p.scanIgnoreWhitespace()
-	if tok != NUMBER {
+	if tok != POUND {
 		panic("replacer must start with #")
 	}
 	tok, lit = p.scanIgnoreWhitespace()
@@ -204,9 +204,9 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 			buf.WriteString(lit)
 
 		case WS:
-			buf.WriteRune(space)
+			buf.WriteByte(SPACE)
 
-		case NUMBER:
+		case POUND:
 			p.unscan()
 			lit = p.scanReplacer()
 			f.Replacers = append(f.Replacers, lit)
@@ -216,7 +216,7 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 			p.unscan()
 			lit = p.scanVariable()
 			f.Variables = append(f.Variables, lit)
-			buf.WriteRune(question)
+			buf.WriteByte(QUESTION)
 
 		case LEFT_BRACKET:
 			p.unscan()

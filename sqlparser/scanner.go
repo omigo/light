@@ -8,9 +8,7 @@ import (
 )
 
 const (
-	eof      = 0
-	space    = ' '
-	question = '?'
+	eof = 0
 )
 
 func isWhitespace(ch rune) bool {
