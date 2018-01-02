@@ -251,8 +251,5 @@ END:
 		}
 	}
 	f.Statement = strings.TrimSpace(buf.String())
-	if len(f.Statement) > 0 {
-		f.Statement += " "
-	}
 	return &f, tok
 }
