@@ -17,58 +17,57 @@ type User interface {
 	Create(name string) error
 
 	// insert into users(username, phone, address, status, birthday, created, updated)
-	// values (${u.Username}, ${u.Phone}, ${u.Address}, ${u.Status}, ${u.Birthday},
-	//   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(u *model.User) (int64, error)
 
 	// UPDATE users
-	// SET [username=${u.Username},]
-	//     [phone=${u.Phone},]
-	//     [address=${u.Address},]
-	//     [status=${u.Status},]
-	//     [birthday=${u.Birthday},]
+	// SET [username=?,]
+	//     [phone=?,]
+	//     [address=?,]
+	//     [status=?,]
+	//     [birthday=?,]
 	//     updated=CURRENT_TIMESTAMP
-	// WHERE id=${u.Id}
+	// WHERE id=?
 	Update(u *model.User) (int64, error)
 
-	// DELETE FROM users WHERE id=${id}
+	// DELETE FROM users WHERE id=?
 	Delete(id uint64) (int64, error)
 
 	// select id, username, phone, address, status, birthday, created, updated
-	// FROM users WHERE id=${id}
+	// FROM users WHERE id=?
 	Get(id uint64) (*model.User, error)
 
 	// select id, username, phone, address, status, birthday, created, updated
 	// from users
-	// where username like ${u.Username}
+	// where username like ?
 	// [
-	// 	and address = ${u.Address}
-	// 	[and phone like ${u.Phone}]
-	// 	and created > ${u.Created}
+	// 	and address = ?
+	// 	[and phone like ?]
+	// 	and created > ?
 	//  [{(u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1 }
-	//   [and birthday > ${u.Birthday}]
-	//   [and id > ${u.Id}]
+	//   [and birthday > ?]
+	//   [and id > ?]
 	//  ]
 	// ]
-	// and status != ${u.Status}
-	// [and updated > ${u.Updated}]
+	// and status != ?
+	// [and updated > ?]
 	// and birthday is not null
 	// order by updated desc
-	// limit ${offset}, ${size}
+	// limit ?
 	List(u *model.User, offset, size int) ([]*model.User, error)
 
 	// select id, username, phone, address, status, birthday, created, updated
 	// from users
-	// where username like ${u.Username}
+	// where username like ?
 	// [
-	// 	and address = ${u.Address}
-	// 	[and phone like ${u.Phone}]
-	// 	and created > ${u.Created}
+	// 	and address = ?
+	// 	[and phone like ?]
+	// 	and created > ?
 	// ]
 	// and birthday is not null
-	// and status != ${u.Status}
-	// [and updated > ${u.Updated}]
+	// and status != ?
+	// [and updated > ?]
 	// order by updated desc
-	// limit ${page}, ${size}
-	Page(u *model.User, page int, size int) (int64, []*model.User, error)
+	// limit ${offset}, ${size}
+	Page(u *model.User, offset int, size int) (int64, []*model.User, error)
 }

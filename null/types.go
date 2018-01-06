@@ -1,4 +1,4 @@
-package light
+package null
 
 import (
 	"database/sql"

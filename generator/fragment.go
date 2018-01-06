@@ -36,7 +36,8 @@ func writeFragment(buf *bytes.Buffer, m *goparser.Method, v *sqlparser.Fragment)
 			w("args = append(args")
 			for _, name := range v.Variables {
 				w(", ")
-				w(m.Params.VarByName(name).Value(name))
+				x := m.Params.VarByName(name)
+				w(x.Value(x.VName))
 			}
 			wln(")")
 		}

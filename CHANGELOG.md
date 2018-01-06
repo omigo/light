@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### TODO
 - more test case, and more covering.
-- Replace  ${...} with ?
 - Range for sql in (${u.Cities}).
 - Expression for select fields.
+- Rewrite types
+- Rewrite sql parser
+- id/page/offset/size null wrap not required
+- ${(page-1)*size} Support
 ### Added
+- Intelligent guess, use ? not ${...}
 - Parse go source file by go/types(get signatures) and go/parser(get comments).
 - Parse sql (comment) to generate Statement AST.
 - Support CREATE statement.

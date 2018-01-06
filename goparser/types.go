@@ -53,7 +53,8 @@ func (t *Tuple) String() string {
 }
 
 func (t *Tuple) At(i int) *Var {
-	return &Var{t.Store, t.Tuple.At(i), ""}
+	x := t.Tuple.At(i)
+	return &Var{VName: x.Name(), Store: t.Store, Var: t.Tuple.At(i)}
 }
 
 func (t *Tuple) VarByName(name string) *Var {
@@ -62,6 +63,8 @@ func (t *Tuple) VarByName(name string) *Var {
 	}
 	parts := strings.Split(name, ".")
 	var v *Var
+
+	// 从参数列表中查找
 	for i := 0; i < t.Len(); i++ {
 		x := t.At(i)
 		if x.Name() == parts[0] {
@@ -69,26 +72,44 @@ func (t *Tuple) VarByName(name string) *Var {
 			break
 		}
 	}
-	if v == nil {
+	// 如果找到了
+	if v != nil {
+		switch len(parts) {
+		case 1:
+			return v
+
+		case 2:
+			s := underlying(v.Type())
+			for i := 0; i < s.NumFields(); i++ {
+				x := s.Field(i)
+				if x.Name() == parts[1] {
+					return &Var{VName: name, Store: t.Store, Var: x, Tag: s.Tag(i)}
+				}
+			}
+			panic("variable " + name + " not exist")
+
+		default:
+			panic("variable " + name + " to long")
+		}
+	}
+
+	// 从结构体参数中查找
+	if len(parts) > 1 {
 		panic("variable " + parts[0] + " not exist")
 	}
-	switch len(parts) {
-	case 1:
-		return v
-
-	case 2:
-		s := underlying(v.Type())
-		for i := 0; i < s.NumFields(); i++ {
-			x := s.Field(i)
-			if x.Name() == parts[1] {
-				return &Var{t.Store, x, s.Tag(i)}
+	name = strings.ToUpper(name[:1]) + name[1:]
+	for i := 0; i < t.Len(); i++ {
+		s := underlying(t.At(i).Type())
+		if s != nil {
+			for j := 0; j < s.NumFields(); j++ {
+				x := s.Field(j)
+				if x.Name() == name {
+					return &Var{VName: t.At(i).Name() + "." + x.Name(), Store: t.Store, Var: x, Tag: s.Tag(j)}
+				}
 			}
 		}
-		panic("variable " + name + " not exist")
-
-	default:
-		panic("variable " + name + " to long")
 	}
+	panic("variable " + parts[0] + " not exist")
 }
 
 func (t *Tuple) Result() *Var {
@@ -105,9 +126,10 @@ func (t *Tuple) Result() *Var {
 }
 
 type Var struct {
+	VName string
 	Store *Store `json:"-"`
+	Tag   string
 	*types.Var
-	Tag string
 }
 
 func (v *Var) VarByTag(field string) *Var {
@@ -118,7 +140,7 @@ func (v *Var) VarByTag(field string) *Var {
 		if idx != -1 {
 			t := tag[idx+4:]
 			if strings.HasPrefix(t, field+" ") {
-				return &Var{v.Store, s.Field(i), s.Tag(i)}
+				return &Var{VName: s.Field(i).Name(), Store: v.Store, Var: s.Field(i), Tag: s.Tag(i)}
 			}
 		}
 
@@ -126,7 +148,7 @@ func (v *Var) VarByTag(field string) *Var {
 	for i := 0; i < s.NumFields(); i++ {
 		x := s.Field(i)
 		if strings.EqualFold(field, x.Name()) {
-			return &Var{v.Store, x, s.Tag(i)}
+			return &Var{VName: s.Field(i).Name(), Store: v.Store, Var: s.Field(i), Tag: s.Tag(i)}
 		}
 	}
 	panic(field + " not found")
@@ -175,7 +197,7 @@ func (v *Var) Value(name string) string {
 
 func (v *Var) Scan(name string) string {
 	s := v.Value(name)
-	if strings.HasPrefix(s, "light") {
+	if strings.HasPrefix(s, "null.") {
 		return s
 	}
 	return "&" + s
@@ -198,7 +220,7 @@ func (v *Var) Wrap() string {
 	case *types.Basic:
 		if v.Nullable() {
 			name := u.Name()
-			return "light." + strings.ToUpper(name[:1]) + name[1:]
+			return "null." + strings.ToUpper(name[:1]) + name[1:]
 		}
 		return ""
 
@@ -222,7 +244,7 @@ func underlying(t types.Type) *types.Struct {
 		return u
 
 	default:
-		panic(" unimplement " + reflect.TypeOf(u).String())
+		return nil
 	}
 }
 

@@ -61,7 +61,7 @@ func deepGenCondition(f *sqlparser.Fragment, m *goparser.Method) {
 			var cs []string
 			for _, name := range f.Variables {
 				v := m.Params.VarByName(name)
-				d := v.NotDefault(name)
+				d := v.NotDefault(v.VName)
 				cs = append(cs, "("+d+")")
 			}
 			f.Condition = strings.Join(cs, " && ")

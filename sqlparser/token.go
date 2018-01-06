@@ -1,50 +1,62 @@
+// Package token defines constants representing the lexical tokens of the
+// light and basic operations on tokens (printing, predicates).
+//
 package sqlparser
 
-import "strings"
+import "strconv"
 
-// Token represents a lexical token.
-type Token uint8
+// Token is the set of lexical tokens of the Go programming language.
+type Token int
 
+// The list of tokens.
 const (
 	// Special tokens
 	EOF Token = iota
-	WS
+	COMMENT
 
-	// Literals
-	IDENT // fields, table_name
+	literal_beg
+	// Identifiers and basic type literals
+	// (these tokens stand for classes of literals)
+	IDENT  // main
+	INT    // 12345
+	FLOAT  // 123.45
+	STRING // 'abc'
+	literal_end
+
+	// Special Character
+	POUND    // #
+	DOLLAR   // $
+	LBRACKET // [
+	RBRACKET // ]
+	LBRACES  // {
+	RBRACES  // }
+	QUESTION // ?
+
+	operator_beg
+	// Operator
+	EQ      // =
+	NE      // !=
+	LG      // <>
+	GT      // >
+	GE      // >=
+	LT      // <
+	LE      // <=
+	BETWEEN // between ... and ...
+	operator_end
 
 	// Misc characters
-	SPACE             = ' '
-	DOT               = '.'
-	POUND             = '#'
-	DOLLAR            = '$'
-	ASTERISK          = '*'
-	COMMA             = ','
-	EQUAL             = '='
-	LEFT_PARENTHESIS  = '('
-	RIGHT_PARENTHESIS = ')'
-	LEFT_BRACKET      = '['
-	RIGHT_BRACKET     = ']'
-	LEFT_BRACES       = '{'
-	RIGHT_BRACES      = '}'
-	QUESTION          = '?'
-)
+	SPACE       // SPACE
+	EXCLAMATION // !
+	DOT         // .
+	ASTERISK    // *
+	COMMA       // ,
+	LPAREN      // (
+	RPAREN      // )
+	APOSTROPHE  // '
 
-func isSymbol(ch rune) bool {
-	switch Token(ch) {
-	case DOT, POUND, DOLLAR, ASTERISK, COMMA, EQUAL,
-		LEFT_PARENTHESIS, RIGHT_PARENTHESIS,
-		LEFT_BRACKET, RIGHT_BRACKET,
-		LEFT_BRACES, RIGHT_BRACES, QUESTION:
-		return true
-	default:
-		return false
-	}
-}
-
-const (
+	keyword_beg
 	// Keywords
-	INSERT = 128 + iota
+	INSERT
 	INTO
 	VALUES
 	UPDATE
@@ -72,9 +84,46 @@ const (
 	LIMIT
 	UNION
 	ALL
+	keyword_end
 )
 
-var tokens = []string{
+var tokens = [...]string{
+	// Special tokens
+	EOF:     "EOF",
+	COMMENT: "COMMENT",
+
+	// Literals
+	IDENT: "IDENT", // fields, table_name
+
+	// Special Character
+	POUND:    "#",
+	DOLLAR:   "$",
+	LBRACKET: "[",
+	RBRACKET: "]",
+	LBRACES:  "{",
+	RBRACES:  "}",
+	QUESTION: "?",
+
+	// Operator
+	EQ:      "=",
+	NE:      "!=",
+	LG:      "<>",
+	GT:      ">",
+	GE:      ">=",
+	LT:      "<",
+	LE:      "<=",
+	BETWEEN: "BETWEEN", // between ... and ...
+
+	// Misc characters
+	SPACE:      " ", //
+	DOT:        ".",
+	ASTERISK:   "*",
+	COMMA:      ",",
+	LPAREN:     "(",
+	RPAREN:     ")",
+	APOSTROPHE: "'",
+
+	// Keywords
 	INSERT: "INSERT",
 	INTO:   "INTO",
 	VALUES: "VALUES",
@@ -105,11 +154,57 @@ var tokens = []string{
 	ALL:    "ALL",
 }
 
+// String returns the string corresponding to the token tok.
+// For operators, delimiters, and keywords the string is the actual
+// token character sequence (e.g., for the token ADD, the string is
+// "+"). For all other tokens the string corresponds to the token
+// constant name (e.g. for the token IDENT, the string is "IDENT").
+//
+func (tok Token) String() string {
+	s := ""
+	if 0 <= tok && tok < Token(len(tokens)) {
+		s = tokens[tok]
+	}
+	if s == "" {
+		s = "token(" + strconv.Itoa(int(tok)) + ")"
+	}
+	return s
+}
+
 var keywords map[string]Token
 
 func init() {
 	keywords = make(map[string]Token)
-	for tok, kw := range tokens {
-		keywords[strings.ToUpper(kw)] = Token(tok)
+	for i := EOF; i < keyword_end; i++ {
+		keywords[tokens[i]] = Token(i)
 	}
+}
+
+// Lookup maps an identifier to its keyword token or IDENT (if not a keyword).
+//
+func Lookup(ident string) Token {
+	if tok, is_keyword := keywords[ident]; is_keyword {
+		return tok
+	}
+	return IDENT
+}
+
+// Predicates
+
+// IsLiteral returns true for tokens corresponding to identifiers
+// and basic type literals; it returns false otherwise.
+func (tok Token) IsLiteral() bool {
+	return literal_beg < tok && tok < literal_end
+}
+
+// IsOperator returns true for tokens corresponding to operators and
+// delimiters; it returns false otherwise.
+func (tok Token) IsOperator() bool {
+	return operator_beg < tok && tok < operator_end
+}
+
+// IsKeyword returns true for tokens corresponding to keywords;
+// it returns false otherwise.
+func (tok Token) IsKeyword() bool {
+	return keyword_beg < tok && tok < keyword_end
 }

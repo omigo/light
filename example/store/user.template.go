@@ -4,7 +4,7 @@ import (
 	"bytes"
 
 	"github.com/arstd/light/example/model"
-	"github.com/arstd/light/light"
+	"github.com/arstd/light/null"
 	"github.com/arstd/log"
 )
 
@@ -27,8 +27,8 @@ type UserStore0 struct{}
 func (*UserStore0) Insert0(u *model.User) (int64, error) {
 	query := `insert into users(username, phone, address, status, birthday, created,
 		 updated) values (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
-	args := []interface{}{u.Username, light.String(&u.Phone), u.Address,
-		light.Uint8(&u.Status), u.Birthday}
+	args := []interface{}{u.Username, null.String(&u.Phone), u.Address,
+		null.Uint8(&u.Status), u.Birthday}
 	log.Debug(query)
 	log.Debug(args...)
 
@@ -56,7 +56,7 @@ func (*UserStore0) Update0(u *model.User) (int64, error) {
 	buf.WriteString(`UPDATE users SET `)
 	if u.Phone != "" {
 		buf.WriteString(`phone=?, `)
-		args = append(args, light.String(&u.Phone))
+		args = append(args, null.String(&u.Phone))
 	}
 	if u.Address != nil {
 		buf.WriteString(`address=?, `)
@@ -64,7 +64,7 @@ func (*UserStore0) Update0(u *model.User) (int64, error) {
 	}
 	if u.Status != 0 {
 		buf.WriteString(`status=?, `)
-		args = append(args, light.Uint8(&u.Status))
+		args = append(args, null.Uint8(&u.Status))
 	}
 	if u.Birthday != nil {
 		buf.WriteString(`birthday=?, `)
@@ -123,8 +123,8 @@ func (*UserStore0) Get0(id uint64) (*model.User, error) {
 
 	row := db.QueryRow(query, args...)
 	xu := new(model.User)
-	xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone),
-		&xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone),
+		&xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
 	if err != nil {
 		log.Error(query)
@@ -153,7 +153,7 @@ func (*UserStore0) List0(u *model.User) ([]*model.User, error) {
 	}
 	if u.Phone != "" {
 		buf.WriteString(`and phone like ? `)
-		args = append(args, light.String(&u.Phone))
+		args = append(args, null.String(&u.Phone))
 	}
 	if !u.Updated.IsZero() {
 		buf.WriteString(`and updated > ? `)
@@ -178,8 +178,8 @@ func (*UserStore0) List0(u *model.User) ([]*model.User, error) {
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone),
-			&xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone),
+			&xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
 			log.Error(query)
@@ -217,7 +217,7 @@ func (*UserStore0) Page0(u *model.User, page int, size int) (int64, []*model.Use
 	}
 	if u.Phone != "" {
 		buf.WriteString(`and phone like ? `)
-		args = append(args, light.String(&u.Phone))
+		args = append(args, null.String(&u.Phone))
 	}
 	if !u.Updated.IsZero() {
 		buf.WriteString(`and updated > ? `)
@@ -257,8 +257,8 @@ func (*UserStore0) Page0(u *model.User, page int, size int) (int64, []*model.Use
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, light.String(&xu.Phone),
-			&xu.Address, light.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone),
+			&xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
 			log.Error(query)

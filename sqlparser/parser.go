@@ -22,7 +22,7 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r)}
+	return &Parser{s: NeSPACEcanner(r)}
 }
 
 func (p *Parser) Parse() (s *Statement, err error) {
@@ -82,7 +82,7 @@ func (p *Parser) unscan() { p.buf.n = 1 }
 // scanIgnoreWhitespace scans the next non-whitespace token.
 func (p *Parser) scanIgnoreWhitespace() (tok Token, lit string) {
 	tok, lit = p.scan()
-	if tok == WS {
+	if tok == SPACE {
 		tok, lit = p.scan()
 	}
 	return
@@ -94,7 +94,7 @@ func (p *Parser) scanVariable() (v string) {
 		panic("variable must start with $")
 	}
 	tok, lit = p.scanIgnoreWhitespace()
-	if tok != LEFT_BRACES {
+	if tok != LBRACES {
 		panic("variable must wraped by ${...}")
 	}
 
@@ -103,9 +103,9 @@ func (p *Parser) scanVariable() (v string) {
 		switch tok {
 		default:
 			v += lit
-		case WS:
+		case SPACE:
 			// ingnore
-		case RIGHT_BRACES:
+		case RBRACES:
 			return
 		case EOF:
 			panic("expect more words")
@@ -119,7 +119,7 @@ func (p *Parser) scanReplacer() (v string) {
 		panic("replacer must start with #")
 	}
 	tok, lit = p.scanIgnoreWhitespace()
-	if tok != LEFT_BRACES {
+	if tok != LBRACES {
 		panic("replacer must wraped by #{...}")
 	}
 
@@ -128,9 +128,9 @@ func (p *Parser) scanReplacer() (v string) {
 		switch tok {
 		default:
 			v += lit
-		case WS:
+		case SPACE:
 			// ingnore
-		case RIGHT_BRACES:
+		case RBRACES:
 			return
 		case EOF:
 			panic("expect more words")
@@ -140,7 +140,7 @@ func (p *Parser) scanReplacer() (v string) {
 
 func (p *Parser) scanCondition() (v string) {
 	tok, lit := p.scan()
-	if tok != LEFT_BRACES {
+	if tok != LBRACES {
 		p.unscan()
 		return ""
 	}
@@ -151,9 +151,9 @@ func (p *Parser) scanCondition() (v string) {
 		switch tok {
 		default:
 			buf.WriteString(lit)
-		case WS:
+		case SPACE:
 			buf.WriteString(" ")
-		case RIGHT_BRACES:
+		case RBRACES:
 			return buf.String()
 		case EOF:
 			panic("expect more words")
@@ -180,9 +180,9 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 	var buf bytes.Buffer
 
 	tok, lit := p.scanIgnoreWhitespace()
-	if tok == LEFT_BRACKET {
+	if tok == LBRACKET {
 		inner = true
-	} else if tok == RIGHT_BRACKET {
+	} else if tok == RBRACKET {
 		p.unscan()
 		return nil, EOF
 	} else if tok == ORDER {
@@ -197,14 +197,19 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 		f.Condition = "-"
 	}
 
+	var last string
 	for {
 		tok, lit = p.scan()
 		switch tok {
 		default:
 			buf.WriteString(lit)
 
-		case WS:
-			buf.WriteByte(SPACE)
+		case IDENT:
+			buf.WriteString(lit)
+			last = lit
+
+		case SPACE:
+			buf.WriteString(SPACE.String())
 
 		case POUND:
 			p.unscan()
@@ -212,13 +217,17 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 			f.Replacers = append(f.Replacers, lit)
 			buf.WriteString("%v")
 
+		case QUESTION:
+			f.Variables = append(f.Variables, last)
+			buf.WriteString(QUESTION.String())
+
 		case DOLLAR:
 			p.unscan()
 			lit = p.scanVariable()
 			f.Variables = append(f.Variables, lit)
-			buf.WriteByte(QUESTION)
+			buf.WriteString(QUESTION.String())
 
-		case LEFT_BRACKET:
+		case LBRACKET:
 			p.unscan()
 			if inner {
 				stmt := strings.TrimSpace(buf.String())
@@ -232,7 +241,7 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 			}
 			goto END
 
-		case RIGHT_BRACKET, ORDER, EOF:
+		case RBRACKET, ORDER, EOF:
 			p.unscan()
 			goto END
 		}
@@ -241,12 +250,12 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 END:
 	tok, lit = p.scanIgnoreWhitespace()
 	if inner {
-		if tok != RIGHT_BRACKET {
+		if tok != RBRACKET {
 			panic("expect ], but got " + lit + ", " + buf.String())
 		}
 	} else {
 		p.unscan()
-		if tok == RIGHT_BRACKET {
+		if tok == RBRACKET {
 			tok = EOF
 		}
 	}

@@ -7,14 +7,11 @@ import (
 	"strings"
 )
 
-const (
-	eof = 0
-)
+const eof = 0
 
-func isWhitespace(ch rune) bool {
-	return ch == ' ' || ch == '\t' || ch == '\n'
+func isSpace(ch rune) bool {
+	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
 }
-
 func isLetter(ch rune) bool {
 	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
 }
@@ -27,8 +24,8 @@ type Scanner struct {
 	r *bufio.Reader
 }
 
-// NewScanner returns a new instance of Scanner.
-func NewScanner(r io.Reader) *Scanner {
+// NeSPACEcanner returns a new instance of Scanner.
+func NeSPACEcanner(r io.Reader) *Scanner {
 	return &Scanner{r: bufio.NewReader(r)}
 }
 
@@ -50,29 +47,58 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 	// Read the next rune.
 	ch := s.read()
 
-	// If we see whitespace then consume all contiguous whitespace.
-	// If we see a letter then consume as an ident or reserved word.
-	if isWhitespace(ch) {
+	switch {
+	case isSpace(ch):
 		s.unread()
-		return s.scanWhitespace()
-	} else if isLetter(ch) {
+		return s.scanSpace()
+
+	case isLetter(ch):
 		s.unread()
 		return s.scanIdent()
+
+	default:
 	}
 
-	// Otherwise read the individual character.
-	switch {
-	case Token(ch) == EOF:
+	switch ch {
+	case eof:
 		return EOF, ""
-	case isSymbol(ch):
-		return Token(ch), string(ch)
+
+	case '#', '$', '[', ']', '{', '}', '?', '=', '.', '*', ',', '(', ')':
+		return Lookup(string(ch)), string(ch)
+
+	case '!':
+		next := s.read()
+		if next == '=' {
+			return NE, "!="
+		}
+		s.unread()
+		return EXCLAMATION, "!"
+
+	case '<':
+		next := s.read()
+		if next == '=' {
+			return LE, "<="
+		} else if next == '>' {
+			return NE, "<>"
+		}
+		s.unread()
+		return LT, "<"
+
+	case '>':
+		next := s.read()
+		if next == '=' {
+			return GE, ">="
+		}
+		s.unread()
+		return GT, ">"
+
 	default:
 		return IDENT, string(ch)
 	}
 }
 
 // scanWhitespace consumes the current rune and all contiguous whitespace.
-func (s *Scanner) scanWhitespace() (tok Token, lit string) {
+func (s *Scanner) scanSpace() (tok Token, lit string) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
@@ -82,7 +108,7 @@ func (s *Scanner) scanWhitespace() (tok Token, lit string) {
 	for {
 		if ch := s.read(); ch == eof {
 			break
-		} else if !isWhitespace(ch) {
+		} else if !isSpace(ch) {
 			s.unread()
 			break
 		} else {
@@ -90,7 +116,7 @@ func (s *Scanner) scanWhitespace() (tok Token, lit string) {
 		}
 	}
 
-	return WS, buf.String()
+	return SPACE, buf.String()
 }
 
 // scanIdent consumes the current rune and all contiguous ident runes.

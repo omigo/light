@@ -28,8 +28,8 @@ func Parse(src string) *Store {
 		Package: f.Name.Name,
 		Imports: map[string]string{
 			"bytes": "",
-			"github.com/arstd/light/light": "",
-			"github.com/arstd/log":         "",
+			"github.com/arstd/light/null": "",
+			"github.com/arstd/log":        "",
 		},
 	}
 

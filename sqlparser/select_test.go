@@ -10,13 +10,13 @@ import (
 func TestParseSelectStmt(t *testing.T) {
 	sql := `select id, username, phone, address, status, birthday, created, updated
     	from users
-    	where username like ${u.Username}
+    	where username like ?
     	[
-			and address = ${u.Address}
+			and address = ?
 			[and phone like ${u.Phone}]
 	    	and created > ${u.Created}
 		]
-		and status != ${u.Status}
+		and status != ?
     	[and updated > ${u.Updated}]
 		and birthday is not null
 		order by updated desc

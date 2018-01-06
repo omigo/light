@@ -55,7 +55,7 @@ func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 	for _, f := range stmt.Fields {
 		s := m.Results.Result()
 		v := s.VarByTag(f)
-		name := "xu." + v.Name()
+		name := "xu." + v.VName
 		w(v.Scan(name))
 		w(",")
 	}
