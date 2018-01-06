@@ -28,6 +28,7 @@ type User interface {
 ```
 
 Then, run `go generate ./...`, code generated.
+
 	# go generate ./...
 	Source file    /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.go
 	Generated file /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.light.go
@@ -79,5 +80,7 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 ### More
 
 Complete demo in example.
+
 Source interface: [example/store/user.go](example/store/user.go)
+
 Generated code: [example/store/user.light.go](example/store/user.light.go)
