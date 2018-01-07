@@ -14,10 +14,11 @@ Install `light` tool. Make sure $GOBIN in your $PATH environment.
 
     `go get -u -v github.com/arstd/light`
 
-Define a interface, comment it with `//go:generate light`.
+Define a interface, and comment metheds with SQLs and Variables, then write a directive `//go:generate light`.
 
 ```go
 //go:generate light
+
 type User interface {
     // UPDATE users
     // SET [username=?,]
@@ -31,7 +32,7 @@ type User interface {
 }
 ```
 
-Then, run `go generate ./...`, code generated.
+After that, run `go generate ./...`, code generated.
 
 	# go generate ./...
 	Source file    /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.go
