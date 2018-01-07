@@ -2,7 +2,7 @@ package store
 
 import "github.com/arstd/light/example/model"
 
-//go:generate light
+//go:generate light -log
 
 type User interface {
 

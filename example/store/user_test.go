@@ -67,7 +67,7 @@ func TestUserList(t *testing.T) {
 	u := &model.User{
 		Username: "ad%",
 		Updated:  time.Now().Add(-time.Hour),
-		Status:   0,
+		Status:   9,
 	}
 	data, err := store.List(u, 0, 2)
 	if err != nil {
@@ -82,6 +82,7 @@ func TestUserPage(t *testing.T) {
 	u := &model.User{
 		Username: "ad%",
 		Updated:  time.Now().Add(-time.Hour),
+		Status:   9,
 	}
 	total, data, err := store.Page(u, 0, 1)
 	if err != nil {
@@ -92,7 +93,7 @@ func TestUserPage(t *testing.T) {
 	}
 }
 
-func TestUserDelete(t *testing.T) {
+func xTestUserDelete(t *testing.T) {
 	a, err := store.Delete(id)
 	if err != nil {
 		t.Error(err)
