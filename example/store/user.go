@@ -3,6 +3,7 @@ package store
 import "github.com/arstd/light/example/model"
 
 //go:generate light
+
 type User interface {
 
 	// CREATE TABLE IF NOT EXISTS #{name} (
