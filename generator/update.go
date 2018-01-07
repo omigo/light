@@ -18,14 +18,18 @@ func writeUpdate(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 	}
 
 	wln("query := buf.String()")
-	wln("log.Debug(query)")
-	wln("log.Debug(args...)")
+	if m.Store.Log {
+		wln("log.Debug(query)")
+		wln("log.Debug(args...)")
+	}
 
 	wln("res, err := db.Exec(query, args...)")
 	wln("if err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
+	if m.Store.Log {
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+	}
 	wln("return 0, err")
 	wln("}")
 	wln("return res.RowsAffected()")

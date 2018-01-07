@@ -26,11 +26,7 @@ func Parse(src string) *Store {
 	store := &Store{
 		Source:  src,
 		Package: f.Name.Name,
-		Imports: map[string]string{
-			"bytes": "",
-			"github.com/arstd/light/null": "",
-			"github.com/arstd/log":        "",
-		},
+		Imports: map[string]string{},
 	}
 
 	goBuild(src)

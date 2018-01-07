@@ -18,14 +18,18 @@ func writeCreate(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 	}
 
 	wln("query := buf.String()")
-	wln("log.Debug(query)")
-	wln("log.Debug(args...)")
+	if m.Store.Log {
+		wln("log.Debug(query)")
+		wln("log.Debug(args...)")
+	}
 
 	wln("_, err := db.Exec(query, args...)")
-	wln("if err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
-	wln("}")
+	if m.Store.Log {
+		wln("if err != nil {")
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+		wln("}")
+	}
 	wln("return err")
 }

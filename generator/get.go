@@ -12,8 +12,10 @@ func writeGet(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) 
 	wln := func(s string) { buf.WriteString(s + "\n") }
 
 	wln("query := buf.String()")
-	wln("log.Debug(query)")
-	wln("log.Debug(args...)")
+	if m.Store.Log {
+		wln("log.Debug(query)")
+		wln("log.Debug(args...)")
+	}
 
 	wln("row := db.QueryRow(query, args...)")
 
@@ -34,13 +36,15 @@ func writeGet(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) 
 	wln("}")
 
 	wln("err := row.Scan(xdst...)")
-	wln("if err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
-	wln("return nil, err")
-	wln("}")
-	wln("log.Debug(xdst...)")
+	if m.Store.Log {
+		wln("if err != nil {")
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+		wln("return nil, err")
+		wln("}")
+		wln("log.Debug(xdst...)")
+	}
 
-	wln("return xu, nil")
+	wln("return xu, err")
 }

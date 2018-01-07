@@ -13,30 +13,37 @@ func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 
 	wln("\nvar total int64")
 	wln(`totalQuery := "SELECT count(1) "+ buf.String()`)
-	wln(`log.Debug(totalQuery)
-	log.Debug(args...)
-	err := db.QueryRow(totalQuery, args...).Scan(&total)
-		if err != nil {
-			log.Error(totalQuery)
+	if m.Store.Log {
+		wln(`log.Debug(totalQuery)
+		log.Debug(args...)`)
+	}
+	wln(`err := db.QueryRow(totalQuery, args...).Scan(&total)
+		if err != nil {`)
+	if m.Store.Log {
+		wln(`log.Error(totalQuery)
 			log.Error(args...)
-			log.Error(err)
-			return 0, nil, err
-		}
-	`)
+			log.Error(err)`)
+	}
+	wln(`return 0, nil, err
+		}`)
 
 	writeFragment(buf, m, stmt.Fragments[len(stmt.Fragments)-1])
 
 	w("query := `")
 	w(stmt.Fragments[0].Statement)
 	wln("`+ buf.String()")
-	wln("log.Debug(query)")
-	wln("log.Debug(args...)")
+	if m.Store.Log {
+		wln("log.Debug(query)")
+		wln("log.Debug(args...)")
+	}
 
 	wln("rows, err := db.Query(query, args...)")
 	wln("if err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
+	if m.Store.Log {
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+	}
 	wln("return 0, nil, err")
 	wln("}")
 	wln("defer rows.Close()")
@@ -64,17 +71,23 @@ func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 
 	wln("err = rows.Scan(xdst...)")
 	wln("if err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
+	if m.Store.Log {
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+	}
 	wln("return 0, nil, err")
 	wln("}")
-	wln("log.Debug(xdst...)")
+	if m.Store.Log {
+		wln("log.Debug(xdst...)")
+	}
 	wln("}")
 	wln("if err = rows.Err(); err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
+	if m.Store.Log {
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+	}
 	wln("return 0, nil, err")
 	wln("}")
 

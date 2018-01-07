@@ -34,6 +34,7 @@ func open() {
 	log.Fataln(err)
 
 	db.SetMaxIdleConns(0)
+	db.SetMaxOpenConns(1)
 	db.SetConnMaxLifetime(0)
 }
 

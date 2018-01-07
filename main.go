@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,10 +12,14 @@ import (
 	"golang.org/x/tools/imports"
 )
 
+var (
+	lg = flag.Bool("log", false, "Generated file with log")
+)
+
 func main() {
 	src := os.Getenv("GOFILE")
 	if src == "" {
-		src = "/Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.go"
+		src = os.Getenv("GOPATH") + "/src/github.com/arstd/light/example/store/user.go"
 	}
 	if src[0] != '/' {
 		wd, err := os.Getwd()
@@ -27,6 +32,7 @@ func main() {
 
 	store := goparser.Parse(src)
 	// log.JSONIndent(store)
+	store.Log = *lg
 
 	content := generator.Generate(store)
 

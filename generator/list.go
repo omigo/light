@@ -12,14 +12,18 @@ func writeList(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 	wln := func(s string) { buf.WriteString(s + "\n") }
 
 	wln("query := buf.String()")
-	wln("log.Debug(query)")
-	wln("log.Debug(args...)")
+	if m.Store.Log {
+		wln("log.Debug(query)")
+		wln("log.Debug(args...)")
+	}
 
 	wln("rows, err := db.Query(query, args...)")
 	wln("if err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
+	if m.Store.Log {
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+	}
 	wln("return nil, err")
 	wln("}")
 	wln("defer rows.Close()")
@@ -47,17 +51,24 @@ func writeList(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 
 	wln("err = rows.Scan(xdst...)")
 	wln("if err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
+	if m.Store.Log {
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+	}
 	wln("return nil, err")
 	wln("}")
-	wln("log.Debug(xdst...)")
+
+	if m.Store.Log {
+		wln("log.Debug(xdst...)")
+	}
 	wln("}")
 	wln("if err = rows.Err(); err != nil {")
-	wln("log.Error(query)")
-	wln("log.Error(args...)")
-	wln("log.Error(err)")
+	if m.Store.Log {
+		wln("log.Error(query)")
+		wln("log.Error(args...)")
+		wln("log.Error(err)")
+	}
 	wln("return nil, err")
 	wln("}")
 
