@@ -2,7 +2,7 @@ light
 =====
 
 `light` is a tool for generating database query code from go source file with
-interface methods and sqls.
+interface methods commented with SQLs and Variables.
 
 `Interface commented methods with SQL and variables` => `go generate`=> `Database query code implementation`
 
@@ -14,7 +14,14 @@ Install `light` tool. Make sure $GOBIN in your $PATH environment.
 
     `go get -u -v github.com/arstd/light`
 
-Define a interface, and comment metheds with SQLs and Variables, then write a directive `//go:generate light`.
+Run `light -h`, check install.
+
+    # light -h
+    Usage of light:
+      -log
+        	Generated file with log
+
+Define a interface, and comment methods with SQLs and Variables, then write a directive `//go:generate light`.
 
 ```go
 //go:generate light

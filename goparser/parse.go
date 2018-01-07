@@ -49,7 +49,7 @@ func goBuild(src string) {
 		fmt.Printf("%s", out)
 	}
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 }
 
