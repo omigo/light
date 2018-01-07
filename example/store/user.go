@@ -54,7 +54,7 @@ type User interface {
 	// [and updated > ?]
 	// and birthday is not null
 	// order by updated desc
-	// limit ?
+	// limit ${offset}, ${size}
 	List(u *model.User, offset, size int) ([]*model.User, error)
 
 	// select id, username, phone, address, status, birthday, created, updated

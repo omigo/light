@@ -33,7 +33,7 @@ func (*UserStore) Create(name string) error {
 func (*UserStore) Insert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`INSERT INTO users(username,phone,address,status,birthday,created,updated)VALUES(?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) `)
+	buf.WriteString(`INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) `)
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
 	query := buf.String()
 	log.Debug(query)
@@ -161,8 +161,8 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 		args = append(args, u.Updated)
 	}
 	buf.WriteString(`AND birthday IS NOT NULL `)
-	buf.WriteString(`ORDER BY updated DESC LIMIT ? `)
-	args = append(args, u.Updated)
+	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ? `)
+	args = append(args, null.Int(&offset), null.Int(&size))
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)

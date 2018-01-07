@@ -62,7 +62,7 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 	if tok, lit := p.scanIgnoreWhitespace(); tok != VALUES {
 		return nil, fmt.Errorf("found %q, expected `VALUES`", lit)
 	}
-	buf.WriteString("VALUES")
+	buf.WriteString(" VALUES ")
 	if tok, lit := p.scanIgnoreWhitespace(); tok != LPAREN {
 		return nil, fmt.Errorf("found %q, expected `(`", lit)
 	}
