@@ -4,6 +4,8 @@ light
 `light` is a tool for generating database query code from go source file with
 interface methods and sqls.
 
+`Interface commented methods with SQL and variables` => `go generate`=> `Database query code implementation`
+
 ![light.jpg](light.jpg)
 
 ### Usage
