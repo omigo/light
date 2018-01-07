@@ -10,7 +10,7 @@ Install `light` tool. Make sure $GOBIN in your $PATH environment.
 
     `go get -u -v github.com/arstd/light`
 
-Define a interface, comment it use `//go:generate light`, like this:
+Define a interface, comment it with `//go:generate light`.
 
 ```go
 //go:generate light
@@ -28,9 +28,10 @@ type User interface {
 ```
 
 Then, run `go generate ./...`, code generated.
-# go generate ./...
-Source file    /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.go
-Generated file /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.light.go
+
+	# go generate ./...
+	Source file    /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.go
+	Generated file /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.light.go
 
 ```go
 
@@ -78,6 +79,8 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 
 ### More
 
-Complete demo
+Complete demo in example.
+
 Source interface: [example/store/user.go](example/store/user.go)
+
 Generated code: [example/store/user.light.go](example/store/user.light.go)
