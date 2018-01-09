@@ -18,11 +18,11 @@ create table users (
 */
 type User struct {
 	Id       uint64
-	Username string `db:"username VARCHAR(32) NOT NULL UNIQUE"`
-	Phone    string
-	Address  *string
-	Status   Status
-	Birthday *time.Time
+	Username string
+	Phone    string     `light:",nullable"`
+	Address  *string    `light:",nullable"`
+	Status   Status     `light:",nullable"`
+	Birthday *time.Time `light:",nullable"`
 	Created  time.Time
 	Updated  time.Time
 }

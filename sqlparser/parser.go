@@ -51,10 +51,6 @@ func (p *Parser) Parse() (s *Statement, err error) {
 		return nil, err
 	}
 
-	if len(s.Fragments) > 0 {
-		f := s.Fragments[len(s.Fragments)-1]
-		f.Statement = strings.TrimSpace(f.Statement)
-	}
 	return s, err
 }
 

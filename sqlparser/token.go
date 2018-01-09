@@ -84,6 +84,7 @@ const (
 	LIMIT
 	UNION
 	ALL
+	CURRENT_TIMESTAMP
 	keyword_end
 )
 
@@ -124,34 +125,35 @@ var tokens = [...]string{
 	APOSTROPHE: "'",
 
 	// Keywords
-	INSERT: "INSERT",
-	INTO:   "INTO",
-	VALUES: "VALUES",
-	UPDATE: "UPDATE",
-	SET:    "SET",
-	DELETE: "DELETE",
-	CREATE: "CREATE",
-	TABLE:  "TABLE",
-	IF:     "IF",
-	SELECT: "SELECT",
-	FROM:   "FROM",
-	WHERE:  "WHERE",
-	AND:    "AND",
-	OR:     "OR",
-	LIKE:   "LIKE",
-	NOT:    "NOT",
-	EXISTS: "EXISTS",
-	GROUP:  "GROUP",
-	BY:     "BY",
-	ORDER:  "ORDER",
-	HAVING: "HAVING",
-	IS:     "IS",
-	NULL:   "NULL",
-	ASC:    "ASC",
-	DESC:   "DESC",
-	LIMIT:  "LIMIT",
-	UNION:  "UNION",
-	ALL:    "ALL",
+	INSERT:            "INSERT",
+	INTO:              "INTO",
+	VALUES:            "VALUES",
+	UPDATE:            "UPDATE",
+	SET:               "SET",
+	DELETE:            "DELETE",
+	CREATE:            "CREATE",
+	TABLE:             "TABLE",
+	IF:                "IF",
+	SELECT:            "SELECT",
+	FROM:              "FROM",
+	WHERE:             "WHERE",
+	AND:               "AND",
+	OR:                "OR",
+	LIKE:              "LIKE",
+	NOT:               "NOT",
+	EXISTS:            "EXISTS",
+	GROUP:             "GROUP",
+	BY:                "BY",
+	ORDER:             "ORDER",
+	HAVING:            "HAVING",
+	IS:                "IS",
+	NULL:              "NULL",
+	ASC:               "ASC",
+	DESC:              "DESC",
+	LIMIT:             "LIMIT",
+	UNION:             "UNION",
+	ALL:               "ALL",
+	CURRENT_TIMESTAMP: "CURRENT_TIMESTAMP",
 }
 
 // String returns the string corresponding to the token tok.

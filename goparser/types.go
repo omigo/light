@@ -85,7 +85,8 @@ func (t *Tuple) VarByName(name string) *Var {
 			for i := 0; i < s.NumFields(); i++ {
 				x := s.Field(i)
 				if x.Name() == parts[1] {
-					return &Var{VName: name, Store: t.Store, Var: x, Tag: s.Tag(i)}
+					z := getTag(s.Tag(i), "light")
+					return &Var{VName: name, Store: t.Store, Var: x, Tag: z}
 				}
 			}
 			panic("variable " + name + " not exist")
@@ -106,7 +107,13 @@ func (t *Tuple) VarByName(name string) *Var {
 			for j := 0; j < s.NumFields(); j++ {
 				x := s.Field(j)
 				if x.Name() == name {
-					return &Var{VName: t.At(i).Name() + "." + x.Name(), Store: t.Store, Var: x, Tag: s.Tag(j)}
+					z := getTag(s.Tag(j), "light")
+					return &Var{
+						VName: t.At(i).Name() + "." + x.Name(),
+						Store: t.Store,
+						Var:   x,
+						Tag:   z,
+					}
 				}
 			}
 		}
@@ -138,22 +145,47 @@ func (v *Var) VarByTag(field string) *Var {
 	s := underlying(v.Type())
 	for i := 0; i < s.NumFields(); i++ {
 		tag := s.Tag(i)
-		idx := strings.Index(tag, `db:"`)
-		if idx != -1 {
-			t := tag[idx+4:]
-			if strings.HasPrefix(t, field+" ") {
-				return &Var{VName: s.Field(i).Name(), Store: v.Store, Var: s.Field(i), Tag: s.Tag(i)}
+		t := getTag(tag, "light")
+		if t != "" {
+			tt := strings.Split(t, ",")
+			if tt[0] != "" {
+				if strings.HasPrefix(t, tt[0]) {
+					return &Var{
+						VName: s.Field(i).Name(),
+						Store: v.Store,
+						Var:   s.Field(i),
+						Tag:   t,
+					}
+				}
 			}
 		}
-
 	}
 	for i := 0; i < s.NumFields(); i++ {
 		x := s.Field(i)
 		if strings.EqualFold(field, x.Name()) {
-			return &Var{VName: s.Field(i).Name(), Store: v.Store, Var: s.Field(i), Tag: s.Tag(i)}
+			t := getTag(s.Tag(i), "light")
+			return &Var{
+				VName: s.Field(i).Name(),
+				Store: v.Store,
+				Var:   s.Field(i),
+				Tag:   t,
+			}
 		}
 	}
 	panic(field + " not found")
+}
+
+func getTag(tag, key string) string {
+	idx := strings.Index(tag, key+`:"`)
+	if idx == -1 {
+		return ""
+	}
+	tag = tag[idx+len(key)+2:]
+	idx = strings.Index(tag, `"`)
+	if idx == -1 {
+		panic(tag)
+	}
+	return tag[:idx]
 }
 
 func (v *Var) NotDefault(name string) string {
@@ -206,7 +238,15 @@ func (v *Var) Scan(name string) string {
 }
 
 func (v *Var) Nullable() bool {
-	return !strings.Contains(v.Tag, "NOT NULL")
+	for i, v := range strings.Split(v.Tag, ",") {
+		if i == 0 {
+			continue
+		}
+		if v == "nullable" {
+			return true
+		}
+	}
+	return false
 }
 
 func (v *Var) IsSlice() bool {

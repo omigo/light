@@ -5,6 +5,7 @@ import (
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
+	"github.com/arstd/log"
 )
 
 func writeGet(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
@@ -30,6 +31,7 @@ func writeGet(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) 
 		v := s.VarByTag(f)
 		name := "xu." + v.VName
 		w(v.Scan(name))
+		log.Debug(f, v.Scan(name))
 		w(",")
 	}
 	buf.Truncate(buf.Len() - 1)
