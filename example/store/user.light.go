@@ -9,6 +9,7 @@ import (
 
 	"github.com/arstd/light/example/model"
 	"github.com/arstd/light/null"
+	"github.com/arstd/log"
 )
 
 type UserStore struct{}
@@ -18,7 +19,14 @@ func (*UserStore) Create(name string) error {
 	var args []interface{}
 	fmt.Fprintf(&buf, `CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birthday DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 `, name)
 	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
 	_, err := db.Exec(query, args...)
+	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+	}
 	return err
 }
 
@@ -28,8 +36,31 @@ func (*UserStore) Insert(u *model.User) (int64, error) {
 	buf.WriteString(`INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) `)
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
 	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
 	res, err := db.Exec(query, args...)
 	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func (*UserStore) Upsert(u *model.User) (int64, error) {
+	var buf bytes.Buffer
+	var args []interface{}
+	buf.WriteString(`INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) on duplicate key UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birthday=VALUES(birthday), updated=CURRENT_TIMESTAMP `)
+	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
+	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
+	res, err := db.Exec(query, args...)
+	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
 		return 0, err
 	}
 	return res.LastInsertId()
@@ -41,8 +72,13 @@ func (*UserStore) Replace(u *model.User) (int64, error) {
 	buf.WriteString(`REPLACE INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) `)
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
 	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
 	res, err := db.Exec(query, args...)
 	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
 		return 0, err
 	}
 	return res.LastInsertId()
@@ -75,8 +111,13 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 	buf.WriteString(`updated=CURRENT_TIMESTAMP WHERE id=? `)
 	args = append(args, u.Id)
 	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
 	res, err := db.Exec(query, args...)
 	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
 		return 0, err
 	}
 	return res.RowsAffected()
@@ -88,8 +129,13 @@ func (*UserStore) Delete(id uint64) (int64, error) {
 	buf.WriteString(`DELETE FROM users WHERE id=? `)
 	args = append(args, id)
 	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
 	res, err := db.Exec(query, args...)
 	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
 		return 0, err
 	}
 	return res.RowsAffected()
@@ -102,10 +148,19 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 	buf.WriteString(`FROM users WHERE id=? `)
 	args = append(args, id)
 	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
 	row := db.QueryRow(query, args...)
 	xu := new(model.User)
 	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
+	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+		return nil, err
+	}
+	log.Debug(xdst...)
 	return xu, err
 }
 
@@ -145,8 +200,13 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ? `)
 	args = append(args, offset, size)
 	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
 	rows, err := db.Query(query, args...)
 	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -157,10 +217,17 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
+			log.Error(query)
+			log.Error(args...)
+			log.Error(err)
 			return nil, err
 		}
+		log.Debug(xdst...)
 	}
 	if err = rows.Err(); err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
 		return nil, err
 	}
 	return data, nil
@@ -190,15 +257,25 @@ func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.Use
 
 	var total int64
 	totalQuery := "SELECT count(1) " + buf.String()
+	log.Debug(totalQuery)
+	log.Debug(args...)
 	err := db.QueryRow(totalQuery, args...).Scan(&total)
 	if err != nil {
+		log.Error(totalQuery)
+		log.Error(args...)
+		log.Error(err)
 		return 0, nil, err
 	}
 	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ? `)
 	args = append(args, offset, size)
 	query := `SELECT id,username,phone,address,status,birthday,created,updated ` + buf.String()
+	log.Debug(query)
+	log.Debug(args...)
 	rows, err := db.Query(query, args...)
 	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
 		return 0, nil, err
 	}
 	defer rows.Close()
@@ -209,10 +286,17 @@ func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.Use
 		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
+			log.Error(query)
+			log.Error(args...)
+			log.Error(err)
 			return 0, nil, err
 		}
+		log.Debug(xdst...)
 	}
 	if err = rows.Err(); err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
 		return 0, nil, err
 	}
 	return total, data, nil

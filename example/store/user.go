@@ -2,7 +2,7 @@ package store
 
 import "github.com/arstd/light/example/model"
 
-//go:generate light
+//go:generate light -log
 
 type User interface {
 
@@ -21,6 +21,13 @@ type User interface {
 	// insert into users(username, phone, address, status, birthday, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(u *model.User) (int64, error)
+
+	// insert into users(username, phone, address, status, birthday, created, updated)
+	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	// on duplicate key update
+	//   username=values(username), phone=values(phone), address=values(address),
+	//   status=values(status), birthday=values(birthday), updated=CURRENT_TIMESTAMP
+	Upsert(u *model.User) (int64, error)
 
 	// replace into users(username, phone, address, status, birthday, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)

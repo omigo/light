@@ -19,9 +19,12 @@ func TestUserCreate(t *testing.T) {
 	}
 }
 
+var username string
+
 func TestUserInsert(t *testing.T) {
+	username = "admin" + time.Now().Format("150405")
 	u := &model.User{
-		Username: "admin" + time.Now().Format("150405"),
+		Username: username,
 	}
 	id0, err := store.Insert(u)
 	if err != nil {
@@ -33,7 +36,20 @@ func TestUserInsert(t *testing.T) {
 	id = uint64(id0)
 }
 
-func TestUserDelete0(t *testing.T) {
+func TestUserUpsert(t *testing.T) {
+	u := &model.User{
+		Username: username,
+	}
+	id0, err := store.Upsert(u)
+	if err != nil {
+		t.Error(err)
+	}
+	if id0 != 0 {
+		t.Errorf("expect id = 0, but %d", id0)
+	}
+}
+
+func TestUserDelete1(t *testing.T) {
 	a, err := store.Delete(id)
 	if err != nil {
 		t.Error(err)

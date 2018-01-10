@@ -9,9 +9,11 @@ import (
 
 func TestParseInsertStmt(t *testing.T) {
 	sql := `
-	insert into users_#{u.Username}(username, phone, address, status, birthday, created, updated)
-	values (?, ${u.Phone}, ${u.Address}, ${u.Status}, ${u.Birthday},
-	  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+		insert into users(username, phone, address, status, birthday, created, updated)
+		values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)on duplicate key update
+		  username=values(?), phone=values(?), address=values(?),
+		  status=values(?), birthday=values(?), update=CURRENT_TIMESTAMP
+	`
 
 	p := NewParser(bytes.NewBufferString(sql))
 	stmt, err := p.Parse()

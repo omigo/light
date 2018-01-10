@@ -6,8 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### TODO
-- more test case, and more covering.
+- Fields is keyword
+- Literal '...'
 - Range for sql in (${u.Cities}).
+- more test case, and more covering.
 - Expression for select fields.
 - Rewrite types
 - Rewrite sql parser

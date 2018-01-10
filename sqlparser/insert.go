@@ -9,9 +9,8 @@ import (
 // Parse parses a SQL INSERT statement.
 func (p *Parser) ParseInsert() (*Statement, error) {
 	stmt := Statement{Type: INSERT}
-	f := Fragment{}
-	stmt.Fragments = append(stmt.Fragments, &f)
 
+	f := Fragment{}
 	var buf bytes.Buffer
 	// First token should be a "INSERT" keyword.
 	if tok, lit := p.scanIgnoreWhitespace(); tok != INSERT {
@@ -95,6 +94,21 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 		}
 	}
 
-	f.Statement = strings.TrimSpace(buf.String())
+	fs := p.scanFragments()
+	if len(fs) == 0 {
+		fs = []*Fragment{&f}
+	} else {
+		buf.WriteByte(' ')
+		buf.WriteString(fs[0].Statement)
+		f.Statement = strings.TrimSpace(buf.String())
+		f.Replacers = append(f.Replacers, fs[0].Replacers...)
+		f.Variables = append(f.Variables, fs[0].Variables...)
+		f.Condition = fs[0].Condition
+		f.Fragments = fs[0].Fragments
+		fs[0] = &f
+	}
+
+	stmt.Fragments = fs
+
 	return &stmt, nil
 }
