@@ -35,6 +35,9 @@ func (p *Parser) Parse() (s *Statement, err error) {
 	case INSERT:
 		s, err = p.ParseInsert()
 
+	case REPLACE:
+		s, err = p.ParseReplace()
+
 	case UPDATE:
 		s, err = p.ParseUpdate()
 
@@ -85,15 +88,16 @@ func (p *Parser) scanIgnoreWhitespace() (tok Token, lit string) {
 }
 
 func (p *Parser) scanVariable() (v string) {
-	tok, lit := p.scanIgnoreWhitespace()
+	tok, _ := p.scanIgnoreWhitespace()
 	if tok != DOLLAR {
 		panic("variable must start with $")
 	}
-	tok, lit = p.scanIgnoreWhitespace()
+	tok, _ = p.scanIgnoreWhitespace()
 	if tok != LBRACES {
 		panic("variable must wraped by ${...}")
 	}
 
+	var lit string
 	for {
 		tok, lit = p.scan()
 		switch tok {
@@ -110,15 +114,16 @@ func (p *Parser) scanVariable() (v string) {
 }
 
 func (p *Parser) scanReplacer() (v string) {
-	tok, lit := p.scanIgnoreWhitespace()
+	tok, _ := p.scanIgnoreWhitespace()
 	if tok != POUND {
 		panic("replacer must start with #")
 	}
-	tok, lit = p.scanIgnoreWhitespace()
+	tok, _ = p.scanIgnoreWhitespace()
 	if tok != LBRACES {
 		panic("replacer must wraped by #{...}")
 	}
 
+	var lit string
 	for {
 		tok, lit = p.scan()
 		switch tok {
@@ -135,7 +140,7 @@ func (p *Parser) scanReplacer() (v string) {
 }
 
 func (p *Parser) scanCondition() (v string) {
-	tok, lit := p.scan()
+	tok, _ := p.scan()
 	if tok != LBRACES {
 		p.unscan()
 		return ""
@@ -143,7 +148,7 @@ func (p *Parser) scanCondition() (v string) {
 
 	var buf bytes.Buffer
 	for {
-		tok, lit = p.scan()
+		tok, lit := p.scan()
 		switch tok {
 		default:
 			buf.WriteString(lit)

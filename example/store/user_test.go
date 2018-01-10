@@ -33,6 +33,30 @@ func TestUserInsert(t *testing.T) {
 	id = uint64(id0)
 }
 
+func TestUserDelete0(t *testing.T) {
+	a, err := store.Delete(id)
+	if err != nil {
+		t.Error(err)
+	}
+	if a != 1 {
+		t.Errorf("expect affect 1 rows, but %d", a)
+	}
+}
+
+func TestUserReplace(t *testing.T) {
+	u := &model.User{
+		Username: "admin" + time.Now().Format("150405"),
+	}
+	id0, err := store.Replace(u)
+	if err != nil {
+		t.Error(err)
+	}
+	if id0 == 0 {
+		t.Errorf("expect id > 1, but %d", id0)
+	}
+	id = uint64(id0)
+}
+
 func TestUserUpdate(t *testing.T) {
 	addr := "address3"
 	birth := time.Now()
@@ -93,7 +117,7 @@ func TestUserPage(t *testing.T) {
 	}
 }
 
-func xTestUserDelete(t *testing.T) {
+func TestUserDelete(t *testing.T) {
 	a, err := store.Delete(id)
 	if err != nil {
 		t.Error(err)

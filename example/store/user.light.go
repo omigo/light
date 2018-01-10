@@ -35,6 +35,19 @@ func (*UserStore) Insert(u *model.User) (int64, error) {
 	return res.LastInsertId()
 }
 
+func (*UserStore) Replace(u *model.User) (int64, error) {
+	var buf bytes.Buffer
+	var args []interface{}
+	buf.WriteString(`REPLACE INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) `)
+	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
+	query := buf.String()
+	res, err := db.Exec(query, args...)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
 func (*UserStore) Update(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}

@@ -6,21 +6,21 @@ import (
 	"strings"
 )
 
-// Parse parses a SQL INSERT statement.
-func (p *Parser) ParseInsert() (*Statement, error) {
-	stmt := Statement{Type: INSERT}
+// Parse parses a SQL REPLACE statement.
+func (p *Parser) ParseReplace() (*Statement, error) {
+	stmt := Statement{Type: REPLACE}
 	f := Fragment{}
 	stmt.Fragments = append(stmt.Fragments, &f)
 
 	var buf bytes.Buffer
 	// First token should be a "INSERT" keyword.
-	if tok, lit := p.scanIgnoreWhitespace(); tok != INSERT {
-		return nil, fmt.Errorf("found %q, expected INSERT", lit)
+	if tok, lit := p.scanIgnoreWhitespace(); tok != REPLACE {
+		return nil, fmt.Errorf("found %q, expected REPLACE", lit)
 	}
 	if tok, lit := p.scanIgnoreWhitespace(); tok != INTO {
 		return nil, fmt.Errorf("found %q, expected INTO", lit)
 	}
-	buf.WriteString("INSERT INTO ")
+	buf.WriteString("REPLACE INTO ")
 
 	// table name
 	for {

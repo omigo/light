@@ -26,7 +26,7 @@ func Generate(store *goparser.Store) []byte {
 		case sqlparser.SELECT:
 			writeSelect(buf, m, stmt)
 
-		case sqlparser.INSERT:
+		case sqlparser.INSERT, sqlparser.REPLACE:
 			writeInsert(buf, m, stmt)
 
 		case sqlparser.UPDATE:

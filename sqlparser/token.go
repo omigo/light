@@ -57,6 +57,7 @@ const (
 	keyword_beg
 	// Keywords
 	INSERT
+	REPLACE
 	INTO
 	VALUES
 	UPDATE
@@ -126,6 +127,7 @@ var tokens = [...]string{
 
 	// Keywords
 	INSERT:            "INSERT",
+	REPLACE:           "REPLACE",
 	INTO:              "INTO",
 	VALUES:            "VALUES",
 	UPDATE:            "UPDATE",

@@ -22,6 +22,10 @@ type User interface {
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(u *model.User) (int64, error)
 
+	// replace into users(username, phone, address, status, birthday, created, updated)
+	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	Replace(u *model.User) (int64, error)
+
 	// UPDATE users
 	// SET [username=?,]
 	//     [phone=?,]
