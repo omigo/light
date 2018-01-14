@@ -51,7 +51,7 @@ func (*UserStore) Insert(u *model.User) (int64, error) {
 func (*UserStore) Upsert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) on duplicate key UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birthday=VALUES(birthday), updated=CURRENT_TIMESTAMP `)
+	buf.WriteString(`INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birthday=VALUES(birthday), updated=CURRENT_TIMESTAMP `)
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
 	query := buf.String()
 	log.Debug(query)

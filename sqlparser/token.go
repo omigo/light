@@ -86,6 +86,9 @@ const (
 	UNION
 	ALL
 	CURRENT_TIMESTAMP
+	ON
+	DUPLICATE
+	KEY
 	keyword_end
 )
 
@@ -156,6 +159,9 @@ var tokens = [...]string{
 	UNION:             "UNION",
 	ALL:               "ALL",
 	CURRENT_TIMESTAMP: "CURRENT_TIMESTAMP",
+	ON:                "ON",
+	DUPLICATE:         "DUPLICATE",
+	KEY:               "KEY",
 }
 
 // String returns the string corresponding to the token tok.
