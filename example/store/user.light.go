@@ -17,7 +17,7 @@ type UserStore struct{}
 func (*UserStore) Create(name string) error {
 	var buf bytes.Buffer
 	var args []interface{}
-	fmt.Fprintf(&buf, `CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birthday DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 `, name)
+	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birthday DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -33,7 +33,7 @@ func (*UserStore) Create(name string) error {
 func (*UserStore) Insert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) `)
+	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
 	query := buf.String()
 	log.Debug(query)
@@ -51,7 +51,7 @@ func (*UserStore) Insert(u *model.User) (int64, error) {
 func (*UserStore) Upsert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birthday=VALUES(birthday), updated=CURRENT_TIMESTAMP `)
+	buf.WriteString("INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birthday=VALUES(birthday), updated=CURRENT_TIMESTAMP ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
 	query := buf.String()
 	log.Debug(query)
@@ -69,7 +69,7 @@ func (*UserStore) Upsert(u *model.User) (int64, error) {
 func (*UserStore) Replace(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`REPLACE INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) `)
+	buf.WriteString("REPLACE INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
 	query := buf.String()
 	log.Debug(query)
@@ -87,28 +87,28 @@ func (*UserStore) Replace(u *model.User) (int64, error) {
 func (*UserStore) Update(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`UPDATE users SET `)
+	buf.WriteString("UPDATE users SET ")
 	if u.Username != "" {
-		buf.WriteString(`username=?, `)
+		buf.WriteString("username=?, ")
 		args = append(args, u.Username)
 	}
 	if u.Phone != "" {
-		buf.WriteString(`phone=?, `)
+		buf.WriteString("phone=?, ")
 		args = append(args, null.String(&u.Phone))
 	}
 	if u.Address != nil {
-		buf.WriteString(`address=?, `)
+		buf.WriteString("address=?, ")
 		args = append(args, u.Address)
 	}
 	if u.Status != 0 {
-		buf.WriteString(`status=?, `)
+		buf.WriteString("status=?, ")
 		args = append(args, null.Uint8(&u.Status))
 	}
 	if u.Birthday != nil {
-		buf.WriteString(`birthday=?, `)
+		buf.WriteString("birthday=?, ")
 		args = append(args, u.Birthday)
 	}
-	buf.WriteString(`updated=CURRENT_TIMESTAMP WHERE id=? `)
+	buf.WriteString("updated=CURRENT_TIMESTAMP WHERE id=? ")
 	args = append(args, u.Id)
 	query := buf.String()
 	log.Debug(query)
@@ -126,7 +126,7 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 func (*UserStore) Delete(id uint64) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`DELETE FROM users WHERE id=? `)
+	buf.WriteString("DELETE FROM users WHERE id=? ")
 	args = append(args, id)
 	query := buf.String()
 	log.Debug(query)
@@ -144,8 +144,8 @@ func (*UserStore) Delete(id uint64) (int64, error) {
 func (*UserStore) Get(id uint64) (*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated  `)
-	buf.WriteString(`FROM users WHERE id=? `)
+	buf.WriteString("SELECT id,username,phone,address,status,birthday,created,updated  ")
+	buf.WriteString("FROM users WHERE id=? ")
 	args = append(args, id)
 	query := buf.String()
 	log.Debug(query)
@@ -167,37 +167,37 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`SELECT id,username,phone,address,status,birthday,created,updated  `)
-	buf.WriteString(`FROM users WHERE username LIKE ? `)
+	buf.WriteString("SELECT id,`username`,phone,address,status,birthday,created,updated  ")
+	buf.WriteString("FROM users WHERE id != -1 AND username <> 'admin' AND username LIKE ? ")
 	args = append(args, u.Username)
 	if (u.Phone != "") || ((u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1) {
-		buf.WriteString(`AND address = ? `)
+		buf.WriteString("AND address = ? ")
 		args = append(args, u.Address)
 		if u.Phone != "" {
-			buf.WriteString(`AND phone LIKE ? `)
+			buf.WriteString("AND phone LIKE ? ")
 			args = append(args, null.String(&u.Phone))
 		}
-		buf.WriteString(`AND created > ? `)
+		buf.WriteString("AND created > ? ")
 		args = append(args, u.Created)
 		if (u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1 {
 			if u.Birthday != nil {
-				buf.WriteString(`AND birthday > ? `)
+				buf.WriteString("AND birthday > ? ")
 				args = append(args, u.Birthday)
 			}
 			if u.Id != 0 {
-				buf.WriteString(`AND id > ? `)
+				buf.WriteString("AND id > ? ")
 				args = append(args, u.Id)
 			}
 		}
 	}
-	buf.WriteString(`AND status != ? `)
+	buf.WriteString("AND status != ? ")
 	args = append(args, null.Uint8(&u.Status))
 	if !u.Updated.IsZero() {
-		buf.WriteString(`AND updated > ? `)
+		buf.WriteString("AND updated > ? ")
 		args = append(args, u.Updated)
 	}
-	buf.WriteString(`AND birthday IS NOT NULL `)
-	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ? `)
+	buf.WriteString("AND birthday IS NOT NULL ")
+	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
 	query := buf.String()
 	log.Debug(query)
@@ -236,22 +236,22 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString(`FROM users WHERE username LIKE ? `)
+	buf.WriteString("FROM users WHERE username LIKE ? ")
 	args = append(args, u.Username)
 	if u.Phone != "" {
-		buf.WriteString(`AND address = ? `)
+		buf.WriteString("AND address = ? ")
 		args = append(args, u.Address)
 		if u.Phone != "" {
-			buf.WriteString(`AND phone LIKE ? `)
+			buf.WriteString("AND phone LIKE ? ")
 			args = append(args, null.String(&u.Phone))
 		}
-		buf.WriteString(`AND created > ? `)
+		buf.WriteString("AND created > ? ")
 		args = append(args, u.Created)
 	}
-	buf.WriteString(`AND birthday IS NOT NULL AND status != ? `)
+	buf.WriteString("AND birthday IS NOT NULL AND status != ? ")
 	args = append(args, null.Uint8(&u.Status))
 	if !u.Updated.IsZero() {
-		buf.WriteString(`AND updated > ? `)
+		buf.WriteString("AND updated > ? ")
 		args = append(args, u.Updated)
 	}
 
@@ -266,7 +266,7 @@ func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.Use
 		log.Error(err)
 		return 0, nil, err
 	}
-	buf.WriteString(`ORDER BY updated DESC LIMIT ?, ? `)
+	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
 	query := `SELECT id,username,phone,address,status,birthday,created,updated ` + buf.String()
 	log.Debug(query)

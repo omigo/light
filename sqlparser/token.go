@@ -53,6 +53,8 @@ const (
 	LPAREN      // (
 	RPAREN      // )
 	APOSTROPHE  // '
+	BACKQUOTE   // `
+	MINUS       // -
 
 	keyword_beg
 	// Keywords
@@ -127,6 +129,8 @@ var tokens = [...]string{
 	LPAREN:     "(",
 	RPAREN:     ")",
 	APOSTROPHE: "'",
+	BACKQUOTE:  "`",
+	MINUS:      "-",
 
 	// Keywords
 	INSERT:            "INSERT",

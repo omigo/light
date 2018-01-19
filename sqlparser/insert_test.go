@@ -8,8 +8,7 @@ import (
 )
 
 func TestParseInsertStmt(t *testing.T) {
-	sql := `
-		insert into users(username, phone, address, status, birthday, created, updated)
+	sql := "insert into users(`username`, phone, address, status, birthday, created, updated)" + `
 		values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)on duplicate key update
 		  username=values(?), phone=values(?), address=values(?),
 		  status=values(?), birthday=values(?), update=CURRENT_TIMESTAMP

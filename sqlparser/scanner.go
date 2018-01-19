@@ -56,12 +56,28 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 		s.unread()
 		return s.scanIdent()
 
+	case isDigit(ch):
+		s.unread()
+		return s.scanDigit()
+
 	default:
 	}
 
 	switch ch {
 	case eof:
 		return EOF, ""
+
+	case '-':
+		s.unread()
+		return s.scanDigit()
+
+	case '`':
+		s.unread()
+		return s.scanBackQuoteIdent()
+
+	case '\'':
+		s.unread()
+		return s.scanApostropheIdent()
 
 	case '#', '$', '[', ']', '{', '}', '?', '=', '.', '*', ',', '(', ')':
 		return Lookup(string(ch)), string(ch)
@@ -147,4 +163,67 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 
 	// Otherwise return as a regular identifier.
 	return IDENT, ident
+}
+
+func (s *Scanner) scanBackQuoteIdent() (tok Token, lit string) {
+	var buf bytes.Buffer
+	buf.WriteRune(s.read())
+	for {
+		if ch := s.read(); ch == eof {
+			break
+		} else if ch == '`' {
+			buf.WriteByte('`')
+			break
+		} else {
+			_, _ = buf.WriteRune(ch)
+		}
+	}
+
+	return IDENT, buf.String()
+}
+
+func (s *Scanner) scanApostropheIdent() (tok Token, lit string) {
+	var buf bytes.Buffer
+	buf.WriteRune(s.read())
+	for {
+		if ch := s.read(); ch == eof {
+			break
+		} else if ch == '\'' {
+			buf.WriteByte('\'')
+			if ch = s.read(); ch == eof {
+				s.unread()
+				break
+			} else if ch == '\'' {
+				// escape
+			} else {
+				s.unread()
+				break
+			}
+		} else {
+			buf.WriteRune(ch)
+		}
+	}
+
+	return STRING, buf.String()
+}
+
+func (s *Scanner) scanDigit() (tok Token, lit string) {
+	var buf bytes.Buffer
+	buf.WriteRune(s.read())
+	tok = INT
+	for {
+		if ch := s.read(); ch == eof {
+			break
+		} else if isDigit(ch) {
+			buf.WriteRune(ch)
+		} else if ch == '.' {
+			tok = FLOAT
+			buf.WriteByte('.')
+		} else {
+			s.unread()
+			break
+		}
+	}
+
+	return tok, buf.String()
 }

@@ -6,8 +6,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### TODO
-- Fields is keyword
-- Literal '...'
 - Range for sql in (${u.Cities}).
 - more test case, and more covering.
 - Expression for select fields.
@@ -22,3 +20,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support CREATE statement.
 - Replacers #{...} like Variables ${...}.
 - Generate implemented file by method signature and sql AST.
+- Literal '...'
+- Fields is keyword `...`

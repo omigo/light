@@ -18,7 +18,7 @@ type User interface {
 	// ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 	Create(name string) error
 
-	// insert into users(username, phone, address, status, birthday, created, updated)
+	// insert into users(`username`, phone, address, status, birthday, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(u *model.User) (int64, error)
 
@@ -50,9 +50,9 @@ type User interface {
 	// FROM users WHERE id=?
 	Get(id uint64) (*model.User, error)
 
-	// select id, username, phone, address, status, birthday, created, updated
+	// select id, `username`, phone, address, status, birthday, created, updated
 	// from users
-	// where username like ?
+	// where id != -1 and  username <> 'admin' and username like ?
 	// [
 	// 	and address = ?
 	// 	[and phone like ?]

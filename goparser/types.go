@@ -60,6 +60,7 @@ func (t *Tuple) At(i int) *Var {
 }
 
 func (t *Tuple) VarByName(name string) *Var {
+	name = strings.Trim(name, "`")
 	if name == "" {
 		panic("name must not blank")
 	}
@@ -142,6 +143,7 @@ type Var struct {
 }
 
 func (v *Var) VarByTag(field string) *Var {
+	field = strings.Trim(field, "`")
 	s := underlying(v.Type())
 	for i := 0; i < s.NumFields(); i++ {
 		tag := s.Tag(i)

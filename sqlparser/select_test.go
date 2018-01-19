@@ -8,9 +8,10 @@ import (
 )
 
 func TestParseSelectStmt(t *testing.T) {
-	sql := `select id, username, phone, address, status, birthday, created, updated
+	sql := "select id, `username`, phone, address, status, birthday, created, updated" + `
     	from users
-    	where username like ?
+    	where id != -1 and username > ''
+		username like ?
     	[
 			and address = ?
 			[and phone like ${u.Phone}]

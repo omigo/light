@@ -19,18 +19,18 @@ func writeFragment(buf *bytes.Buffer, m *goparser.Method, v *sqlparser.Fragment)
 
 	if v.Statement != "" {
 		if len(v.Replacers) > 0 {
-			w("fmt.Fprintf(&buf, `")
+			w(`fmt.Fprintf(&buf, "`)
 			w(v.Statement)
-			w(" `")
+			w(` "`)
 			for _, name := range v.Replacers {
 				w(",")
 				w(name)
 			}
 			wln(")")
 		} else {
-			w("buf.WriteString(`")
+			w(`buf.WriteString("`)
 			w(v.Statement)
-			wln(" `)")
+			wln(` ")`)
 		}
 		if len(v.Variables) > 0 {
 			w("args = append(args")
