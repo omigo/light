@@ -50,8 +50,9 @@ type User interface {
 	// FROM users WHERE id=?
 	Get(id uint64) (*model.User, error)
 
-	// select id, `username`, phone, address, status, birthday, created, updated
-	// from users
+	// select (select id from users where id=a.id) as id,
+	// `username`, phone as phone, address, status, birthday, created, updated
+	// from users a
 	// where id != -1 and  username <> 'admin' and username like ?
 	// [
 	// 	and address = ?

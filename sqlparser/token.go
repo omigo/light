@@ -3,7 +3,9 @@
 //
 package sqlparser
 
-import "strconv"
+import (
+	"strconv"
+)
 
 // Token is the set of lexical tokens of the Go programming language.
 type Token int
@@ -91,6 +93,7 @@ const (
 	ON
 	DUPLICATE
 	KEY
+	AS
 	keyword_end
 )
 
@@ -166,6 +169,7 @@ var tokens = [...]string{
 	ON:                "ON",
 	DUPLICATE:         "DUPLICATE",
 	KEY:               "KEY",
+	AS:                "AS",
 }
 
 // String returns the string corresponding to the token tok.
