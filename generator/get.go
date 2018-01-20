@@ -43,7 +43,7 @@ func writeGet(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) 
 		wln("log.Error(err)")
 		wln("return nil, err")
 		wln("}")
-		wln("log.Debug(xdst...)")
+		wln(`log.Debugf("%#v",xu)`)
 	}
 
 	wln("return xu, err")

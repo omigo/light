@@ -79,7 +79,7 @@ func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 	wln("return 0, nil, err")
 	wln("}")
 	if m.Store.Log {
-		wln("log.Debug(xdst...)")
+		wln(`log.Debugf("%#v",xu)`)
 	}
 	wln("}")
 	wln("if err = rows.Err(); err != nil {")

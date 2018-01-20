@@ -160,7 +160,7 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 		log.Error(err)
 		return nil, err
 	}
-	log.Debug(xdst...)
+	log.Debugf("%#v", xu)
 	return xu, err
 }
 
@@ -222,7 +222,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 			log.Error(err)
 			return nil, err
 		}
-		log.Debug(xdst...)
+		log.Debugf("%#v", xu)
 	}
 	if err = rows.Err(); err != nil {
 		log.Error(query)
@@ -291,7 +291,7 @@ func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.Use
 			log.Error(err)
 			return 0, nil, err
 		}
-		log.Debug(xdst...)
+		log.Debugf("%#v", xu)
 	}
 	if err = rows.Err(); err != nil {
 		log.Error(query)
