@@ -277,7 +277,7 @@ func (v *Var) IsSlice() bool {
 
 func (v *Var) Wrap() string {
 	switch u := v.Type().(type) {
-	case *types.Pointer, *types.Named:
+	case *types.Pointer, *types.Named, *types.Slice, *types.Array:
 		return ""
 
 	case *types.Basic:
