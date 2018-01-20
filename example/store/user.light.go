@@ -17,7 +17,7 @@ type UserStore struct{}
 func (*UserStore) Create(name string) error {
 	var buf bytes.Buffer
 	var args []interface{}
-	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birthday DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
+	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -33,8 +33,8 @@ func (*UserStore) Create(name string) error {
 func (*UserStore) Insert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
-	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
+	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -51,8 +51,8 @@ func (*UserStore) Insert(u *model.User) (int64, error) {
 func (*UserStore) Upsert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("INSERT INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birthday=VALUES(birthday), updated=CURRENT_TIMESTAMP ")
-	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
+	buf.WriteString("INSERT INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birth_day=VALUES(birth_day), updated=CURRENT_TIMESTAMP ")
+	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -69,8 +69,8 @@ func (*UserStore) Upsert(u *model.User) (int64, error) {
 func (*UserStore) Replace(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("REPLACE INTO users(username,phone,address,status,birthday,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
-	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.Birthday)
+	buf.WriteString("REPLACE INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -104,9 +104,9 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 		buf.WriteString("status=?, ")
 		args = append(args, null.Uint8(&u.Status))
 	}
-	if u.Birthday != nil {
-		buf.WriteString("birthday=?, ")
-		args = append(args, u.Birthday)
+	if u.BirthDay != nil {
+		buf.WriteString("birth_day=?, ")
+		args = append(args, u.BirthDay)
 	}
 	buf.WriteString("updated=CURRENT_TIMESTAMP WHERE id=? ")
 	args = append(args, u.Id)
@@ -144,7 +144,7 @@ func (*UserStore) Delete(id uint64) (int64, error) {
 func (*UserStore) Get(id uint64) (*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("SELECT id, username, phone, address, status, birthday, created, updated  ")
+	buf.WriteString("SELECT id, username, phone, address, status, birth_day, created, updated  ")
 	buf.WriteString("FROM users WHERE id=? ")
 	args = append(args, id)
 	query := buf.String()
@@ -152,7 +152,7 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 	log.Debug(args...)
 	row := db.QueryRow(query, args...)
 	xu := new(model.User)
-	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
 	if err != nil {
 		log.Error(query)
@@ -167,10 +167,10 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("SELECT (SELECT id FROM users WHERE id=a.id) AS id, `username`, phone AS phone, address, status, birthday, created, updated  ")
+	buf.WriteString("SELECT (SELECT id FROM users WHERE id=a.id) AS id, `username`, phone AS phone, address, status, birth_day, created, updated  ")
 	buf.WriteString("FROM users a WHERE id != -1 AND username <> 'admin' AND username LIKE ? ")
 	args = append(args, u.Username)
-	if (u.Phone != "") || ((u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1) {
+	if (u.Phone != "") || ((u.BirthDay != nil && !u.BirthDay.IsZero()) || u.Id > 1) {
 		buf.WriteString("AND address = ? ")
 		args = append(args, u.Address)
 		if u.Phone != "" {
@@ -179,10 +179,10 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 		}
 		buf.WriteString("AND created > ? ")
 		args = append(args, u.Created)
-		if (u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1 {
-			if u.Birthday != nil {
-				buf.WriteString("AND birthday > ? ")
-				args = append(args, u.Birthday)
+		if (u.BirthDay != nil && !u.BirthDay.IsZero()) || u.Id > 1 {
+			if u.BirthDay != nil {
+				buf.WriteString("AND birth_day > ? ")
+				args = append(args, u.BirthDay)
 			}
 			if u.Id != 0 {
 				buf.WriteString("AND id > ? ")
@@ -196,7 +196,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 		buf.WriteString("AND updated > ? ")
 		args = append(args, u.Updated)
 	}
-	buf.WriteString("AND birthday IS NOT NULL ")
+	buf.WriteString("AND birth_day IS NOT NULL ")
 	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
 	query := buf.String()
@@ -214,7 +214,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
 			log.Error(query)
@@ -248,7 +248,7 @@ func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.Use
 		buf.WriteString("AND created > ? ")
 		args = append(args, u.Created)
 	}
-	buf.WriteString("AND birthday IS NOT NULL AND status != ? ")
+	buf.WriteString("AND birth_day IS NOT NULL AND status != ? ")
 	args = append(args, null.Uint8(&u.Status))
 	if !u.Updated.IsZero() {
 		buf.WriteString("AND updated > ? ")
@@ -268,7 +268,7 @@ func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.Use
 	}
 	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
-	query := `SELECT id, username, phone, address, status, birthday, created, updated ` + buf.String()
+	query := `SELECT id, username, phone, address, status, birth_day, created, updated ` + buf.String()
 	log.Debug(query)
 	log.Debug(args...)
 	rows, err := db.Query(query, args...)
@@ -283,7 +283,7 @@ func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.Use
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.Birthday, &xu.Created, &xu.Updated}
+		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
 			log.Error(query)

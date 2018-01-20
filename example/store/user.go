@@ -12,24 +12,24 @@ type User interface {
 	// 	Phone VARCHAR(32),
 	// 	address VARCHAR(256),
 	// 	status TINYINT UNSIGNED,
-	// 	birthday DATE,
+	// 	birth_day DATE,
 	// 	created TIMESTAMP default CURRENT_TIMESTAMP,
 	// 	updated TIMESTAMP default CURRENT_TIMESTAMP
 	// ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 	Create(name string) error
 
-	// insert into users(`username`, phone, address, status, birthday, created, updated)
+	// insert into users(`username`, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(u *model.User) (int64, error)
 
-	// insert into users(username, phone, address, status, birthday, created, updated)
+	// insert into users(username, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	// on duplicate key update
 	//   username=values(username), phone=values(phone), address=values(address),
-	//   status=values(status), birthday=values(birthday), updated=CURRENT_TIMESTAMP
+	//   status=values(status), birth_day=values(birth_day), updated=CURRENT_TIMESTAMP
 	Upsert(u *model.User) (int64, error)
 
-	// replace into users(username, phone, address, status, birthday, created, updated)
+	// replace into users(username, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Replace(u *model.User) (int64, error)
 
@@ -38,7 +38,7 @@ type User interface {
 	//     [phone=?,]
 	//     [address=?,]
 	//     [status=?,]
-	//     [birthday=?,]
+	//     [birth_day=?,]
 	//     updated=CURRENT_TIMESTAMP
 	// WHERE id=?
 	Update(u *model.User) (int64, error)
@@ -46,31 +46,31 @@ type User interface {
 	// DELETE FROM users WHERE id=?
 	Delete(id uint64) (int64, error)
 
-	// select id, username, phone, address, status, birthday, created, updated
+	// select id, username, phone, address, status, birth_day, created, updated
 	// FROM users WHERE id=?
 	Get(id uint64) (*model.User, error)
 
 	// select (select id from users where id=a.id) as id,
-	// `username`, phone as phone, address, status, birthday, created, updated
+	// `username`, phone as phone, address, status, birth_day, created, updated
 	// from users a
 	// where id != -1 and  username <> 'admin' and username like ?
 	// [
 	// 	and address = ?
 	// 	[and phone like ?]
 	// 	and created > ?
-	//  [{(u.Birthday != nil && !u.Birthday.IsZero()) || u.Id > 1 }
-	//   [and birthday > ?]
+	//  [{(u.BirthDay != nil && !u.BirthDay.IsZero()) || u.Id > 1 }
+	//   [and birth_day > ?]
 	//   [and id > ?]
 	//  ]
 	// ]
 	// and status != ?
 	// [and updated > ?]
-	// and birthday is not null
+	// and birth_day is not null
 	// order by updated desc
 	// limit ${offset}, ${size}
 	List(u *model.User, offset, size int) ([]*model.User, error)
 
-	// select id, username, phone, address, status, birthday, created, updated
+	// select id, username, phone, address, status, birth_day, created, updated
 	// from users
 	// where username like ?
 	// [
@@ -78,7 +78,7 @@ type User interface {
 	// 	[and phone like ?]
 	// 	and created > ?
 	// ]
-	// and birthday is not null
+	// and birth_day is not null
 	// and status != ?
 	// [and updated > ?]
 	// order by updated desc

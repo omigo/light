@@ -11,7 +11,7 @@ create table users (
 	Phone VARCHAR(32),
 	address VARCHAR(256),
 	status TINYINT UNSIGNED,
-	birthday DATE,
+	birth_day DATE,
 	created TIMESTAMP default CURRENT_TIMESTAMP,
 	updated TIMESTAMP default CURRENT_TIMESTAMP
 )
@@ -22,7 +22,7 @@ type User struct {
 	Phone    string     `light:",nullable"`
 	Address  *string    `light:",nullable"`
 	Status   Status     `light:",nullable"`
-	Birthday *time.Time `light:",nullable"`
+	BirthDay *time.Time `light:",nullable"`
 	Created  time.Time
 	Updated  time.Time
 }

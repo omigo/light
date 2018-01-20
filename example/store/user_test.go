@@ -82,7 +82,7 @@ func TestUserUpdate(t *testing.T) {
 		Phone:    "phone3",
 		Address:  &addr,
 		Status:   3,
-		Birthday: &birth,
+		BirthDay: &birth,
 	}
 	a, err := store.Update(u)
 	if err != nil {

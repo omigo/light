@@ -101,13 +101,14 @@ func (t *Tuple) VarByName(name string) *Var {
 	if len(parts) > 1 {
 		panic("variable " + parts[0] + " not exist")
 	}
-	name = strings.ToUpper(name[:1]) + name[1:]
+
+	out := capitalize(name)
 	for i := 0; i < t.Len(); i++ {
 		s := underlying(t.At(i).Type())
 		if s != nil {
 			for j := 0; j < s.NumFields(); j++ {
 				x := s.Field(j)
-				if x.Name() == name {
+				if x.Name() == out {
 					z := getTag(s.Tag(j), "light")
 					return &Var{
 						VName: t.At(i).Name() + "." + x.Name(),
@@ -162,9 +163,11 @@ func (v *Var) VarByTag(field string) *Var {
 			}
 		}
 	}
+
+	out := capitalize(field)
 	for i := 0; i < s.NumFields(); i++ {
 		x := s.Field(i)
-		if strings.EqualFold(field, x.Name()) {
+		if strings.EqualFold(out, x.Name()) {
 			t := getTag(s.Tag(i), "light")
 			return &Var{
 				VName: s.Field(i).Name(),
@@ -175,6 +178,22 @@ func (v *Var) VarByTag(field string) *Var {
 		}
 	}
 	panic(field + " not found")
+}
+
+func capitalize(field string) (out string) {
+	var first bool = true
+	for _, v := range field {
+		if first {
+			out += strings.ToUpper(string(v))
+			first = false
+		} else if v == '_' {
+			first = true
+		} else {
+			out += string(v)
+			first = false
+		}
+	}
+	return out
 }
 
 func getTag(tag, key string) string {
