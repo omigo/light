@@ -2,6 +2,7 @@ package generator
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,9 +44,15 @@ func writeHeader(store *goparser.Store) *bytes.Buffer {
 	}
 	wln(")")
 
-	w("type ")
-	w(store.Name)
-	wln("Store struct{}")
+	if store.Name[0] == 'I' {
+		name := store.Name[1:]
+		fmt.Fprintf(&header, "var %s I%s = new(%sStore)\n", name, name, name)
+	} else {
+		name := store.Name
+		fmt.Fprintf(&header, "var Default%s %s = new(%sStore)\n", name, name, name)
+	}
+
+	fmt.Fprintf(&header, "type %sStore struct{}\n", store.Name)
 
 	return &header
 }

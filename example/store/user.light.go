@@ -12,6 +12,8 @@ import (
 	"github.com/arstd/log"
 )
 
+var DefaultUser User = new(UserStore)
+
 type UserStore struct{}
 
 func (*UserStore) Create(name string) error {
