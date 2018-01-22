@@ -24,14 +24,16 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 		if tok != IDENT && tok != ASTERISK {
 			return nil, fmt.Errorf("found %q, expected field", lit)
 		}
+
 		stmt.Fields = append(stmt.Fields, field)
 		buf.WriteString(lit)
 
 		// If the next token is not a comma then break the loop.
-		if tok, _ := p.scanIgnoreWhitespace(); tok != COMMA {
+		if tok, _ = p.scanIgnoreWhitespace(); tok != COMMA {
 			p.unscan()
 			break
 		}
+
 		buf.WriteString(", ")
 	}
 	buf.WriteByte(' ')
@@ -50,53 +52,41 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 
 func (p *Parser) scanSelectField() (tok Token, lit, field string) {
 	var buf bytes.Buffer
-	tok, lit = p.scanIgnoreWhitespace()
-	buf.WriteString(lit)
-	if tok != LPAREN {
-		field = lit
-		for {
-			tok, lit = p.scanIgnoreWhitespace()
-			if tok == COMMA || tok == eof || tok == FROM {
-				p.unscan()
-				return IDENT, buf.String(), field
-			} else {
-				buf.WriteByte(' ')
-				buf.WriteString(lit)
-				field = lit
-			}
-		}
-	}
+	p.s.scanSpace()
 
 	var deep int
-OUTTER:
 	for {
 		tok, lit = p.scan()
-		buf.WriteString(lit)
 		switch tok {
-		case EOF:
-			break
+		case SPACE:
+			buf.WriteByte(' ')
 
 		case LPAREN:
 			deep++
+			buf.WriteString(LPAREN.String())
 
 		case RPAREN:
-			if deep == 0 {
-				break OUTTER
-			}
 			deep--
+			buf.WriteString(RPAREN.String())
+
+		case COMMA, FROM, EOF:
+			if deep == 0 {
+				p.unscan()
+				return IDENT, buf.String(), field
+			}
+			buf.WriteString(lit)
+
+		case BACKQUOTE:
+			p.unscan()
+			_, lit = p.s.scanBackQuoteIdent()
+			buf.WriteString(lit)
+			field = lit
+
 		default:
+			buf.WriteString(lit)
+			field = lit
 		}
 	}
 
-	tok, lit = p.scanIgnoreWhitespace()
-	if tok == AS {
-		buf.WriteString(" AS ")
-		tok, lit = p.scanIgnoreWhitespace()
-	}
-
-	if tok != IDENT {
-		panic("require fields ")
-	}
-	buf.WriteString(lit)
-	return IDENT, buf.String(), lit
+	return IDENT, buf.String(), field
 }

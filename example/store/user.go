@@ -4,7 +4,7 @@ import "github.com/arstd/light/example/model"
 
 //go:generate light -log
 
-type User interface {
+type IUser interface {
 
 	// CREATE TABLE IF NOT EXISTS #{name} (
 	// 	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

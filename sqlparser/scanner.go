@@ -73,7 +73,8 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 
 	case '`':
 		s.unread()
-		return s.scanBackQuoteIdent()
+		tok, lit = s.scanBackQuoteIdent()
+		return tok, lit
 
 	case '\'':
 		s.unread()
@@ -117,7 +118,6 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 func (s *Scanner) scanSpace() (tok Token, lit string) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
-	buf.WriteRune(s.read())
 
 	// Read every subsequent whitespace character into the buffer.
 	// Non-whitespace characters and EOF will cause the loop to exit.
@@ -167,6 +167,7 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 
 func (s *Scanner) scanBackQuoteIdent() (tok Token, lit string) {
 	var buf bytes.Buffer
+	s.scanSpace()
 	buf.WriteRune(s.read())
 	for {
 		if ch := s.read(); ch == eof {
@@ -178,7 +179,6 @@ func (s *Scanner) scanBackQuoteIdent() (tok Token, lit string) {
 			_, _ = buf.WriteRune(ch)
 		}
 	}
-
 	return IDENT, buf.String()
 }
 

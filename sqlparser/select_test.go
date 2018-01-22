@@ -8,7 +8,7 @@ import (
 )
 
 func TestParseSelectStmt(t *testing.T) {
-	sql := "select (select id from users where id=1) as id, `username`, phone as phone, address, status, birthday, created, updated" + `
+	sql := "select (select id from users where id=1) as id, sum(status) status,`username`, phone as phone, address, birthday, created, updated" + `
     	from users
     	where id != -1 and username > ''
 		username like ?
