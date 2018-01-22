@@ -6,8 +6,33 @@ import (
 	"time"
 )
 
+const layout = `"2006-01-02 15:04:05"`
+
 type NullTime struct {
 	Time *time.Time
+}
+
+func (n *NullTime) IsEmpty() bool {
+	return n.Time == nil || n.Time.IsZero()
+}
+
+func (n *NullTime) MarshalJSON() ([]byte, error) {
+	if n.Time == nil || n.Time.IsZero() {
+		return []byte("null"), nil
+	}
+	return []byte(n.Time.Format(layout)), nil
+}
+
+func (n *NullTime) UnmarshalJSON(data []byte) error {
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		return err
+	}
+	if n.Time == nil {
+		n.Time = new(time.Time)
+	}
+	*n.Time, err = time.ParseInLocation(layout, string(data), loc)
+	return err
 }
 
 func (n *NullTime) String() string {
@@ -42,7 +67,6 @@ func (n *NullTime) Scan(value interface{}) error {
 	}
 	return nil
 }
-
 func (n NullTime) Value() (driver.Value, error) {
 	if n.Time == nil {
 		return nil, nil
