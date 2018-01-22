@@ -44,15 +44,14 @@ func writeHeader(store *goparser.Store) *bytes.Buffer {
 	}
 	wln(")")
 
-	if store.Name[0] == 'I' {
-		name := store.Name[1:]
-		fmt.Fprintf(&header, "var %s I%s = new(%sStore)\n", name, name, name)
+	name := store.Name
+	if name[0] == 'I' {
+		name = name[1:]
+		fmt.Fprintf(&header, "var %s I%s = new(Store%s)\n", name, name, name)
 	} else {
-		name := store.Name
-		fmt.Fprintf(&header, "var Default%s %s = new(%sStore)\n", name, name, name)
+		fmt.Fprintf(&header, "var Default%s %s = new(Store%s)\n", name, name, name)
 	}
-
-	fmt.Fprintf(&header, "type %sStore struct{}\n", store.Name)
+	fmt.Fprintf(&header, "type Store%s struct{}\n", name)
 
 	return &header
 }

@@ -37,7 +37,11 @@ type Method struct {
 }
 
 func (m *Method) Signature() string {
-	return "func (*" + m.Store.Name + "Store)" + m.Name +
+	name := m.Store.Name
+	if name[0] == 'I' {
+		name = name[1:]
+	}
+	return "func (*Store" + name + ")" + m.Name +
 		"(" + m.Params.String() + ")(" + m.Results.String() + "){\n"
 }
 

@@ -12,11 +12,11 @@ import (
 	"github.com/arstd/log"
 )
 
-var DefaultUser User = new(UserStore)
+var DefaultUser User = new(StoreUser)
 
-type UserStore struct{}
+type StoreUser struct{}
 
-func (*UserStore) Create(name string) error {
+func (*StoreUser) Create(name string) error {
 	var buf bytes.Buffer
 	var args []interface{}
 	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
@@ -32,7 +32,7 @@ func (*UserStore) Create(name string) error {
 	return err
 }
 
-func (*UserStore) Insert(u *model.User) (int64, error) {
+func (*StoreUser) Insert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
@@ -50,7 +50,7 @@ func (*UserStore) Insert(u *model.User) (int64, error) {
 	return res.LastInsertId()
 }
 
-func (*UserStore) Upsert(u *model.User) (int64, error) {
+func (*StoreUser) Upsert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("INSERT INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birth_day=VALUES(birth_day), updated=CURRENT_TIMESTAMP ")
@@ -68,7 +68,7 @@ func (*UserStore) Upsert(u *model.User) (int64, error) {
 	return res.LastInsertId()
 }
 
-func (*UserStore) Replace(u *model.User) (int64, error) {
+func (*StoreUser) Replace(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("REPLACE INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
@@ -86,7 +86,7 @@ func (*UserStore) Replace(u *model.User) (int64, error) {
 	return res.LastInsertId()
 }
 
-func (*UserStore) Update(u *model.User) (int64, error) {
+func (*StoreUser) Update(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("UPDATE users SET ")
@@ -125,7 +125,7 @@ func (*UserStore) Update(u *model.User) (int64, error) {
 	return res.RowsAffected()
 }
 
-func (*UserStore) Delete(id uint64) (int64, error) {
+func (*StoreUser) Delete(id uint64) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("DELETE FROM users WHERE id=? ")
@@ -143,7 +143,7 @@ func (*UserStore) Delete(id uint64) (int64, error) {
 	return res.RowsAffected()
 }
 
-func (*UserStore) Get(id uint64) (*model.User, error) {
+func (*StoreUser) Get(id uint64) (*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("SELECT id, username, phone, address, status, birth_day, created, updated  ")
@@ -166,7 +166,7 @@ func (*UserStore) Get(id uint64) (*model.User, error) {
 	return xu, err
 }
 
-func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, error) {
+func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("SELECT (SELECT id FROM users WHERE id=a.id) AS id, `username`, phone AS phone, address, status, birth_day, created, updated  ")
@@ -235,7 +235,7 @@ func (*UserStore) List(u *model.User, offset int, size int) ([]*model.User, erro
 	return data, nil
 }
 
-func (*UserStore) Page(u *model.User, offset int, size int) (int64, []*model.User, error) {
+func (*StoreUser) Page(u *model.User, offset int, size int) (int64, []*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("FROM users WHERE username LIKE ? ")
