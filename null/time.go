@@ -20,10 +20,16 @@ func (n *NullTime) String() string {
 
 	return n.Time.Format("2006-01-02 15:04:05.999")
 }
+
 func (n *NullTime) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
+
+	if n.Time == nil {
+		n.Time = new(time.Time)
+	}
+
 	switch v := value.(type) {
 	case time.Time:
 		*n.Time = v
@@ -36,6 +42,7 @@ func (n *NullTime) Scan(value interface{}) error {
 	}
 	return nil
 }
+
 func (n NullTime) Value() (driver.Value, error) {
 	if n.Time == nil {
 		return nil, nil
