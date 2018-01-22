@@ -64,13 +64,15 @@ func (t *Tuple) VarByName(name string) *Var {
 	if name == "" {
 		panic("name must not blank")
 	}
-	parts := strings.Split(name, ".")
-	var v *Var
 
+	var v *Var
+	parts := strings.Split(name, ".")
+
+	parts0 := lowerCamelCase(parts[0])
 	// 从参数列表中查找
 	for i := 0; i < t.Len(); i++ {
 		x := t.At(i)
-		if x.Name() == parts[0] {
+		if x.Name() == parts0 {
 			v = x
 			break
 		}
@@ -99,10 +101,10 @@ func (t *Tuple) VarByName(name string) *Var {
 
 	// 从结构体参数中查找
 	if len(parts) > 1 {
-		panic("variable " + parts[0] + " not exist")
+		panic("variable " + name + " not exist")
 	}
 
-	out := capitalize(name)
+	out := upperCamelCase(name)
 	for i := 0; i < t.Len(); i++ {
 		s := underlying(t.At(i).Type())
 		if s != nil {
@@ -120,7 +122,7 @@ func (t *Tuple) VarByName(name string) *Var {
 			}
 		}
 	}
-	panic("variable " + parts[0] + " not exist")
+	panic("variable " + name + " not exist")
 }
 
 func (t *Tuple) Result() *Var {
@@ -164,7 +166,7 @@ func (v *Var) VarByTag(field string) *Var {
 		}
 	}
 
-	out := capitalize(field)
+	out := upperCamelCase(field)
 	for i := 0; i < s.NumFields(); i++ {
 		x := s.Field(i)
 		if strings.EqualFold(out, x.Name()) {
@@ -180,9 +182,16 @@ func (v *Var) VarByTag(field string) *Var {
 	panic(field + " not found")
 }
 
-func capitalize(field string) (out string) {
-	var first bool = true
-	for _, v := range field {
+func lowerCamelCase(field string) (out string) {
+	return camelCase(field, false)
+}
+
+func upperCamelCase(field string) (out string) {
+	return camelCase(field, true)
+}
+
+func camelCase(name string, first bool) (out string) {
+	for _, v := range name {
 		if first {
 			out += strings.ToUpper(string(v))
 			first = false
