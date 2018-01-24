@@ -9,9 +9,9 @@ import (
 
 func TestParseSelectStmt(t *testing.T) {
 	sql := "select (select id from users where id=1) as id, sum(status) status,`username`, phone as phone, address, birthday, created, updated" + `
-    	from users
-    	where id != -1 and username > ''
-		username like ?
+    	from users` +
+		"where `from`=${from} id != -1 and username > ''" +
+		`username like ?
     	[
 			and address = ?
 			[and phone like ${u.Phone}]
@@ -21,7 +21,7 @@ func TestParseSelectStmt(t *testing.T) {
     	[and updated > ${u.Updated}]
 		and birthday is not null
 		order by updated desc
-    	limit ${(page-1)*size}, ${size}`
+    	limit ${page*size}, ${size}`
 
 	p := NewParser(bytes.NewBufferString(sql))
 	stmt, err := p.Parse()

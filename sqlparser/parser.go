@@ -212,21 +212,27 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 		case SPACE:
 			buf.WriteString(SPACE.String())
 
-		case POUND:
-			p.unscan()
-			lit = p.scanReplacer()
-			f.Replacers = append(f.Replacers, lit)
-			buf.WriteString("%v")
-
 		case QUESTION:
 			f.Variables = append(f.Variables, last)
 			buf.WriteString(QUESTION.String())
 
-		case DOLLAR:
-			p.unscan()
-			lit = p.scanVariable()
+		// case DOLLAR:
+		// 	p.unscan()
+		// 	lit = p.scanVariable()
+		// 	f.Variables = append(f.Variables, lit)
+		// 	buf.WriteString(QUESTION.String())
+		case VARIABLE:
 			f.Variables = append(f.Variables, lit)
 			buf.WriteString(QUESTION.String())
+
+		// case POUND:
+		// 	p.unscan()
+		// 	lit = p.scanReplacer()
+		// 	f.Replacers = append(f.Replacers, lit)
+		// 	buf.WriteString("%v")
+		case REPLACER:
+			f.Replacers = append(f.Replacers, lit)
+			buf.WriteString("%v")
 
 		case LBRACKET:
 			p.unscan()

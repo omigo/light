@@ -25,6 +25,9 @@ const (
 	STRING // 'abc'
 	literal_end
 
+	VARIABLE // ${...}
+	REPLACER // #{...}
+
 	// Special Character
 	POUND    // #
 	DOLLAR   // $

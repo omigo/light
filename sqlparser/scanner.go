@@ -80,7 +80,7 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 		s.unread()
 		return s.scanApostropheIdent()
 
-	case '#', '$', '[', ']', '{', '}', '?', '=', '.', '*', ',', '(', ')':
+	case '[', ']', '{', '}', '?', '=', '.', '*', ',', '(', ')':
 		return Lookup(string(ch)), string(ch)
 
 	case '!':
@@ -108,6 +108,20 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 		}
 		s.unread()
 		return GT, ">"
+
+	case '#':
+		if ch = s.read(); ch == '{' {
+			return s.scanReplacer()
+		}
+		s.unread()
+		return IDENT, string(ch)
+
+	case '$':
+		if ch = s.read(); ch == '{' {
+			return s.scanVariable()
+		}
+		s.unread()
+		return IDENT, string(ch)
 
 	default:
 		return IDENT, string(ch)
@@ -167,7 +181,6 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 
 func (s *Scanner) scanBackQuoteIdent() (tok Token, lit string) {
 	var buf bytes.Buffer
-	s.scanSpace()
 	buf.WriteRune(s.read())
 	for {
 		if ch := s.read(); ch == eof {
@@ -180,6 +193,34 @@ func (s *Scanner) scanBackQuoteIdent() (tok Token, lit string) {
 		}
 	}
 	return IDENT, buf.String()
+}
+
+func (s *Scanner) scanVariable() (tok Token, lit string) {
+	var buf bytes.Buffer
+	for {
+		if ch := s.read(); ch == eof {
+			break
+		} else if ch == '}' {
+			break
+		} else {
+			_, _ = buf.WriteRune(ch)
+		}
+	}
+	return VARIABLE, buf.String()
+}
+
+func (s *Scanner) scanReplacer() (tok Token, lit string) {
+	var buf bytes.Buffer
+	for {
+		if ch := s.read(); ch == eof {
+			break
+		} else if ch == '}' {
+			break
+		} else {
+			_, _ = buf.WriteRune(ch)
+		}
+	}
+	return REPLACER, buf.String()
 }
 
 func (s *Scanner) scanApostropheIdent() (tok Token, lit string) {
