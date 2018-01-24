@@ -25,7 +25,7 @@ func main() {
 	src := getSourceFile()
 	fmt.Printf("Source file    %s\n", src)
 	dst := src[:len(src)-3] + ".light.go"
-	// os.Remove(dst)
+	os.Remove(dst)
 
 	store := goparser.Parse(src)
 	// log.JSONIndent(store)

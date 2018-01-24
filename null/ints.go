@@ -16,6 +16,36 @@ type NullUint32 struct{ Uint32 *uint32 }
 type NullInt64 struct{ Int64 *int64 }
 type NullUint64 struct{ Uint64 *uint64 }
 
+func (n *NullInt) IsEmpty() bool    { return isEmpty(n.Int) }
+func (n *NullInt8) IsEmpty() bool   { return isEmpty(n.Int8) }
+func (n *NullUint8) IsEmpty() bool  { return isEmpty(n.Uint8) }
+func (n *NullInt16) IsEmpty() bool  { return isEmpty(n.Int16) }
+func (n *NullUint16) IsEmpty() bool { return isEmpty(n.Uint16) }
+func (n *NullInt32) IsEmpty() bool  { return isEmpty(n.Int32) }
+func (n *NullUint32) IsEmpty() bool { return isEmpty(n.Uint32) }
+func (n *NullInt64) IsEmpty() bool  { return isEmpty(n.Int64) }
+func (n *NullUint64) IsEmpty() bool { return isEmpty(n.Uint64) }
+
+func (n *NullInt) MarshalJSON() ([]byte, error)    { return marshalJSON(n.Int) }
+func (n *NullInt8) MarshalJSON() ([]byte, error)   { return marshalJSON(n.Int8) }
+func (n *NullUint8) MarshalJSON() ([]byte, error)  { return marshalJSON(n.Uint8) }
+func (n *NullInt16) MarshalJSON() ([]byte, error)  { return marshalJSON(n.Int16) }
+func (n *NullUint16) MarshalJSON() ([]byte, error) { return marshalJSON(n.Uint16) }
+func (n *NullInt32) MarshalJSON() ([]byte, error)  { return marshalJSON(n.Int32) }
+func (n *NullUint32) MarshalJSON() ([]byte, error) { return marshalJSON(n.Uint32) }
+func (n *NullInt64) MarshalJSON() ([]byte, error)  { return marshalJSON(n.Int64) }
+func (n *NullUint64) MarshalJSON() ([]byte, error) { return marshalJSON(n.Uint64) }
+
+func (n *NullInt) UnmarshalJSON(data []byte) error    { return unmarshalJSON(n.Int, data) }
+func (n *NullInt8) UnmarshalJSON(data []byte) error   { return unmarshalJSON(n.Int8, data) }
+func (n *NullUint8) UnmarshalJSON(data []byte) error  { return unmarshalJSON(n.Uint8, data) }
+func (n *NullInt16) UnmarshalJSON(data []byte) error  { return unmarshalJSON(n.Int16, data) }
+func (n *NullUint16) UnmarshalJSON(data []byte) error { return unmarshalJSON(n.Uint16, data) }
+func (n *NullInt32) UnmarshalJSON(data []byte) error  { return unmarshalJSON(n.Int32, data) }
+func (n *NullUint32) UnmarshalJSON(data []byte) error { return unmarshalJSON(n.Uint32, data) }
+func (n *NullInt64) UnmarshalJSON(data []byte) error  { return unmarshalJSON(n.Int64, data) }
+func (n *NullUint64) UnmarshalJSON(data []byte) error { return unmarshalJSON(n.Uint64, data) }
+
 func (n *NullInt) String() string    { return toString(n.Int) }
 func (n *NullInt8) String() string   { return toString(n.Int8) }
 func (n *NullUint8) String() string  { return toString(n.Uint8) }
@@ -117,6 +147,40 @@ func scan(ptr, value interface{}) error {
 		panic("unsupported type " + reflect.TypeOf(v).String())
 	}
 
+	fromI64(ptr, i64)
+
+	return nil
+}
+
+func isEmpty(ptr interface{}) bool {
+	if ptr == nil {
+		return true
+	}
+	return toInt64(ptr) == 0
+}
+
+func marshalJSON(ptr interface{}) ([]byte, error) {
+	if ptr == nil {
+		return []byte{'0'}, nil
+	}
+	i64 := toInt64(ptr)
+	return []byte(strconv.FormatInt(i64, 10)), nil
+}
+
+func unmarshalJSON(ptr interface{}, data []byte) error {
+	if data == nil {
+		return nil
+	}
+	i64, err := strconv.ParseInt(string(data), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	fromI64(ptr, i64)
+	return nil
+}
+
+func fromI64(ptr interface{}, i64 int64) {
 	switch v := ptr.(type) {
 	case *int8:
 		*v = int8(i64)
@@ -144,6 +208,4 @@ func scan(ptr, value interface{}) error {
 	default:
 		panic("unsupported type " + reflect.TypeOf(v).String())
 	}
-
-	return nil
 }

@@ -8,7 +8,7 @@ import (
 // Parse parses a SQL SELECT statement.
 func (p *Parser) ParseSelect() (*Statement, error) {
 	stmt := Statement{Type: SELECT}
-
+	first := &Fragment{}
 	var buf bytes.Buffer
 
 	// First token should be a "SELECT" keyword.
@@ -20,12 +20,14 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 	// Next we should loop over all our comma-delimited fields.
 	for {
 		// Read a field.
-		tok, lit, field := p.scanSelectField()
+		tok, lit, field, f := p.scanSelectField()
 		if tok != IDENT && tok != ASTERISK {
 			return nil, fmt.Errorf("found %q, expected field", lit)
 		}
 
 		stmt.Fields = append(stmt.Fields, field)
+		first.Replacers = append(first.Replacers, f.Replacers...)
+		first.Variables = append(first.Variables, f.Variables...)
 		buf.WriteString(lit)
 
 		// If the next token is not a comma then break the loop.
@@ -44,15 +46,18 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 	}
 	p.unscan()
 
-	stmt.Fragments = append(stmt.Fragments, &Fragment{Statement: buf.String()})
+	first.Statement = buf.String()
+	stmt.Fragments = append(stmt.Fragments, first)
 	stmt.Fragments = append(stmt.Fragments, p.scanFragments()...)
 
 	return &stmt, nil
 }
 
-func (p *Parser) scanSelectField() (tok Token, lit, field string) {
+func (p *Parser) scanSelectField() (tok Token, lit, field string, f *Fragment) {
 	var buf bytes.Buffer
 	p.s.scanSpace()
+
+	f = &Fragment{}
 
 	var deep int
 	for {
@@ -72,9 +77,17 @@ func (p *Parser) scanSelectField() (tok Token, lit, field string) {
 		case COMMA, FROM, EOF:
 			if deep == 0 {
 				p.unscan()
-				return IDENT, buf.String(), field
+				return IDENT, buf.String(), field, f
 			}
 			buf.WriteString(lit)
+
+		case REPLACER:
+			buf.WriteString("%s")
+			f.Replacers = append(f.Replacers, lit)
+
+		case VARIABLE:
+			buf.WriteString("?")
+			f.Variables = append(f.Variables, lit)
 
 		case BACKQUOTE:
 			p.unscan()
@@ -88,5 +101,5 @@ func (p *Parser) scanSelectField() (tok Token, lit, field string) {
 		}
 	}
 
-	return IDENT, buf.String(), field
+	return IDENT, buf.String(), field, f
 }

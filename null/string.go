@@ -17,6 +17,25 @@ type NullString struct {
 	String_ *string
 }
 
+func (n *NullString) IsEmpty() bool {
+	return n.String_ == nil || *n.String_ == ""
+}
+
+func (n *NullString) MarshalJSON() ([]byte, error) {
+	if n.String_ == nil {
+		return []byte("null"), nil
+	}
+	return []byte(`"` + *n.String_ + `"`), nil
+}
+
+func (n *NullString) UnmarshalJSON(data []byte) error {
+	if data == nil {
+		return nil
+	}
+	*n.String_ = string(data)
+	return nil
+}
+
 func (n *NullString) String() string {
 	if n.String_ != nil {
 		return "nil"
