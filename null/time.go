@@ -6,7 +6,10 @@ import (
 	"time"
 )
 
-const layout = `"2006-01-02 15:04:05"`
+const (
+	formatDate     = `"2006-01-02"`
+	formatDatetime = `"2006-01-02 15:04:05"`
+)
 
 type NullTime struct {
 	Time *time.Time
@@ -20,7 +23,7 @@ func (n *NullTime) MarshalJSON() ([]byte, error) {
 	if n.Time == nil || n.Time.IsZero() {
 		return []byte("null"), nil
 	}
-	return []byte(n.Time.Format(layout)), nil
+	return []byte(n.Time.Format(formatDatetime)), nil
 }
 
 func (n *NullTime) UnmarshalJSON(data []byte) error {
@@ -31,7 +34,11 @@ func (n *NullTime) UnmarshalJSON(data []byte) error {
 	if n.Time == nil {
 		n.Time = new(time.Time)
 	}
-	*n.Time, err = time.ParseInLocation(layout, string(data), loc)
+	if len(data) == len(formatDate) {
+		*n.Time, err = time.ParseInLocation(formatDate, string(data), loc)
+	} else {
+		*n.Time, err = time.ParseInLocation(formatDatetime, string(data), loc)
+	}
 	return err
 }
 
