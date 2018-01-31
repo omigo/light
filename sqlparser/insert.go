@@ -27,10 +27,8 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 			buf.WriteString(lit)
 		} else if tok == DOT {
 			buf.WriteString(DOT.String())
-		} else if tok == POUND {
-			p.unscan()
-			v := p.scanReplacer()
-			f.Replacers = append(f.Replacers, v)
+		} else if tok == REPLACER {
+			f.Replacers = append(f.Replacers, lit)
 			buf.WriteString("%v")
 		} else {
 			return nil, fmt.Errorf("found %q, expected IDENT, at `%s`", lit, buf.String())

@@ -35,7 +35,7 @@ func (*StoreUser) Create(name string) error {
 func (*StoreUser) Insert(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+	fmt.Fprintf(&buf, "INSERT INTO %v_%v(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ", u.Username, u.Phone)
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
 	query := buf.String()
 	log.Debug(query)

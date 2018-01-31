@@ -25,6 +25,7 @@ func main() {
 	src := getSourceFile()
 	fmt.Printf("Source file    %s\n", src)
 	dst := src[:len(src)-3] + ".light.go"
+	// TODO must remove all *.light.go files
 	os.Remove(dst)
 
 	store := goparser.Parse(src)
