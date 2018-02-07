@@ -268,6 +268,7 @@ func (*StoreUser) Page(u *model.User, offset int, size int) (int64, []*model.Use
 		log.Error(err)
 		return 0, nil, err
 	}
+	log.Debug(total)
 	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
 	query := `SELECT id, username, phone, address, status, birth_day, created, updated  ` + buf.String()

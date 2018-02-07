@@ -26,6 +26,9 @@ func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 	}
 	wln(`return 0, nil, err
 		}`)
+	if m.Store.Log {
+		wln(`log.Debug(total)`)
+	}
 
 	writeFragment(buf, m, stmt.Fragments[len(stmt.Fragments)-1])
 

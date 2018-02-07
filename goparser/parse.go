@@ -39,9 +39,7 @@ func Parse(src string) *Store {
 }
 
 func goBuild(src string) {
-	cmd := exec.Command("go", "build", "-i")
-	idx := strings.LastIndex(src, "/")
-	cmd.Dir = src[:idx+1]
+	cmd := exec.Command("go", "build", "-i", src)
 	out, err := cmd.CombinedOutput()
 	if bytes.HasSuffix(out, []byte("command-line-arguments\n")) {
 		fmt.Printf("%s", out[:len(out)-23])

@@ -23,6 +23,9 @@ func (n *NullTime) MarshalJSON() ([]byte, error) {
 	if n.Time == nil || n.Time.IsZero() {
 		return []byte("null"), nil
 	}
+	if n.Time.Hour() == 0 && n.Time.Minute() == 0 && n.Time.Second() == 0 {
+		return []byte(n.Time.Format(formatDate)), nil
+	}
 	return []byte(n.Time.Format(formatDatetime)), nil
 }
 
