@@ -10,6 +10,9 @@ type Statement struct {
 
 type Fragment struct {
 	Condition string `json:"cond,omitempty"`
+	Range     string `json:"range,omitempty"`
+	Open      string `json:"open,omitempty"`
+	Close     string `json:"close,omitempty"`
 
 	Statement string   `json:"stmt,omitempty"`
 	Replacers []string `json:"replacers,omitempty"`

@@ -18,6 +18,7 @@ func TestParseSelectStmt(t *testing.T) {
 	    	and created > ${u.Created}
 		]
 		and status != ?
+		[{range} and status in (${ss})]
     	[and updated > ${u.Updated}]
 		and birthday is not null
 		order by updated desc

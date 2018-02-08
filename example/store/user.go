@@ -80,8 +80,9 @@ type IUser interface {
 	// ]
 	// and birth_day is not null
 	// and status != ?
+	// [{ range } and status in (#{ss})]
 	// [and updated > ?]
 	// order by updated desc
 	// limit ${offset}, ${size}
-	Page(u *model.User, offset int, size int) (int64, []*model.User, error)
+	Page(u *model.User, ss []model.Status, offset int, size int) (int64, []*model.User, error)
 }

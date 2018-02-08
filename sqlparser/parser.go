@@ -267,5 +267,9 @@ END:
 		}
 	}
 	f.Statement = strings.TrimSpace(buf.String())
+	if strings.TrimSpace(f.Condition) == "range" {
+		f.Condition = "-"
+		f.Range = f.Replacers[0]
+	}
 	return &f, tok
 }

@@ -6,6 +6,7 @@ package store
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/arstd/light/example/model"
 	"github.com/arstd/light/null"
@@ -235,7 +236,7 @@ func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, erro
 	return data, nil
 }
 
-func (*StoreUser) Page(u *model.User, offset int, size int) (int64, []*model.User, error) {
+func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, []*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("FROM users WHERE username LIKE ? ")
@@ -252,6 +253,12 @@ func (*StoreUser) Page(u *model.User, offset int, size int) (int64, []*model.Use
 	}
 	buf.WriteString("AND birth_day IS NOT NULL AND status != ? ")
 	args = append(args, null.Uint8(&u.Status))
+	if len(ss) > 0 {
+		fmt.Fprintf(&buf, "AND status in (%v) ", strings.Repeat(",?", len(ss))[1:])
+		for _, v := range ss {
+			args = append(args, v)
+		}
+	}
 	if !u.Updated.IsZero() {
 		buf.WriteString("AND updated > ? ")
 		args = append(args, u.Updated)

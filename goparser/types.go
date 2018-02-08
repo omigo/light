@@ -251,6 +251,9 @@ func (v *Var) NotDefault(name string) string {
 	case *types.Struct:
 		return name + " != nil"
 
+	case *types.Slice:
+		return "len(" + name + ") != 0"
+
 	default:
 		panic(" unimplement " + reflect.TypeOf(u).String() + u.String())
 	}
