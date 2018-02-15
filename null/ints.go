@@ -2,7 +2,6 @@ package null
 
 import (
 	"database/sql/driver"
-	"encoding/binary"
 	"reflect"
 	"strconv"
 )
@@ -145,7 +144,11 @@ func scan(ptr, value interface{}) error {
 	case *int64:
 		i64 = *v
 	case []uint8:
-		i64 = int64(binary.BigEndian.Uint64(v))
+		var err error
+		i64, err = strconv.ParseInt(string(v), 10, 64)
+		if err != nil {
+			return err
+		}
 	default:
 		panic("unsupported type " + reflect.TypeOf(v).String())
 	}
