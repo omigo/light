@@ -222,6 +222,11 @@ func getTag(tag, key string) string {
 	return tag[:idx]
 }
 
+func (v *Var) IsBasic() bool {
+	_, ok := v.Type().(*types.Basic)
+	return ok
+}
+
 func (v *Var) NotDefault(name string) string {
 	switch u := v.Type().(type) {
 	case *types.Named:
@@ -291,13 +296,13 @@ func (v *Var) IsSlice() bool {
 	return ok
 }
 
-func (v *Var) Wrap() string {
+func (v *Var) Wrap(force ...bool) string {
 	switch u := v.Type().(type) {
 	case *types.Pointer, *types.Named, *types.Slice, *types.Array:
 		return ""
 
 	case *types.Basic:
-		if v.Nullable() {
+		if v.Nullable() || (len(force) > 0 && force[0]) {
 			name := u.Name()
 			return "null." + strings.ToUpper(name[:1]) + name[1:]
 		}

@@ -16,9 +16,6 @@ var (
 	lg = flag.Bool("log", false, "Generated file with log")
 )
 
-// 每次执行 `go generate ./...` 前，先编译安装，保证代码最新
-//go:generate go install
-
 func main() {
 	flag.Parse()
 

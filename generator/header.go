@@ -39,7 +39,11 @@ func writeHeader(store *goparser.Store) *bytes.Buffer {
 	for k, v := range store.Imports {
 		w(v)
 		w(` "`)
-		w(k)
+		if i := strings.Index(k, "/vendor/"); i > 0 {
+			w(k[i+8:])
+		} else {
+			w(k)
+		}
 		wln(`"`)
 	}
 	wln(")")

@@ -167,6 +167,26 @@ func (*StoreUser) Get(id uint64) (*model.User, error) {
 	return xu, err
 }
 
+func (*StoreUser) Count() (int64, error) {
+	var buf bytes.Buffer
+	var args []interface{}
+	buf.WriteString("SELECT count(1)   ")
+	buf.WriteString("FROM users ")
+	query := buf.String()
+	log.Debug(query)
+	log.Debug(args...)
+	var total int64
+	err := db.QueryRow(query, args...).Scan(null.Int64(&total))
+	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+		return total, err
+	}
+	log.Debug(total)
+	return total, nil
+}
+
 func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}

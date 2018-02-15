@@ -26,6 +26,8 @@ func writeSelect(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 	}
 	if m.Results.At(0).IsSlice() {
 		writeList(buf, m, stmt)
+	} else if m.Results.Result().IsBasic() {
+		writeCount(buf, m, stmt)
 	} else {
 		writeGet(buf, m, stmt)
 	}

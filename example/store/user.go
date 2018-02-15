@@ -50,6 +50,10 @@ type IUser interface {
 	// FROM users WHERE id=?
 	Get(id uint64) (*model.User, error)
 
+	// select count(1)
+	// from users
+	Count() (int64, error)
+
 	// select (select id from users where id=a.id) as id,
 	// `username`, phone as phone, address, status, birth_day, created, updated
 	// from users a

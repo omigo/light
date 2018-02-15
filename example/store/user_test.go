@@ -124,7 +124,7 @@ func TestUserPage(t *testing.T) {
 		Updated:  time.Now().Add(-time.Hour),
 		Status:   9,
 	}
-	total, data, err := store.Page(u, 0, 1)
+	total, data, err := store.Page(u, []model.Status{9}, 0, 1)
 	if err != nil {
 		log.Error(err)
 	}
