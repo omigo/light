@@ -19,7 +19,7 @@ func (n *Timestamp) MarshalJSON() ([]byte, error) {
 	if n.Time == nil || n.Time.IsZero() {
 		return []byte("0"), nil
 	}
-	return []byte(strconv.FormatInt(n.Time.Unix(), 64)), nil
+	return []byte(strconv.FormatInt(n.Time.Unix(), 10)), nil
 }
 
 func (n *Timestamp) UnmarshalJSON(data []byte) error {
