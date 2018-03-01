@@ -3,6 +3,7 @@ package sqlparser
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 // Parse parses a SQL SELECT statement.
@@ -38,7 +39,6 @@ func (p *Parser) ParseSelect() (*Statement, error) {
 
 		buf.WriteString(", ")
 	}
-	buf.WriteByte(' ')
 
 	// First token should be a "FROM" keyword.
 	if tok, lit := p.scanIgnoreWhitespace(); tok != FROM {
@@ -77,7 +77,7 @@ func (p *Parser) scanSelectField() (tok Token, lit, field string, f *Fragment) {
 		case COMMA, FROM, EOF:
 			if deep == 0 {
 				p.unscan()
-				return IDENT, buf.String(), field, f
+				return IDENT, strings.TrimSpace(buf.String()), field, f
 			}
 			buf.WriteString(lit)
 
@@ -100,6 +100,4 @@ func (p *Parser) scanSelectField() (tok Token, lit, field string, f *Fragment) {
 			field = lit
 		}
 	}
-
-	return IDENT, buf.String(), field, f
 }

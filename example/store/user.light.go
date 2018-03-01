@@ -147,7 +147,7 @@ func (*StoreUser) Delete(id uint64) (int64, error) {
 func (*StoreUser) Get(id uint64) (*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("SELECT id, username, phone, address, status, birth_day, created, updated   ")
+	buf.WriteString("SELECT id, username, phone, address, status, birth_day, created, updated ")
 	buf.WriteString("FROM users WHERE id=? ")
 	args = append(args, id)
 	query := buf.String()
@@ -170,7 +170,7 @@ func (*StoreUser) Get(id uint64) (*model.User, error) {
 func (*StoreUser) Count() (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("SELECT count(1)   ")
+	buf.WriteString("SELECT count(1) ")
 	buf.WriteString("FROM users ")
 	query := buf.String()
 	log.Debug(query)
@@ -190,7 +190,7 @@ func (*StoreUser) Count() (int64, error) {
 func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
-	buf.WriteString("SELECT (SELECT id FROM users WHERE id=a.id) AS id, `username`, phone AS phone, address, status, birth_day, created, updated   ")
+	buf.WriteString("SELECT (SELECT id FROM users WHERE id=a.id) AS id, `username`, phone AS phone, address, status, birth_day, created, updated ")
 	buf.WriteString("FROM users a WHERE id != -1 AND username <> 'admin' AND username LIKE ? ")
 	args = append(args, u.Username)
 	if (u.Phone != "") || ((u.BirthDay != nil && !u.BirthDay.IsZero()) || u.Id > 1) {
@@ -298,7 +298,7 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 	log.Debug(total)
 	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
-	query := `SELECT id, username, phone, address, status, birth_day, created, updated  ` + buf.String()
+	query := `SELECT id, username, phone, address, status, birth_day, created, updated ` + buf.String()
 	log.Debug(query)
 	log.Debug(args...)
 	rows, err := db.Query(query, args...)

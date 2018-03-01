@@ -21,24 +21,26 @@ func TestUserCreate(t *testing.T) {
 
 var username string
 
-func TestUserInsert(t *testing.T) {
-	username = "admin" + time.Now().Format("150405")
-	u := &model.User{
-		Username: username,
-	}
-	id0, err := store.Insert(u)
-	if err != nil {
-		t.Error(err)
-	}
-	if id0 == 0 {
-		t.Errorf("expect id > 1, but %d", id0)
-	}
-	id = uint64(id0)
-}
+// func TestUserInsert(t *testing.T) {
+// 	username = "admin" + time.Now().Format("150405")
+// 	u := &model.User{
+// 		Username: username,
+// 		Phone:    username,
+// 	}
+// 	id0, err := store.Insert(u)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	if id0 == 0 {
+// 		t.Errorf("expect id > 1, but %d", id0)
+// 	}
+// 	id = uint64(id0)
+// }
 
 func TestUserUpsert(t *testing.T) {
 	u := &model.User{
 		Username: username,
+		Phone:    username,
 	}
 	id0, err := store.Upsert(u)
 	if err != nil {

@@ -34,7 +34,7 @@ func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 
 	w("query := `")
 	w(stmt.Fragments[0].Statement)
-	wln("`+ buf.String()")
+	wln(" `+ buf.String()")
 	if m.Store.Log {
 		wln("log.Debug(query)")
 		wln("log.Debug(args...)")
