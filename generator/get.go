@@ -38,6 +38,9 @@ func writeGet(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) 
 	wln("err := row.Scan(xdst...)")
 	if m.Store.Log {
 		wln("if err != nil {")
+		wln(`if err == sql.ErrNoRows {
+			return nil, nil
+		}`)
 		wln("log.Error(query)")
 		wln("log.Error(args...)")
 		wln("log.Error(err)")

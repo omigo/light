@@ -5,6 +5,7 @@ package store
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -158,6 +159,9 @@ func (*StoreUser) Get(id uint64) (*model.User, error) {
 	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
