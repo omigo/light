@@ -4,6 +4,8 @@ import (
 	"go/types"
 	"reflect"
 	"strings"
+
+	"github.com/arstd/log"
 )
 
 type Store struct {
@@ -233,7 +235,24 @@ func (v *Var) NotDefault(name string) string {
 		if u.String() == "time.Time" {
 			return "!" + name + ".IsZero()"
 		}
-		return name + ` != ""`
+
+		t, ok := u.Underlying().(*types.Basic)
+		if !ok {
+			log.Fatalf("%#v", u)
+		}
+		bi := t.Info()
+		switch {
+		case bi&types.IsString == types.IsString:
+			return name + ` != ""`
+		case bi&types.IsInteger == types.IsInteger:
+			return name + ` != 0`
+		case bi&types.IsFloat == types.IsFloat:
+			return name + ` != 0`
+		case bi&types.IsBoolean == types.IsBoolean:
+			return name
+		default:
+			panic(t)
+		}
 
 	case *types.Basic:
 		bi := u.Info()
@@ -247,7 +266,7 @@ func (v *Var) NotDefault(name string) string {
 		case bi&types.IsBoolean == types.IsBoolean:
 			return name
 		default:
-			panic(u.Name())
+			panic(u)
 		}
 
 	case *types.Pointer:
