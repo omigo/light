@@ -2,35 +2,42 @@ package generator
 
 import (
 	"bytes"
+	"html/template"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
+	"github.com/arstd/log"
 )
 
+const CountResult = `
+	query := buf.String()
+{{- if .Log}}
+	log.Debug(query)
+	log.Debug(args...)
+{{end -}}
+	var count {{.ResultTypeName}}
+	err := db.QueryRow(query, args...).Scan({{.ResultTypeWrap}}(&count))
+	if err != nil {
+{{- if .Log}}
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+{{end -}}
+		return count, err
+	}
+{{- if .Log}}
+	log.Debug(count)
+{{end -}}
+	return count, nil
+`
+
+var countResultTpl = template.Must(template.New("tplCountResult").Parse(CountResult))
+
 func writeCount(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
-	w := buf.WriteString
-	wln := func(s string) { buf.WriteString(s + "\n") }
-
-	wln("query := buf.String()")
-	if m.Store.Log {
-		wln("log.Debug(query)")
-		wln("log.Debug(args...)")
+	data := map[string]interface{}{
+		"Log":            m.Store.Log,
+		"ResultTypeName": m.Results.Result().TypeName(),
+		"ResultTypeWrap": m.Results.Result().Wrap(true),
 	}
-
-	w("var total ")
-	wln(m.Results.Result().TypeName())
-	wln(`err := db.QueryRow(query, args...).Scan(` + m.Results.Result().Wrap(true) + `(&total))
-		if err != nil {`)
-	if m.Store.Log {
-		wln(`log.Error(query)
-			log.Error(args...)
-			log.Error(err)`)
-	}
-	wln(`return total, err
-		}`)
-	if m.Store.Log {
-		wln(`log.Debug(total)`)
-	}
-
-	wln("return total, nil")
+	log.Errorn(countResultTpl.Execute(buf, data))
 }
