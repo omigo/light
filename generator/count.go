@@ -11,21 +11,21 @@ import (
 
 const CountResult = `
 	query := buf.String()
-{{- if .Log}}
+{{- if .Store.Log}}
 	log.Debug(query)
 	log.Debug(args...)
 {{end -}}
-	var count {{.ResultTypeName}}
-	err := db.QueryRow(query, args...).Scan({{.ResultTypeWrap}}(&count))
+	var count {{call .ResultTypeName}}
+	err := db.QueryRow(query, args...).Scan({{call .ResultTypeWrap}}(&count))
 	if err != nil {
-{{- if .Log}}
+{{- if .Store.Log}}
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
 {{end -}}
 		return count, err
 	}
-{{- if .Log}}
+{{- if .Store.Log}}
 	log.Debug(count)
 {{end -}}
 	return count, nil
@@ -34,10 +34,5 @@ const CountResult = `
 var countResultTpl = template.Must(template.New("tplCountResult").Parse(CountResult))
 
 func writeCount(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
-	data := map[string]interface{}{
-		"Log":            m.Store.Log,
-		"ResultTypeName": m.Results.Result().TypeName(),
-		"ResultTypeWrap": m.Results.Result().Wrap(true),
-	}
-	log.Errorn(countResultTpl.Execute(buf, data))
+	log.Errorn(countResultTpl.Execute(buf, m))
 }

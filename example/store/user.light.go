@@ -176,19 +176,20 @@ func (*StoreUser) Count() (int64, error) {
 	var args []interface{}
 	buf.WriteString("SELECT count(1) ")
 	buf.WriteString("FROM users ")
+
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	var total int64
-	err := db.QueryRow(query, args...).Scan(null.Int64(&total))
+	var count int64
+	err := db.QueryRow(query, args...).Scan(null.Int64(&count))
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
-		return total, err
+		return count, err
 	}
-	log.Debug(total)
-	return total, nil
+	log.Debug(count)
+	return count, nil
 }
 
 func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, error) {

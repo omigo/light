@@ -63,11 +63,7 @@ func extractDocs(store *Store, f *ast.File) {
 
 						store.Name = typeSpec.Name.Name
 						for _, field := range interfaceType.Methods.List {
-							m := &Method{
-								Store: store,
-								Name:  field.Names[0].Name,
-								Doc:   getDoc(field.Doc),
-							}
+							m := NewMethod(store, field.Names[0].Name, getDoc(field.Doc))
 							store.Methods = append(store.Methods, m)
 						}
 					}

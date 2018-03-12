@@ -36,6 +36,16 @@ type Method struct {
 
 	Params  *Tuple
 	Results *Tuple
+
+	ResultTypeName func() string
+	ResultTypeWrap func() string
+}
+
+func NewMethod(store *Store, name, doc string) *Method {
+	m := &Method{Store: store, Name: name, Doc: doc}
+	m.ResultTypeName = func() string { return m.Results.Result().TypeName() }
+	m.ResultTypeWrap = func() string { return m.Results.Result().Wrap(true) }
+	return m
 }
 
 func (m *Method) Signature() string {
