@@ -32,6 +32,7 @@ func writeHeader(store *goparser.Store) *bytes.Buffer {
 	wln(`import (
 		"bytes"
 		"fmt"
+		"github.com/arstd/light/light"
 		"github.com/arstd/light/null"`)
 	if store.Log {
 		wln(`"github.com/arstd/log"`)

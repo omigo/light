@@ -16,7 +16,7 @@ const textCount = `
 	log.Debug(args...)
 {{end -}}
 	var count {{call .ResultTypeName}}
-	err := db.QueryRow(query, args...).Scan({{call .ResultTypeWrap}}(&count))
+	err := exec.QueryRow(query, args...).Scan({{call .ResultTypeWrap}}(&count))
 	if err != nil {
 {{- if .Store.Log}}
 		log.Error(query)

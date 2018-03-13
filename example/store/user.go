@@ -1,6 +1,10 @@
 package store
 
-import "github.com/arstd/light/example/model"
+import (
+	"database/sql"
+
+	"github.com/arstd/light/example/model"
+)
 
 //go:generate light -log
 
@@ -18,7 +22,7 @@ type IUser interface {
 	// ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 	Create(name string) error
 
-	// insert into #{u.Username}_#{u.Phone}(`username`, phone, address, status, birth_day, created, updated)
+	// insert into users(`username`, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(u *model.User) (int64, error)
 
@@ -27,7 +31,7 @@ type IUser interface {
 	// on duplicate key update
 	//   username=values(username), phone=values(phone), address=values(address),
 	//   status=values(status), birth_day=values(birth_day), updated=CURRENT_TIMESTAMP
-	Upsert(u *model.User) (int64, error)
+	Upsert(u *model.User, tx *sql.Tx) (int64, error)
 
 	// replace into users(username, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)

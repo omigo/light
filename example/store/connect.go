@@ -47,3 +47,7 @@ func Close() {
 		log.Errorn(db.Close())
 	}
 }
+
+func Begin() (*sql.Tx, error) {
+	return db.Begin()
+}

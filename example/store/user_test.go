@@ -21,31 +21,35 @@ func TestUserCreate(t *testing.T) {
 
 var username string
 
-// func TestUserInsert(t *testing.T) {
-// 	username = "admin" + time.Now().Format("150405")
-// 	u := &model.User{
-// 		Username: username,
-// 		Phone:    username,
-// 	}
-// 	id0, err := store.Insert(u)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	if id0 == 0 {
-// 		t.Errorf("expect id > 1, but %d", id0)
-// 	}
-// 	id = uint64(id0)
-// }
+func TestUserInsert(t *testing.T) {
+	username = "admin" + time.Now().Format("150405")
+	u := &model.User{
+		Username: username,
+		Phone:    username,
+	}
+	id0, err := store.Insert(u)
+	if err != nil {
+		t.Error(err)
+	}
+	if id0 == 0 {
+		t.Errorf("expect id > 1, but %d", id0)
+	}
+	id = uint64(id0)
+}
 
 func TestUserUpsert(t *testing.T) {
 	u := &model.User{
 		Username: username,
 		Phone:    username,
 	}
-	id0, err := store.Upsert(u)
+	tx, err := db.Begin()
+	defer tx.Rollback()
+	log.Fataln(err)
+	id0, err := store.Upsert(u, tx)
 	if err != nil {
 		t.Error(err)
 	}
+	tx.Commit()
 	if id0 != 0 {
 		t.Errorf("expect id = 0, but %d", id0)
 	}
@@ -126,7 +130,7 @@ func TestUserPage(t *testing.T) {
 		Updated:  time.Now().Add(-time.Hour),
 		Status:   9,
 	}
-	total, data, err := store.Page(u, []model.Status{9}, 0, 1)
+	total, data, err := store.Page(u, []model.Status{1, 2, 3}, 0, 1)
 	if err != nil {
 		log.Error(err)
 	}

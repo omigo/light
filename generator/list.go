@@ -17,7 +17,7 @@ func writeList(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement)
 		wln("log.Debug(args...)")
 	}
 
-	wln("rows, err := db.Query(query, args...)")
+	wln("rows, err := exec.Query(query, args...)")
 	wln("if err != nil {")
 	if m.Store.Log {
 		wln("log.Error(query)")

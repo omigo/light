@@ -37,16 +37,26 @@ type Method struct {
 	Params  *Tuple
 	Results *Tuple
 
-	ResultTypeName func() string
-	ResultTypeWrap func() string
-
+	ResultTypeName  func() string
+	ResultTypeWrap  func() string
 	ParamsVarByName func(string) *Var
+	Tx              func() string
 }
 
 func NewMethod(store *Store, name, doc string) *Method {
 	m := &Method{Store: store, Name: name, Doc: doc}
 	m.ResultTypeName = func() string { return m.Results.Result().TypeName() }
 	m.ResultTypeWrap = func() string { return m.Results.Result().Wrap(true) }
+	m.Tx = func() string {
+		for i := 0; i < m.Params.Len(); i++ {
+			v := m.Params.At(i)
+			typ := typeString(v.Store, v.Type())
+			if typ == "*sql.Tx" {
+				return v.Name()
+			}
+		}
+		return ""
+	}
 	return m
 }
 

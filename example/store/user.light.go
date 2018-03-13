@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/arstd/light/example/model"
+	"github.com/arstd/light/light"
 	"github.com/arstd/light/null"
 	"github.com/arstd/log"
 )
@@ -19,13 +20,14 @@ var User IUser = new(StoreUser)
 type StoreUser struct{}
 
 func (*StoreUser) Create(name string) error {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	_, err := db.Exec(query, args...)
+	_, err := exec.Exec(query, args...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
@@ -35,14 +37,15 @@ func (*StoreUser) Create(name string) error {
 }
 
 func (*StoreUser) Insert(u *model.User) (int64, error) {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
-	fmt.Fprintf(&buf, "INSERT INTO %v_%v(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ", u.Username, u.Phone)
+	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	res, err := db.Exec(query, args...)
+	res, err := exec.Exec(query, args...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
@@ -52,7 +55,8 @@ func (*StoreUser) Insert(u *model.User) (int64, error) {
 	return res.LastInsertId()
 }
 
-func (*StoreUser) Upsert(u *model.User) (int64, error) {
+func (*StoreUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
+	var exec = light.GetExec(tx, db)
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("INSERT INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birth_day=VALUES(birth_day), updated=CURRENT_TIMESTAMP ")
@@ -60,7 +64,7 @@ func (*StoreUser) Upsert(u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	res, err := db.Exec(query, args...)
+	res, err := exec.Exec(query, args...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
@@ -71,6 +75,7 @@ func (*StoreUser) Upsert(u *model.User) (int64, error) {
 }
 
 func (*StoreUser) Replace(u *model.User) (int64, error) {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("REPLACE INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
@@ -78,7 +83,7 @@ func (*StoreUser) Replace(u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	res, err := db.Exec(query, args...)
+	res, err := exec.Exec(query, args...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
@@ -89,6 +94,7 @@ func (*StoreUser) Replace(u *model.User) (int64, error) {
 }
 
 func (*StoreUser) Update(u *model.User) (int64, error) {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("UPDATE users SET ")
@@ -117,7 +123,7 @@ func (*StoreUser) Update(u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	res, err := db.Exec(query, args...)
+	res, err := exec.Exec(query, args...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
@@ -128,6 +134,7 @@ func (*StoreUser) Update(u *model.User) (int64, error) {
 }
 
 func (*StoreUser) Delete(id uint64) (int64, error) {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("DELETE FROM users WHERE id=? ")
@@ -135,7 +142,7 @@ func (*StoreUser) Delete(id uint64) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	res, err := db.Exec(query, args...)
+	res, err := exec.Exec(query, args...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
@@ -146,6 +153,7 @@ func (*StoreUser) Delete(id uint64) (int64, error) {
 }
 
 func (*StoreUser) Get(id uint64) (*model.User, error) {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("SELECT id, username, phone, address, status, birth_day, created, updated ")
@@ -154,7 +162,7 @@ func (*StoreUser) Get(id uint64) (*model.User, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	row := db.QueryRow(query, args...)
+	row := exec.QueryRow(query, args...)
 	xu := new(model.User)
 	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
@@ -172,6 +180,7 @@ func (*StoreUser) Get(id uint64) (*model.User, error) {
 }
 
 func (*StoreUser) Count() (int64, error) {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("SELECT count(1) ")
@@ -180,7 +189,7 @@ func (*StoreUser) Count() (int64, error) {
 	log.Debug(query)
 	log.Debug(args...)
 	var count int64
-	err := db.QueryRow(query, args...).Scan(null.Int64(&count))
+	err := exec.QueryRow(query, args...).Scan(null.Int64(&count))
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
@@ -192,6 +201,7 @@ func (*StoreUser) Count() (int64, error) {
 }
 
 func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, error) {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("SELECT (SELECT id FROM users WHERE id=a.id) AS id, `username`, phone AS phone, address, status, birth_day, created, updated ")
@@ -229,7 +239,7 @@ func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, erro
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	rows, err := db.Query(query, args...)
+	rows, err := exec.Query(query, args...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)
@@ -261,6 +271,7 @@ func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, erro
 }
 
 func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, []*model.User, error) {
+	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 	buf.WriteString("FROM users WHERE username LIKE ? ")
@@ -291,7 +302,7 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 	totalQuery := "SELECT count(1) " + buf.String()
 	log.Debug(totalQuery)
 	log.Debug(args...)
-	err := db.QueryRow(totalQuery, args...).Scan(&total)
+	err := exec.QueryRow(totalQuery, args...).Scan(&total)
 	if err != nil {
 		log.Error(totalQuery)
 		log.Error(args...)
@@ -304,7 +315,7 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 	query := `SELECT id, username, phone, address, status, birth_day, created, updated ` + buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	rows, err := db.Query(query, args...)
+	rows, err := exec.Query(query, args...)
 	if err != nil {
 		log.Error(query)
 		log.Error(args...)

@@ -23,7 +23,7 @@ func writeCreate(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 		wln("log.Debug(args...)")
 	}
 
-	wln("_, err := db.Exec(query, args...)")
+	wln("_, err := exec.Exec(query, args...)")
 	if m.Store.Log {
 		wln("if err != nil {")
 		wln("log.Error(query)")

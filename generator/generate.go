@@ -9,7 +9,7 @@ import (
 )
 
 func Generate(store *goparser.Store) []byte {
-	buf := bytes.NewBuffer(make([]byte, 0, 65536))
+	buf := bytes.NewBuffer(make([]byte, 0, 65535))
 	for _, m := range store.Methods {
 		p := sqlparser.NewParser(bytes.NewBufferString(m.Doc))
 		stmt, err := p.Parse()
@@ -21,6 +21,12 @@ func Generate(store *goparser.Store) []byte {
 
 		genCondition(stmt, m)
 		// log.JSONIndent(stmt)
+
+		if tx := m.Tx(); tx != "" {
+			buf.WriteString("var exec = light.GetExec(" + tx + ", db);")
+		} else {
+			buf.WriteString("var exec = db;")
+		}
 
 		switch stmt.Type {
 		case sqlparser.SELECT:
