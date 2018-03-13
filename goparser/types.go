@@ -39,6 +39,8 @@ type Method struct {
 
 	ResultTypeName func() string
 	ResultTypeWrap func() string
+
+	ParamsVarByName func(string) *Var
 }
 
 func NewMethod(store *Store, name, doc string) *Method {

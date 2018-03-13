@@ -2,14 +2,14 @@ package generator
 
 import (
 	"bytes"
-	"html/template"
+	"text/template"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
 	"github.com/arstd/log"
 )
 
-const CountResult = `
+const textCount = `
 	query := buf.String()
 {{- if .Store.Log}}
 	log.Debug(query)
@@ -31,8 +31,8 @@ const CountResult = `
 	return count, nil
 `
 
-var countResultTpl = template.Must(template.New("tplCountResult").Parse(CountResult))
+var tplCount = template.Must(template.New("textCount").Parse(textCount))
 
 func writeCount(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
-	log.Errorn(countResultTpl.Execute(buf, m))
+	log.Errorn(tplCount.Execute(buf, m))
 }

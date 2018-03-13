@@ -2,62 +2,61 @@ package generator
 
 import (
 	"bytes"
+	"text/template"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
+	"github.com/arstd/log"
 )
 
-func writeFragment(buf *bytes.Buffer, m *goparser.Method, v *sqlparser.Fragment) {
-	w := buf.WriteString
-	wln := func(s string) { buf.WriteString(s + "\n") }
-
-	if v.Condition != "" {
-		w("if ")
-		w(v.Condition)
-		wln(" {")
-	}
-
-	if v.Statement != "" {
-		if v.Range != "" {
-			wln(`if len(` + v.Range + `) > 0 {`)
-			w(`fmt.Fprintf(&buf, "`)
-			w(v.Statement)
-			wln(` ", strings.Repeat(",?", len(` + v.Range + `))[1:])`)
-			wln(`for _, v := range ` + v.Range + ` {
-						args = append(args, v)
+const textFragment = `
+	{{- if .Fragment.Condition}} if {{.Fragment.Condition}} { {{end -}}
+	{{- if .Fragment.Statement -}}
+		{{- if .Fragment.Range -}}
+			if len({{.Fragment.Range}}) > 0 {
+				fmt.Fprintf(&buf, "{{.Fragment.Statement}} ", strings.Repeat(",?", len({{.Fragment.Range}}))[1:])
+				for _, v := range {{.Fragment.Range}} {
+					args = append(args, v)
 				}
-			}`)
-		} else if len(v.Replacers) > 0 {
-			w(`fmt.Fprintf(&buf, "`)
-			w(v.Statement)
-			w(` "`)
-			for _, name := range v.Replacers {
-				w(",")
-				w(name)
 			}
-			wln(")")
-		} else {
-			w(`buf.WriteString("`)
-			w(v.Statement)
-			wln(` ")`)
-		}
+		{{- else if .Fragment.Replacers -}}
+			fmt.Fprintf(&buf, "{{.Fragment.Statement}} "{{range $elem := .Fragment.Replacers}}, {{$elem}}{{end}})
+		{{- else -}}
+			buf.WriteString("{{.Fragment.Statement}} ")
+		{{- end -}}
+		{{- if .Fragment.Variables -}}{{$method := .Method}}
+			args = append(args{{range $elem := .Fragment.Variables}}, {{paramsVarByNameValue $method $elem}}{{end}})
+		{{- end -}}
+	{{- else -}}{{$method := .Method}}
+		{{- range $fragment := .Fragment.Fragments -}}
+			{{template "textFragment" (aggregate $method $fragment)}}
+		{{- end -}}
+	{{- end -}}
+	{{- if .Fragment.Condition}} } {{end -}}
+;`
 
-		if len(v.Variables) > 0 {
-			w("args = append(args")
-			for _, name := range v.Variables {
-				w(", ")
-				x := m.Params.VarByName(name)
-				w(x.Value(x.VName))
-			}
-			wln(")")
-		}
-	} else {
-		for _, x := range v.Fragments {
-			writeFragment(buf, m, x)
-		}
-	}
+var tplFragment *template.Template
 
-	if v.Condition != "" {
-		wln("}")
-	}
+func init() {
+	tplFragment = template.New("textFragment")
+	tplFragment.Funcs(template.FuncMap{
+		"aggregate": func(m *goparser.Method, v *sqlparser.Fragment) *Aggregate {
+			return &Aggregate{Method: m, Fragment: v}
+		},
+		"paramsVarByNameValue": func(m *goparser.Method, name string) string {
+			x := m.Params.VarByName(name)
+			return x.Value(x.VName)
+		},
+	})
+	log.Fataln(tplFragment.Parse(textFragment))
+}
+
+type Aggregate struct {
+	Method   *goparser.Method
+	Fragment *sqlparser.Fragment
+}
+
+func writeFragment(buf *bytes.Buffer, m *goparser.Method, v *sqlparser.Fragment) {
+	data := &Aggregate{Method: m, Fragment: v}
+	tplFragment.Execute(buf, data)
 }

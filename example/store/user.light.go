@@ -176,7 +176,6 @@ func (*StoreUser) Count() (int64, error) {
 	var args []interface{}
 	buf.WriteString("SELECT count(1) ")
 	buf.WriteString("FROM users ")
-
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
@@ -288,7 +287,6 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 		buf.WriteString("AND updated > ? ")
 		args = append(args, u.Updated)
 	}
-
 	var total int64
 	totalQuery := "SELECT count(1) " + buf.String()
 	log.Debug(totalQuery)
