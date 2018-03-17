@@ -18,6 +18,9 @@ const textCount = `
 	var count {{call .ResultTypeName}}
 	err := exec.QueryRow(query, args...).Scan({{call .ResultTypeWrap}}(&count))
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return count, nil
+		}
 {{- if .Store.Log}}
 		log.Error(query)
 		log.Error(args...)

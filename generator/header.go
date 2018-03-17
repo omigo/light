@@ -26,7 +26,7 @@ func writeHeader(store *goparser.Store) *bytes.Buffer {
 			file = file[len(v)+5:]
 		}
 	}
-	wln("// Generate from source: " + file)
+	wln("// Generated from source: " + file)
 	w("package ")
 	wln(store.Package)
 	wln(`import (
