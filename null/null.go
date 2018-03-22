@@ -21,6 +21,7 @@ func Int64(v *int64) ValueScanner     { return &NullInt64{Int64: v} }
 func Float32(v *float32) ValueScanner { return &NullFloat32{Float32: v} }
 func Float64(v *float64) ValueScanner { return &NullFloat64{Float64: v} }
 func Time(v *time.Time) ValueScanner  { return &NullTime{Time: v} }
+func Bool(v *bool) ValueScanner       { return &NullBool{Bool: v} }
 
 type ValueScanner interface {
 	driver.Valuer
