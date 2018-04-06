@@ -37,7 +37,7 @@ func (n *NullString) UnmarshalJSON(data []byte) error {
 }
 
 func (n *NullString) String() string {
-	if n.String_ != nil {
+	if n.String_ == nil {
 		return "nil"
 	}
 	if *n.String_ == "" {
