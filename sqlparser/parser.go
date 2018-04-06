@@ -248,7 +248,16 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 			}
 			goto END
 
-		case RBRACKET, ORDER, EOF:
+		case ORDER, LIMIT:
+			if inner {
+				buf.WriteString(lit)
+				last = lit
+			} else {
+				p.unscan()
+				goto END
+			}
+
+		case RBRACKET, EOF:
 			p.unscan()
 			goto END
 		}
