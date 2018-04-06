@@ -248,10 +248,9 @@ func (p *Parser) parseFragment() (*Fragment, Token) {
 			}
 			goto END
 
-		case ORDER, LIMIT:
+		case ORDER:
 			if inner {
 				buf.WriteString(lit)
-				last = lit
 			} else {
 				p.unscan()
 				goto END
