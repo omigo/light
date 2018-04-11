@@ -6,7 +6,7 @@ import (
 	"github.com/arstd/light/example/model"
 )
 
-//go:generate light -log
+//go:generate light
 
 type IUser interface {
 

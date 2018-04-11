@@ -17,7 +17,9 @@ func writeGet(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) 
 		wln("log.Debug(args...)")
 	}
 
-	wln("row := exec.QueryRow(query, args...)")
+	wln(`ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		row := exec.QueryRowContext(ctx, query, args...)`)
 
 	v := m.Results.Result()
 

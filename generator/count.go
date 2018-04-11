@@ -14,9 +14,11 @@ const textCount = `
 {{- if .Store.Log}}
 	log.Debug(query)
 	log.Debug(args...)
-{{end -}}
+{{- end}}
 	var count {{call .ResultTypeName}}
-	err := exec.QueryRow(query, args...).Scan({{call .ResultTypeWrap}}(&count))
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := exec.QueryRowContext(ctx, query, args...).Scan({{call .ResultTypeWrap}}(&count))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return count, nil
@@ -25,12 +27,12 @@ const textCount = `
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
-{{end -}}
+{{- end}}
 		return count, err
 	}
 {{- if .Store.Log}}
 	log.Debug(count)
-{{end -}}
+{{- end}}
 	return count, nil
 `
 

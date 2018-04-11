@@ -23,7 +23,9 @@ func writeDelete(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 		wln("log.Debug(args...)")
 	}
 
-	wln("res, err := exec.Exec(query, args...)")
+	wln(`ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		res, err := exec.ExecContext(ctx, query, args...)`)
 	wln("if err != nil {")
 	if m.Store.Log {
 		wln("log.Error(query)")

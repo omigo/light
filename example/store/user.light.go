@@ -5,14 +5,15 @@ package store
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/arstd/light/example/model"
 	"github.com/arstd/light/light"
 	"github.com/arstd/light/null"
-	"github.com/arstd/log"
 )
 
 var User IUser = new(StoreUser)
@@ -25,14 +26,9 @@ func (*StoreUser) Create(name string) error {
 	var args []interface{}
 	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	_, err := exec.Exec(query, args...)
-	if err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := exec.ExecContext(ctx, query, args...)
 	return err
 }
 
@@ -43,13 +39,10 @@ func (*StoreUser) Insert(u *model.User) (int64, error) {
 	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	res, err := exec.Exec(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return 0, err
 	}
 	return res.LastInsertId()
@@ -62,13 +55,10 @@ func (*StoreUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 	buf.WriteString("INSERT INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birth_day=VALUES(birth_day), updated=CURRENT_TIMESTAMP ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	res, err := exec.Exec(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return 0, err
 	}
 	return res.LastInsertId()
@@ -81,13 +71,10 @@ func (*StoreUser) Replace(u *model.User) (int64, error) {
 	buf.WriteString("REPLACE INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	res, err := exec.Exec(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return 0, err
 	}
 	return res.LastInsertId()
@@ -121,13 +108,10 @@ func (*StoreUser) Update(u *model.User) (int64, error) {
 	buf.WriteString("updated=CURRENT_TIMESTAMP WHERE id=? ")
 	args = append(args, u.Id)
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	res, err := exec.Exec(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return 0, err
 	}
 	return res.RowsAffected()
@@ -140,13 +124,10 @@ func (*StoreUser) Delete(id uint64) (int64, error) {
 	buf.WriteString("DELETE FROM users WHERE id=? ")
 	args = append(args, id)
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	res, err := exec.Exec(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return 0, err
 	}
 	return res.RowsAffected()
@@ -160,22 +141,12 @@ func (*StoreUser) Get(id uint64) (*model.User, error) {
 	buf.WriteString("FROM users WHERE id=? ")
 	args = append(args, id)
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	row := exec.QueryRow(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	row := exec.QueryRowContext(ctx, query, args...)
 	xu := new(model.User)
 	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
-		return nil, err
-	}
-	log.JSON(xdst)
 	return xu, err
 }
 
@@ -186,20 +157,16 @@ func (*StoreUser) Count() (int64, error) {
 	buf.WriteString("SELECT count(1) ")
 	buf.WriteString("FROM users ")
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
 	var count int64
-	err := exec.QueryRow(query, args...).Scan(null.Int64(&count))
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := exec.QueryRowContext(ctx, query, args...).Scan(null.Int64(&count))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return count, nil
 		}
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return count, err
 	}
-	log.Debug(count)
 	return count, nil
 }
 
@@ -240,13 +207,10 @@ func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, erro
 	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
 	query := buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	rows, err := exec.Query(query, args...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	rows, err := exec.QueryContext(ctx, query, args...)
 	if err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -257,17 +221,10 @@ func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, erro
 		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
-			log.Error(query)
-			log.Error(args...)
-			log.Error(err)
 			return nil, err
 		}
-		log.JSON(xdst)
 	}
 	if err = rows.Err(); err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return nil, err
 	}
 	return data, nil
@@ -303,26 +260,19 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 	}
 	var total int64
 	totalQuery := "SELECT count(1) " + buf.String()
-	log.Debug(totalQuery)
-	log.Debug(args...)
-	err := exec.QueryRow(totalQuery, args...).Scan(&total)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := exec.QueryRowContext(ctx, totalQuery, args...).Scan(&total)
 	if err != nil {
-		log.Error(totalQuery)
-		log.Error(args...)
-		log.Error(err)
 		return 0, nil, err
 	}
-	log.Debug(total)
 	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
 	query := `SELECT id, username, phone, address, status, birth_day, created, updated ` + buf.String()
-	log.Debug(query)
-	log.Debug(args...)
-	rows, err := exec.Query(query, args...)
+	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	rows, err := exec.QueryContext(ctx, query, args...)
 	if err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return 0, nil, err
 	}
 	defer rows.Close()
@@ -333,17 +283,10 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
-			log.Error(query)
-			log.Error(args...)
-			log.Error(err)
 			return 0, nil, err
 		}
-		log.JSON(xdst)
 	}
 	if err = rows.Err(); err != nil {
-		log.Error(query)
-		log.Error(args...)
-		log.Error(err)
 		return 0, nil, err
 	}
 	return total, data, nil
