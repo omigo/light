@@ -147,7 +147,13 @@ func (*StoreUser) Get(id uint64) (*model.User, error) {
 	xu := new(model.User)
 	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
-	return xu, err
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return xu, nil
 }
 
 func (*StoreUser) Count() (int64, error) {
