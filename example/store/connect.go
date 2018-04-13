@@ -6,9 +6,6 @@ import (
 
 	"github.com/arstd/light/example/conf"
 	"github.com/arstd/log"
-
-	// import driver
-	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB

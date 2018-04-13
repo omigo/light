@@ -1,0 +1,7 @@
+package: github.com/arstd/light
+import:
+- package: github.com/arstd/log
+- package: golang.org/x/tools/imports
+  repo: git@github.com:golang/tools.git
+testImport:
+- name: github.com/go-sql-driver/mysql

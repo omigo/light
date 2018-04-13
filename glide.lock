@@ -1,0 +1,11 @@
+hash: 231770d0f4b5650970a4afd1292ed8b6b1bd966fc5baa0b0f9dfc80462b14bee
+updated: 2018-04-13T13:32:04.47517149+08:00
+imports:
+- name: github.com/arstd/log
+  version: 7bc0b1c0d6cba3a2afc05b65a53907d96dc6cfe8
+- name: golang.org/x/tools/imports
+  version: 1c0c7a8ccea464136be9160da64d04309e424a3b
+  repo: git@github.com:golang/tools.git
+testImports:
+- name: github.com/go-sql-driver/mysql
+  version: a0583e0143b1624142adab07e0e97fe106d99561

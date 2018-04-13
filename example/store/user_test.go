@@ -6,6 +6,9 @@ import (
 
 	"github.com/arstd/light/example/model"
 	"github.com/arstd/log"
+
+	// import driver
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var store IUser = &StoreUser{}

@@ -26,6 +26,4 @@ _testmain.go
 # IDE
 .vscode/
 
-vendor/
-
 # generated files
