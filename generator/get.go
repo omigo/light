@@ -2,54 +2,52 @@ package generator
 
 import (
 	"bytes"
+	"text/template"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
+	"github.com/arstd/log"
 )
 
+const textGet = `
+query := buf.String()
+{{- if .Method.Store.Log }}
+	log.Debug(query)
+	log.Debug(args...)
+{{- end}}
+
+ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+defer cancel()
+row := exec.QueryRowContext(ctx, query, args...)
+
+xu := new({{call .Method.ResultTypeName}})
+xdst := []interface{}{ {{- $method := .Method -}}
+	{{- range $i, $field := .Statement.Fields -}}
+		{{- if $i -}} , {{- end -}}
+		{{- call $method.ResultVarByTagScan $field -}}
+	{{- end -}}
+}
+err := row.Scan(xdst...)
+	if err != nil {
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+{{- if .Method.Store.Log}}
+	log.Error(query)
+	log.Error(args...)
+	log.Error(err)
+{{- end }}
+	return nil, err
+{{- if .Method.Store.Log}}
+	log.JSON(xdst)
+{{- end }}
+}
+
+return xu, err
+`
+
+var tplGet = template.Must(template.New("textGet").Parse(textGet))
+
 func writeGet(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
-	w := buf.WriteString
-	wln := func(s string) { buf.WriteString(s + "\n") }
-
-	wln("query := buf.String()")
-	if m.Store.Log {
-		wln("log.Debug(query)")
-		wln("log.Debug(args...)")
-	}
-
-	wln(`ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		row := exec.QueryRowContext(ctx, query, args...)`)
-
-	v := m.Results.Result()
-
-	w("xu := new(")
-	w(v.TypeName())
-	wln(")")
-	w("xdst := []interface{}{")
-	for _, f := range stmt.Fields {
-		s := m.Results.Result()
-		v := s.VarByTag(f)
-		name := "xu." + v.VName
-		w(v.Scan(name))
-		w(",")
-	}
-	buf.Truncate(buf.Len() - 1)
-	wln("}")
-
-	wln("err := row.Scan(xdst...)")
-	if m.Store.Log {
-		wln("if err != nil {")
-		wln(`if err == sql.ErrNoRows {
-			return nil, nil
-		}`)
-		wln("log.Error(query)")
-		wln("log.Error(args...)")
-		wln("log.Error(err)")
-		wln("return nil, err")
-		wln("}")
-		wln(`log.JSON(xdst)`)
-	}
-
-	wln("return xu, err")
+	log.Errorn(tplGet.Execute(buf, &Wrapper{Method: m, Statement: stmt}))
 }

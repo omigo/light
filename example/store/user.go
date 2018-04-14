@@ -8,6 +8,8 @@ import (
 
 //go:generate light
 
+var User IUser
+
 type IUser interface {
 
 	// CREATE TABLE IF NOT EXISTS #{name} (

@@ -11,12 +11,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var store IUser = &StoreUser{}
-
 var id uint64
 
 func TestUserCreate(t *testing.T) {
-	err := store.Create("users")
+	err := User.Create("users")
 	if err != nil {
 		t.Error(err)
 	}
@@ -30,7 +28,7 @@ func TestUserInsert(t *testing.T) {
 		Username: username,
 		Phone:    username,
 	}
-	id0, err := store.Insert(u)
+	id0, err := User.Insert(u)
 	if err != nil {
 		t.Error(err)
 	}
@@ -48,7 +46,7 @@ func TestUserUpsert(t *testing.T) {
 	tx, err := db.Begin()
 	defer tx.Rollback()
 	log.Fataln(err)
-	id0, err := store.Upsert(u, tx)
+	id0, err := User.Upsert(u, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -59,7 +57,7 @@ func TestUserUpsert(t *testing.T) {
 }
 
 func TestUserDelete1(t *testing.T) {
-	a, err := store.Delete(id)
+	a, err := User.Delete(id)
 	if err != nil {
 		t.Error(err)
 	}
@@ -72,7 +70,7 @@ func TestUserReplace(t *testing.T) {
 	u := &model.User{
 		Username: "admin" + time.Now().Format("150405"),
 	}
-	id0, err := store.Replace(u)
+	id0, err := User.Replace(u)
 	if err != nil {
 		t.Error(err)
 	}
@@ -93,7 +91,7 @@ func TestUserUpdate(t *testing.T) {
 		Status:   3,
 		BirthDay: &birth,
 	}
-	a, err := store.Update(u)
+	a, err := User.Update(u)
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,7 +101,7 @@ func TestUserUpdate(t *testing.T) {
 }
 
 func TestUserGet(t *testing.T) {
-	u, err := store.Get(id)
+	u, err := User.Get(id)
 	if err != nil {
 		t.Error(err)
 	}
@@ -118,7 +116,7 @@ func TestUserList(t *testing.T) {
 		Updated:  time.Now().Add(-time.Hour),
 		Status:   9,
 	}
-	data, err := store.List(u, 0, 2)
+	data, err := User.List(u, 0, 2)
 	if err != nil {
 		log.Error(err)
 	}
@@ -133,7 +131,7 @@ func TestUserPage(t *testing.T) {
 		Updated:  time.Now().Add(-time.Hour),
 		Status:   9,
 	}
-	total, data, err := store.Page(u, []model.Status{1, 2, 3}, 0, 1)
+	total, data, err := User.Page(u, []model.Status{1, 2, 3}, 0, 1)
 	if err != nil {
 		log.Error(err)
 	}
@@ -143,7 +141,7 @@ func TestUserPage(t *testing.T) {
 }
 
 func TestUserDelete(t *testing.T) {
-	a, err := store.Delete(id)
+	a, err := User.Delete(id)
 	if err != nil {
 		t.Error(err)
 	}

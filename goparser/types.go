@@ -37,16 +37,23 @@ type Method struct {
 	Params  *Tuple
 	Results *Tuple
 
-	ResultTypeName  func() string
-	ResultTypeWrap  func() string
-	ParamsVarByName func(string) *Var
-	Tx              func() string
+	ResultTypeName     func() string
+	ResultTypeWrap     func() string
+	ResultVarByTagScan func(name string) string
+	ParamsVarByName    func(string) *Var
+	Tx                 func() string
 }
 
 func NewMethod(store *Store, name, doc string) *Method {
 	m := &Method{Store: store, Name: name, Doc: doc}
 	m.ResultTypeName = func() string { return m.Results.Result().TypeName() }
 	m.ResultTypeWrap = func() string { return m.Results.Result().Wrap(true) }
+	m.ResultVarByTagScan = func(name string) string {
+		s := m.Results.Result()
+		v := s.VarByTag(name)
+		return v.Scan("xu." + v.VName)
+	}
+
 	m.Tx = func() string {
 		for i := 0; i < m.Params.Len(); i++ {
 			v := m.Params.At(i)
