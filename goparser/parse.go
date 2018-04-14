@@ -28,6 +28,7 @@ func Parse(src string) *Store {
 		Package: f.Name.Name,
 		Imports: map[string]string{},
 	}
+	store.Init = store.Initx
 
 	goBuild(src)
 

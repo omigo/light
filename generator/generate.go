@@ -2,6 +2,8 @@ package generator
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/arstd/light/goparser"
@@ -9,6 +11,20 @@ import (
 )
 
 func Generate(store *goparser.Store) []byte {
+	gopath := os.Getenv("GOPATH")
+	for _, v := range strings.Split(gopath, string(filepath.ListSeparator)) {
+		if strings.HasPrefix(store.Source, v) {
+			store.Source = store.Source[len(v)+5:]
+		}
+	}
+
+	for k, v := range store.Imports {
+		if i := strings.Index(k, "/vendor/"); i > 0 {
+			delete(store.Imports, k)
+			store.Imports[k[i+8:]] = v
+		}
+	}
+
 	buf := bytes.NewBuffer(make([]byte, 0, 65535))
 	for _, m := range store.Methods {
 		p := sqlparser.NewParser(bytes.NewBufferString(m.Doc))
@@ -23,9 +39,9 @@ func Generate(store *goparser.Store) []byte {
 		// log.JSONIndent(stmt)
 
 		if tx := m.Tx(); tx != "" {
-			buf.WriteString("var exec = light.GetExec(" + tx + ", db);")
+			buf.WriteString("var exec = light.GetExec(" + tx + ", db)\n")
 		} else {
-			buf.WriteString("var exec = db;")
+			buf.WriteString("var exec = db\n")
 		}
 
 		switch stmt.Type {

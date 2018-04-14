@@ -1,6 +1,7 @@
 package goparser
 
 import (
+	"fmt"
 	"go/types"
 	"reflect"
 	"strings"
@@ -13,10 +14,22 @@ type Store struct {
 	Log    bool
 
 	Package string            // store
-	Imports map[string]string // fmt database/sql
+	Imports map[string]string // database/sql => sql
 	Name    string            // User
 
 	Methods []*Method
+
+	Init func() string
+}
+
+func (store *Store) Initx() string {
+	name := store.Name
+	if name[0] == 'I' {
+		name = name[1:]
+		return fmt.Sprintf("func init(){ %s = new(Store%s)}\ntype Store%s struct{}\n", name, name, name)
+	} else {
+		return fmt.Sprintf("func init(){ Default%s = new(Store%s)}\ntype Store%s struct{}\n", name, name, name)
+	}
 }
 
 func (s *Store) MethodByName(name string) *Method {
