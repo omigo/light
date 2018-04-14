@@ -2,101 +2,143 @@ package generator
 
 import (
 	"bytes"
+	"text/template"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
+	"github.com/arstd/log"
 )
 
-func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
-	w := buf.WriteString
-	wln := func(s string) { buf.WriteString(s + "\n") }
+const textPage = `
+{{- define "textFragment" -}}
+	{{- if .Fragment.Condition}}
+		if {{.Fragment.Condition}} {
+	{{- end }}
+	{{- if .Fragment.Statement }}
+		{{- if .Fragment.Range }}
+			if len({{.Fragment.Range}}) > 0 {
+				fmt.Fprintf(&buf, "{{.Fragment.Statement}} ", strings.Repeat(",?", len({{.Fragment.Range}}))[1:])
+				for _, v := range {{.Fragment.Range}} {
+					args = append(args, v)
+				}
+			}
+		{{- else if .Fragment.Replacers }}
+			fmt.Fprintf(&buf, "{{.Fragment.Statement}} "{{range $elem := .Fragment.Replacers}}, {{$elem}}{{end}})
+		{{- else }}
+			buf.WriteString("{{.Fragment.Statement}} ")
+		{{- end }}
+		{{- if .Fragment.Variables }}{{$method := .Method}}
+			args = append(args{{range $elem := .Fragment.Variables}}, {{paramsVarByNameValue $method $elem}}{{end}})
+		{{- end }}
+	{{- else }}{{$method := .Method}}
+		{{- range $fragment := .Fragment.Fragments }}
+			{{template "textFragment" (aggregate $method $fragment)}}
+		{{- end }}
+	{{- end }}
+	{{- if .Fragment.Condition}}
+	 }
+	{{- end }}
+{{- end -}}
 
-	wln("\nvar total int64")
-	wln(`totalQuery := "SELECT count(1) "+ buf.String()`)
-	if m.Store.Log {
-		wln(`log.Debug(totalQuery)
-		log.Debug(args...)`)
+var total int64
+totalQuery := "SELECT count(1) "+ buf.String()
+{{- if .Method.Store.Log }}
+	log.Debug(totalQuery)
+	log.Debug(args...)
+{{- end}}
+ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+defer cancel()
+err := exec.QueryRowContext(ctx, totalQuery, args...).Scan(&total)
+if err != nil {
+	{{- if .Method.Store.Log }}
+		log.Error(totalQuery)
+		log.Error(args...)
+		log.Error(err)
+	{{- end}}
+	return 0, nil, err
+}
+{{- if .Method.Store.Log }}
+log.Debug(total)
+{{- end}}
+
+{{$i := sub (len .Statement.Fragments) 1}}
+{{ $fragment := index .Statement.Fragments $i }}
+{{template "textFragment" (aggregate .Method $fragment)}}
+
+{{ $fragement0 := index .Statement.Fragments 0 }}
+query := "{{$fragement0.Statement}} " + buf.String()
+{{- if .Method.Store.Log }}
+	log.Debug(query)
+	log.Debug(args...)
+{{- end}}
+
+ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+defer cancel()
+rows, err := exec.QueryContext(ctx, query, args...)
+if err != nil {
+	{{- if .Method.Store.Log }}
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+	{{- end}}
+	return 0, nil, err
+}
+defer rows.Close()
+
+var data {{call .Method.ResultTypeName}}
+
+for rows.Next() {
+	xu := new({{ call .Method.ResultElemTypeName }})
+	data = append(data, xu)
+	xdst := []interface{}{ {{- $method := .Method -}}
+		{{- range $i, $field := .Statement.Fields -}}
+			{{- if $i -}} , {{- end -}}
+			{{- call $method.ResultVarByTagScan $field -}}
+		{{- end -}}
 	}
-	wln(`ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			err := exec.QueryRowContext(ctx, totalQuery, args...).Scan(&total)
-		if err != nil {`)
-	if m.Store.Log {
-		wln(`log.Error(totalQuery)
+
+	err = rows.Scan(xdst...)
+	if err != nil {
+		{{- if .Method.Store.Log }}
+			log.Error(query)
 			log.Error(args...)
-			log.Error(err)`)
+			log.Error(err)
+		{{- end}}
+		return 0, nil, err
 	}
-	wln(`return 0, nil, err
-		}`)
-	if m.Store.Log {
-		wln(`log.Debug(total)`)
-	}
+	{{- if .Method.Store.Log }}
+		log.JSON(xdst)
+	{{- end}}
+}
+if err = rows.Err(); err != nil {
+	{{- if .Method.Store.Log }}
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+	{{- end}}
+	return 0, nil, err
+}
 
-	writeFragment(buf, m, stmt.Fragments[len(stmt.Fragments)-1])
+return total, data, nil
+`
 
-	w("query := `")
-	w(stmt.Fragments[0].Statement)
-	wln(" `+ buf.String()")
-	if m.Store.Log {
-		wln("log.Debug(query)")
-		wln("log.Debug(args...)")
-	}
+var tplPage *template.Template
 
-	wln(`ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		rows, err := exec.QueryContext(ctx, query, args...)`)
-	wln("if err != nil {")
-	if m.Store.Log {
-		wln("log.Error(query)")
-		wln("log.Error(args...)")
-		wln("log.Error(err)")
-	}
-	wln("return 0, nil, err")
-	wln("}")
-	wln("defer rows.Close()")
+func init() {
+	tplPage = template.New("textPage")
+	tplPage.Funcs(template.FuncMap{
+		"sub": func(a, b int) int { return a - b },
+		"aggregate": func(m *goparser.Method, v *sqlparser.Fragment) *Aggregate {
+			return &Aggregate{Method: m, Fragment: v}
+		},
+		"paramsVarByNameValue": func(m *goparser.Method, name string) string {
+			x := m.Params.VarByName(name)
+			return x.Value(x.VName)
+		},
+	})
+	log.Fataln(tplPage.Parse(textPage))
+}
 
-	v := m.Results.Result()
-
-	w("var data ")
-	wln(v.TypeName())
-
-	wln("for rows.Next() {")
-	w("xu := new(")
-	w(v.ElemTypeName())
-	wln(")")
-	wln("data = append(data, xu)")
-	w("xdst := []interface{}{")
-	for _, f := range stmt.Fields {
-		s := m.Results.Result()
-		v := s.VarByTag(f)
-		name := "xu." + v.VName
-		w(v.Scan(name))
-		w(",")
-	}
-	buf.Truncate(buf.Len() - 1)
-	wln("}")
-
-	wln("err = rows.Scan(xdst...)")
-	wln("if err != nil {")
-	if m.Store.Log {
-		wln("log.Error(query)")
-		wln("log.Error(args...)")
-		wln("log.Error(err)")
-	}
-	wln("return 0, nil, err")
-	wln("}")
-	if m.Store.Log {
-		wln(`log.JSON(xdst)`)
-	}
-	wln("}")
-	wln("if err = rows.Err(); err != nil {")
-	if m.Store.Log {
-		wln("log.Error(query)")
-		wln("log.Error(args...)")
-		wln("log.Error(err)")
-	}
-	wln("return 0, nil, err")
-	wln("}")
-
-	wln("return total, data, nil")
+func writePage(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
+	log.Errorn(tplPage.Execute(buf, &Wrapper{Method: m, Statement: stmt}))
 }

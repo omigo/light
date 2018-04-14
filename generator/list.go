@@ -2,77 +2,71 @@ package generator
 
 import (
 	"bytes"
+	"text/template"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
+	"github.com/arstd/log"
 )
 
+var textList = `
+query := buf.String()
+{{- if .Method.Store.Log }}
+	log.Debug(query)
+	log.Debug(args...)
+{{- end}}
+
+ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+defer cancel()
+rows, err := exec.QueryContext(ctx, query, args...)
+if err != nil {
+	{{- if .Method.Store.Log }}
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+	{{- end}}
+	return nil, err
+}
+defer rows.Close()
+
+var data {{call .Method.ResultTypeName}}
+
+for rows.Next() {
+	xu := new({{ call .Method.ResultElemTypeName }})
+	data = append(data, xu)
+	xdst := []interface{}{ {{- $method := .Method -}}
+		{{- range $i, $field := .Statement.Fields -}}
+			{{- if $i -}} , {{- end -}}
+			{{- call $method.ResultVarByTagScan $field -}}
+		{{- end -}}
+	}
+
+	err = rows.Scan(xdst...)
+	if err != nil {
+		{{- if .Method.Store.Log }}
+			log.Error(query)
+			log.Error(args...)
+			log.Error(err)
+		{{- end}}
+		return nil, err
+	}
+	{{- if .Method.Store.Log }}
+		log.JSON(xdst)
+	{{- end}}
+}
+if err = rows.Err(); err != nil {
+	{{- if .Method.Store.Log }}
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+	{{- end}}
+	return nil, err
+}
+
+return data, nil
+`
+var tplList = template.Must(template.New("textList").Parse(textList))
+
 func writeList(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
-	w := buf.WriteString
-	wln := func(s string) { buf.WriteString(s + "\n") }
-
-	wln("query := buf.String()")
-	if m.Store.Log {
-		wln("log.Debug(query)")
-		wln("log.Debug(args...)")
-	}
-
-	wln(`ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		rows, err := exec.QueryContext(ctx, query, args...)`)
-	wln("if err != nil {")
-	if m.Store.Log {
-		wln("log.Error(query)")
-		wln("log.Error(args...)")
-		wln("log.Error(err)")
-	}
-	wln("return nil, err")
-	wln("}")
-	wln("defer rows.Close()")
-
-	v := m.Results.Result()
-
-	w("var data ")
-	wln(v.TypeName())
-
-	wln("for rows.Next() {")
-	w("xu := new(")
-	w(v.ElemTypeName())
-	wln(")")
-	wln("data = append(data, xu)")
-	w("xdst := []interface{}{")
-	for _, f := range stmt.Fields {
-		s := m.Results.Result()
-		v := s.VarByTag(f)
-		name := "xu." + v.VName
-		w(v.Scan(name))
-		w(",")
-	}
-	buf.Truncate(buf.Len() - 1)
-	wln("}")
-
-	wln("err = rows.Scan(xdst...)")
-	wln("if err != nil {")
-	if m.Store.Log {
-		wln("log.Error(query)")
-		wln("log.Error(args...)")
-		wln("log.Error(err)")
-	}
-	wln("return nil, err")
-	wln("}")
-
-	if m.Store.Log {
-		wln(`log.JSON(xdst)`)
-	}
-	wln("}")
-	wln("if err = rows.Err(); err != nil {")
-	if m.Store.Log {
-		wln("log.Error(query)")
-		wln("log.Error(args...)")
-		wln("log.Error(err)")
-	}
-	wln("return nil, err")
-	wln("}")
-
-	wln("return data, nil")
+	log.Errorn(tplList.Execute(buf, &Wrapper{Method: m, Statement: stmt}))
 }

@@ -39,6 +39,7 @@ type Method struct {
 
 	ResultTypeName     func() string
 	ResultTypeWrap     func() string
+	ResultElemTypeName func() string
 	ResultVarByTagScan func(name string) string
 	ParamsVarByName    func(string) *Var
 	Tx                 func() string
@@ -48,6 +49,7 @@ func NewMethod(store *Store, name, doc string) *Method {
 	m := &Method{Store: store, Name: name, Doc: doc}
 	m.ResultTypeName = func() string { return m.Results.Result().TypeName() }
 	m.ResultTypeWrap = func() string { return m.Results.Result().Wrap(true) }
+	m.ResultElemTypeName = func() string { return m.Results.Result().ElemTypeName() }
 	m.ResultVarByTagScan = func(name string) string {
 		s := m.Results.Result()
 		v := s.VarByTag(name)

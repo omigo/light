@@ -120,7 +120,9 @@ func (*StoreUser) Update(u *model.User) (int64, error) {
 
 	buf.WriteString("updated=CURRENT_TIMESTAMP WHERE id=? ")
 	args = append(args, u.Id)
+
 	query := buf.String()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
@@ -252,7 +254,9 @@ func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, erro
 
 	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
+
 	query := buf.String()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := exec.QueryContext(ctx, query, args...)
@@ -260,11 +264,14 @@ func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, erro
 		return nil, err
 	}
 	defer rows.Close()
+
 	var data []*model.User
+
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
 		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
+
 		err = rows.Scan(xdst...)
 		if err != nil {
 			return nil, err
@@ -273,6 +280,7 @@ func (*StoreUser) List(u *model.User, offset int, size int) ([]*model.User, erro
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+
 	return data, nil
 }
 
@@ -313,7 +321,6 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 		buf.WriteString("AND updated > ? ")
 		args = append(args, u.Updated)
 	}
-
 	var total int64
 	totalQuery := "SELECT count(1) " + buf.String()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -325,7 +332,9 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 
 	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
 	args = append(args, offset, size)
-	query := `SELECT id, username, phone, address, status, birth_day, created, updated ` + buf.String()
+
+	query := "SELECT id, username, phone, address, status, birth_day, created, updated " + buf.String()
+
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := exec.QueryContext(ctx, query, args...)
@@ -333,11 +342,14 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 		return 0, nil, err
 	}
 	defer rows.Close()
+
 	var data []*model.User
+
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
 		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
+
 		err = rows.Scan(xdst...)
 		if err != nil {
 			return 0, nil, err
@@ -346,5 +358,6 @@ func (*StoreUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, 
 	if err = rows.Err(); err != nil {
 		return 0, nil, err
 	}
+
 	return total, data, nil
 }
