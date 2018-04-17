@@ -28,10 +28,16 @@ func TestUserInsert(t *testing.T) {
 		Username: username,
 		Phone:    username,
 	}
-	id0, err := User.Insert(u)
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	id0, err := User.Insert(tx, u)
 	if err != nil {
 		t.Error(err)
 	}
+	tx.Commit()
 	if id0 == 0 {
 		t.Errorf("expect id > 1, but %d", id0)
 	}

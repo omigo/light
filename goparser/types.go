@@ -1,12 +1,25 @@
 package goparser
 
 import (
-	"fmt"
 	"go/types"
 	"reflect"
 	"strings"
 
+	"github.com/arstd/light/sqlparser"
 	"github.com/arstd/log"
+)
+
+type MethodType string
+
+const (
+	MethodTypeDDL    = "ddl"
+	MethodTypeInsert = "insert"
+	MethodTypeUpdate = "update"
+	MethodTypeDelete = "delete"
+	MethodTypeGet    = "get"
+	MethodTypeList   = "list"
+	MethodTypePage   = "page"
+	MethodTypeAgg    = "agg"
 )
 
 type Store struct {
@@ -15,21 +28,14 @@ type Store struct {
 
 	Package string            // store
 	Imports map[string]string // database/sql => sql
-	Name    string            // User
+	Name    string            // IUser
+
+	VarName   string
+	StoreName string
 
 	Methods []*Method
 
 	Init func() string
-}
-
-func (store *Store) Initx() string {
-	name := store.Name
-	if name[0] == 'I' {
-		name = name[1:]
-		return fmt.Sprintf("func init(){ %s = new(Store%s)}\ntype Store%s struct{}\n", name, name, name)
-	} else {
-		return fmt.Sprintf("func init(){ Default%s = new(Store%s)}\ntype Store%s struct{}\n", name, name, name)
-	}
 }
 
 func (s *Store) MethodByName(name string) *Method {
@@ -47,6 +53,9 @@ type Method struct {
 	Name string // Insert
 	Doc  string // insert into users ...
 
+	Statement *sqlparser.Statement
+	Type      MethodType
+
 	Params  *Tuple
 	Results *Tuple
 
@@ -55,7 +64,35 @@ type Method struct {
 	ResultElemTypeName func() string
 	ResultVarByTagScan func(name string) string
 	ParamsVarByName    func(string) *Var
+	Signature          func() string
 	Tx                 func() string
+}
+
+func (m *Method) SetType() {
+	switch m.Statement.Type {
+	case sqlparser.SELECT:
+		if m.Results.Len() == 3 {
+			m.Type = MethodTypePage
+		} else if m.Results.At(0).IsSlice() {
+			m.Type = MethodTypeList
+		} else if m.Results.Result().IsBasic() {
+			m.Type = MethodTypeAgg
+		} else {
+			m.Type = MethodTypeGet
+		}
+
+	case sqlparser.INSERT, sqlparser.REPLACE:
+		m.Type = MethodTypeInsert
+
+	case sqlparser.UPDATE:
+		m.Type = MethodTypeUpdate
+
+	case sqlparser.DELETE:
+		m.Type = MethodTypeDelete
+
+	default:
+		m.Type = MethodTypeDDL
+	}
 }
 
 func NewMethod(store *Store, name, doc string) *Method {
@@ -68,6 +105,7 @@ func NewMethod(store *Store, name, doc string) *Method {
 		v := s.VarByTag(name)
 		return v.Scan("xu." + v.VName)
 	}
+	m.Signature = m.Signaturex
 
 	m.Tx = func() string {
 		for i := 0; i < m.Params.Len(); i++ {
@@ -82,13 +120,12 @@ func NewMethod(store *Store, name, doc string) *Method {
 	return m
 }
 
-func (m *Method) Signature() string {
+func (m *Method) Signaturex() string {
 	name := m.Store.Name
 	if name[0] == 'I' {
 		name = name[1:]
 	}
-	return "func (*Store" + name + ")" + m.Name +
-		"(" + m.Params.String() + ")(" + m.Results.String() + "){\n"
+	return m.Name + "(" + m.Params.String() + ")(" + m.Results.String() + ")"
 }
 
 type Tuple struct {

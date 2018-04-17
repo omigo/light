@@ -5,9 +5,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
+	"github.com/arstd/log"
 )
 
 func Generate(store *goparser.Store) []byte {
@@ -25,50 +27,36 @@ func Generate(store *goparser.Store) []byte {
 		}
 	}
 
-	buf := bytes.NewBuffer(make([]byte, 0, 65535))
 	for _, m := range store.Methods {
 		p := sqlparser.NewParser(bytes.NewBufferString(m.Doc))
 		stmt, err := p.Parse()
 		if err != nil {
 			panic(err)
 		}
-
-		buf.WriteString(m.Signature())
+		m.Statement = stmt
 
 		genCondition(stmt, m)
 		// log.JSONIndent(stmt)
 
-		if tx := m.Tx(); tx != "" {
-			buf.WriteString("var exec = light.GetExec(" + tx + ", db)\n")
-		} else {
-			buf.WriteString("var exec = db\n")
-		}
-
-		switch stmt.Type {
-		case sqlparser.SELECT:
-			writeSelect(buf, m, stmt)
-
-		case sqlparser.INSERT, sqlparser.REPLACE:
-			writeInsert(buf, m, stmt)
-
-		case sqlparser.UPDATE:
-			writeUpdate(buf, m, stmt)
-
-		case sqlparser.DELETE:
-			writeDelete(buf, m, stmt)
-
-		case sqlparser.CREATE:
-			writeCreate(buf, m, stmt)
-
-		default:
-			panic("unimplemented " + m.Doc)
-		}
-		buf.WriteString("}\n\n")
+		m.SetType()
 	}
 
-	header := writeHeader(store)
-	buf.WriteTo(header)
-	return header.Bytes()
+	var t *template.Template
+	t = template.New("tpl")
+	t.Funcs(template.FuncMap{
+		"sub": func(a, b int) int { return a - b },
+		"aggregate": func(m *goparser.Method, v *sqlparser.Fragment) *Aggregate {
+			return &Aggregate{Method: m, Fragment: v}
+		},
+		"paramsVarByNameValue": func(m *goparser.Method, name string) string {
+			x := m.Params.VarByName(name)
+			return x.Value(x.VName)
+		},
+	})
+	log.Fataln(t.Parse(tpl))
+	buf := bytes.NewBuffer(make([]byte, 0, 1024*16))
+	log.Fataln(t.Execute(buf, store))
+	return buf.Bytes()
 }
 
 func genCondition(stmt *sqlparser.Statement, m *goparser.Method) {

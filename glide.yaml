@@ -1,7 +1,15 @@
 package: github.com/arstd/light
+license: MIT
+owners:
+- name: Arstd
+email: shangxuejin@gmail.com
+ignore:
+- google.golang.org/appengine/cloudsql
 import:
 - package: github.com/arstd/log
-- package: golang.org/x/tools/imports
-  repo: git@github.com:golang/tools.git
+- package: golang.org/x/tools
+  repo: https://github.com/golang/tools
+  subpackages:
+  - imports
 testImport:
-- name: github.com/go-sql-driver/mysql
+- package: github.com/go-sql-driver/mysql

@@ -35,7 +35,7 @@ const textFragment = `
 	{{- end }}
 {{- end }}
 {{- if .Fragment.Condition}}
- }
+	}
 {{- end }}
 `
 

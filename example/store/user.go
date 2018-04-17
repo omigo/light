@@ -6,7 +6,7 @@ import (
 	"github.com/arstd/light/example/model"
 )
 
-//go:generate light
+//go:generate light -log
 
 var User IUser
 
@@ -26,7 +26,7 @@ type IUser interface {
 
 	// insert into users(`username`, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	Insert(u *model.User) (int64, error)
+	Insert(tx *sql.Tx, u *model.User) (int64, error)
 
 	// insert into users(username, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
