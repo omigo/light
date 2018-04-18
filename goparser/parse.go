@@ -99,11 +99,11 @@ func parseTypes(store *Store) {
 	if err != nil {
 		log.Panic(err)
 	}
-	// ast.Print(fset, f)
 
 	var files []*ast.File
 	for _, p := range pkgs {
 		for _, v := range p.Files {
+			// ast.Print(fset, v)
 			files = append(files, v)
 		}
 	}
@@ -114,15 +114,25 @@ func parseTypes(store *Store) {
 	log.Fataln(err)
 
 	for k, obj := range info.Defs {
-		if k.Obj != nil && k.Name == store.Name && k.Obj.Kind == ast.Typ {
-			// get method name and params/returns
-			if itfType, ok := obj.Type().Underlying().(*types.Interface); ok {
-				for i := 0; i < itfType.NumMethods(); i++ {
-					x := itfType.Method(i)
-					m := store.MethodByName(x.Name())
-					y := x.Type().(*types.Signature)
-					m.Params = &Tuple{store, y.Params()}
-					m.Results = &Tuple{store, y.Results()}
+		if k.Obj != nil {
+			if k.Name == store.Name {
+				if k.Obj.Kind == ast.Typ {
+					// get method name and params/returns
+					if itfType, ok := obj.Type().Underlying().(*types.Interface); ok {
+						for i := 0; i < itfType.NumMethods(); i++ {
+							x := itfType.Method(i)
+							m := store.MethodByName(x.Name())
+							y := x.Type().(*types.Signature)
+							m.Params = &Tuple{store, y.Params()}
+							m.Results = &Tuple{store, y.Results()}
+						}
+					}
+				}
+			} else {
+				if tn, ok := obj.Type().(*types.Named); ok {
+					if store.Name == tn.Obj().Name() {
+						store.VarName = k.Name
+					}
 				}
 			}
 		}

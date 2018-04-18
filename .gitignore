@@ -26,4 +26,11 @@ _testmain.go
 # IDE
 .vscode/
 
-# generated files
+
+# Push imports to repository
+/vendor/**
+!/vendor/golang.org/x/tools/imports
+!/vendor/golang.org/x/tools/go/ast/astutil
+!/vendor/golang.org/x/tools/internal/fastwalk
+
+# Generated files

@@ -2,10 +2,34 @@ package generator
 
 import (
 	"bytes"
+	"text/template"
 
 	"github.com/arstd/light/goparser"
 	"github.com/arstd/light/sqlparser"
+	"github.com/arstd/log"
 )
+
+const textCreate = `
+query := buf.String()
+{{- if .Method.Store.Log }}
+	log.Debug(query)
+	log.Debug(args...)
+{{- end}}
+
+ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+defer cancel()
+_, err := exec.ExecContext(ctx, query, args...)
+{{- if .Method.Store.Log }}
+	if err != nil {
+		log.Error(query)
+		log.Error(args...)
+		log.Error(err)
+	}
+{{- end}}
+return err
+`
+
+var tplCreate = template.Must(template.New("textCreate").Parse(textCreate))
 
 func writeCreate(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statement) {
 	wln := func(s string) { buf.WriteString(s + "\n") }
@@ -17,21 +41,5 @@ func writeCreate(buf *bytes.Buffer, m *goparser.Method, stmt *sqlparser.Statemen
 		writeFragment(buf, m, f)
 	}
 
-	wln("query := buf.String()")
-	if m.Store.Log {
-		wln("log.Debug(query)")
-		wln("log.Debug(args...)")
-	}
-
-	wln(`ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		_, err := exec.ExecContext(ctx, query, args...)`)
-	if m.Store.Log {
-		wln("if err != nil {")
-		wln("log.Error(query)")
-		wln("log.Error(args...)")
-		wln("log.Error(err)")
-		wln("}")
-	}
-	wln("return err")
+	log.Errorn(tplCreate.Execute(buf, &Wrapper{Method: m, Statement: stmt}))
 }
