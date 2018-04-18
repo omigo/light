@@ -59,6 +59,11 @@ func Generate(store *goparser.Store) []byte {
 	return buf.Bytes()
 }
 
+type Aggregate struct {
+	Method   *goparser.Method
+	Fragment *sqlparser.Fragment
+}
+
 func genCondition(stmt *sqlparser.Statement, m *goparser.Method) {
 	for _, v := range stmt.Fragments {
 		deepGenCondition(v, m)
