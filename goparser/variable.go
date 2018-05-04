@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+func VariableTypeName(v *Variable) string     { return v.TypeName() }
+func VariableWrap(v *Variable) string         { return v.Wrap(true) }
+func VariableElemTypeName(v *Variable) string { return v.ElemTypeName() }
+func VariableVarByTagScan(v *Variable, name string) string {
+	x := v.VarByTag(name)
+	return x.Scan("xu." + v.Var.Name())
+}
+
 type Variable struct {
 	VName string
 	Store *Store `json:"-"`

@@ -47,10 +47,11 @@ func Generate(store *goparser.Store) []byte {
 		"aggregate": func(m *goparser.Method, v *sqlparser.Fragment) *Aggregate {
 			return &Aggregate{Method: m, Fragment: v}
 		},
-		"paramsVarByNameValue": func(m *goparser.Method, name string) string {
-			x := m.Params.VarByName(name)
-			return x.Value(x.VName)
-		},
+		"ParamsVarByNameValue": goparser.ParamsVarByNameValue,
+		"VariableTypeName":     goparser.VariableTypeName,
+		"VariableWrap":         goparser.VariableWrap,
+		"VariableElemTypeName": goparser.VariableElemTypeName,
+		"VariableVarByTagScan": goparser.VariableVarByTagScan,
 	})
 	log.Fataln(t.Parse(tpl))
 	buf := bytes.NewBuffer(make([]byte, 0, 1024*16))

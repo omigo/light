@@ -47,7 +47,7 @@ type Store{{.Name}} struct{}
 		buf.WriteString("{{.Fragment.Statement}} ")
 	{{- end }}
 	{{- if .Fragment.Variables }}
-		args = append(args{{range $elem := .Fragment.Variables}}, {{paramsVarByNameValue $.Method $elem}}{{end}})
+		args = append(args{{range $elem := .Fragment.Variables}}, {{ParamsVarByNameValue $.Method.Params $elem}}{{end}})
 	{{- end }}
 {{- else }}
 	{{- range $fragment := .Fragment.Fragments }}
@@ -132,7 +132,7 @@ query := buf.String()
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
 row := exec.QueryRowContext(ctx, query, args...)
-xu := new({{call .ResultTypeName}})
+xu := new({{VariableTypeName .Results.Result}})
 xdst := []interface{}{
 	{{- range $i, $field := .Statement.Fields -}}
 		{{- if $i -}} , {{- end -}}
@@ -176,9 +176,9 @@ if err != nil {
 	return nil, err
 }
 defer rows.Close()
-var data {{call .ResultTypeName}}
+var data {{VariableTypeName .Results.Result}}
 for rows.Next() {
-	xu := new({{ call .ResultElemTypeName }})
+	xu := new({{ VariableElemTypeName .Results.Result }})
 	data = append(data, xu)
 	xdst := []interface{}{
 		{{- range $i, $field := .Statement.Fields -}}
@@ -254,9 +254,9 @@ if err != nil {
 	return 0, nil, err
 }
 defer rows.Close()
-var data {{call .ResultTypeName}}
+var data {{VariableTypeName .Results.Result}}
 for rows.Next() {
-	xu := new({{ call .ResultElemTypeName }})
+	xu := new({{ VariableElemTypeName .Results.Result }})
 	data = append(data, xu)
 	xdst := []interface{}{
 		{{- range $i, $field := .Statement.Fields -}}
@@ -296,7 +296,7 @@ query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
 {{- end}}
-var agg {{call .ResultTypeName}}
+var agg {{VariableTypeName .Results.Result}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
 err := exec.QueryRowContext(ctx, query, args...).Scan({{call .ResultTypeWrap}}(&agg))

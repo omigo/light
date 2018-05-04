@@ -5,6 +5,11 @@ import (
 	"strings"
 )
 
+func ParamsVarByNameValue(ps *Params, name string) string {
+	x := ps.VarByName(name)
+	return x.Value(x.VName)
+}
+
 type Params struct {
 	Store  *Store `json:"-"`
 	Tuple  *types.Tuple
