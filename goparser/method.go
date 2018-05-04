@@ -19,6 +19,31 @@ const (
 	MethodTypeAgg    = "agg"
 )
 
+func (m *Method) signature() string {
+	name := m.Store.Name
+	if name[0] == 'I' {
+		name = name[1:]
+	}
+	return m.Name + "(" + m.Params.String() + ")(" + m.Results.String() + ")"
+}
+
+func (m *Method) resultVarByTagScan(name string) string {
+	s := m.Results.Result
+	v := s.VarByTag(name)
+	return v.Scan("xu." + v.VName)
+}
+
+func (m *Method) tx() string {
+	for i := 0; i < m.Params.Len(); i++ {
+		v := m.Params.At(i)
+		typ := typeString(v.Store, v.Var.Type())
+		if typ == "*sql.Tx" {
+			return v.Var.Name()
+		}
+	}
+	return ""
+}
+
 type Method struct {
 	Store *Store `json:"-"`
 
@@ -31,20 +56,14 @@ type Method struct {
 	Params  *Params
 	Results *Results
 
-	ResultTypeName     func() string
-	ResultTypeWrap     func() string
-	ResultElemTypeName func() string
 	ResultVarByTagScan func(name string) string
-	ParamsVarByName    func(string) *Variable
-	Signature          func() string
-	Tx                 func() string
+
+	Signature func() string
+	Tx        func() string
 }
 
 func NewMethod(store *Store, name, doc string) *Method {
 	m := &Method{Store: store, Name: name, Doc: doc}
-	m.ResultTypeName = m.resultTypeName
-	m.ResultTypeWrap = m.resultTypeWrap
-	m.ResultElemTypeName = m.resultElemTypeName
 	m.ResultVarByTagScan = m.resultVarByTagScan
 	m.Signature = m.signature
 	m.Tx = m.tx
@@ -114,32 +133,4 @@ func deepGenCondition(f *sqlparser.Fragment, m *Method) {
 		cs = append(cs, "("+v.Condition+")")
 	}
 	f.Condition = strings.Join(cs, " || ")
-}
-
-func (m *Method) signature() string {
-	name := m.Store.Name
-	if name[0] == 'I' {
-		name = name[1:]
-	}
-	return m.Name + "(" + m.Params.String() + ")(" + m.Results.String() + ")"
-}
-
-func (m *Method) resultTypeName() string     { return m.Results.Result.TypeName() }
-func (m *Method) resultTypeWrap() string     { return m.Results.Result.Wrap(true) }
-func (m *Method) resultElemTypeName() string { return m.Results.Result.ElemTypeName() }
-func (m *Method) resultVarByTagScan(name string) string {
-	s := m.Results.Result
-	v := s.VarByTag(name)
-	return v.Scan("xu." + v.VName)
-}
-
-func (m *Method) tx() string {
-	for i := 0; i < m.Params.Len(); i++ {
-		v := m.Params.At(i)
-		typ := typeString(v.Store, v.Var.Type())
-		if typ == "*sql.Tx" {
-			return v.Var.Name()
-		}
-	}
-	return ""
 }

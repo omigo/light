@@ -299,7 +299,7 @@ query := buf.String()
 var agg {{VariableTypeName .Results.Result}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
-err := exec.QueryRowContext(ctx, query, args...).Scan({{call .ResultTypeWrap}}(&agg))
+err := exec.QueryRowContext(ctx, query, args...).Scan({{VariableWrap .Results.Result}}(&agg))
 if err != nil {
 	if err == sql.ErrNoRows {
 		{{- if .Store.Log}}
