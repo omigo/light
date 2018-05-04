@@ -34,10 +34,9 @@ func Generate(store *goparser.Store) []byte {
 			panic(err)
 		}
 		m.Statement = stmt
-
-		genCondition(stmt, m)
 		// log.JSONIndent(stmt)
 
+		m.GenCondition()
 		m.SetType()
 	}
 
@@ -62,42 +61,4 @@ func Generate(store *goparser.Store) []byte {
 type Aggregate struct {
 	Method   *goparser.Method
 	Fragment *sqlparser.Fragment
-}
-
-func genCondition(stmt *sqlparser.Statement, m *goparser.Method) {
-	for _, v := range stmt.Fragments {
-		deepGenCondition(v, m)
-	}
-}
-
-func deepGenCondition(f *sqlparser.Fragment, m *goparser.Method) {
-	if len(f.Fragments) == 0 {
-		if f.Condition == "-" {
-			var cs []string
-			for _, name := range f.Variables {
-				v := m.Params.VarByName(name)
-				d := v.NotDefault(v.VName)
-				cs = append(cs, "("+d+")")
-			}
-			f.Condition = strings.Join(cs, " && ")
-		}
-		return
-	}
-
-	for _, v := range f.Fragments {
-		deepGenCondition(v, m)
-	}
-
-	if f.Condition != "-" {
-		return
-	}
-
-	var cs []string
-	for _, v := range f.Fragments {
-		if v.Condition == "" {
-			continue
-		}
-		cs = append(cs, "("+v.Condition+")")
-	}
-	f.Condition = strings.Join(cs, " || ")
 }

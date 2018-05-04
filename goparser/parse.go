@@ -14,6 +14,20 @@ import (
 	"github.com/arstd/log"
 )
 
+type Store struct {
+	Source string
+	Log    bool
+
+	Package string            // store
+	Imports map[string]string // database/sql => sql
+	Name    string            // IUser
+
+	VarName   string
+	StoreName string
+
+	Methods []*Method
+}
+
 func Parse(src string) *Store {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, src, nil, parser.ParseComments)
@@ -96,10 +110,10 @@ func parseTypes(store *Store, f *ast.File, fset *token.FileSet) {
 					if itfType, ok := obj.Type().Underlying().(*types.Interface); ok {
 						for i := 0; i < itfType.NumMethods(); i++ {
 							x := itfType.Method(i)
-							m := store.MethodByName(x.Name())
+							m := getMethodByName(store, x.Name())
 							y := x.Type().(*types.Signature)
-							m.Params = &Tuple{store, y.Params()}
-							m.Results = &Tuple{store, y.Results()}
+							m.Params = NewParams(store, y.Params())
+							m.Results = NewResults(store, y.Results())
 						}
 					}
 				}
@@ -112,4 +126,13 @@ func parseTypes(store *Store, f *ast.File, fset *token.FileSet) {
 			}
 		}
 	}
+}
+
+func getMethodByName(s *Store, name string) *Method {
+	for _, a := range s.Methods {
+		if a.Name == name {
+			return a
+		}
+	}
+	return nil
 }
