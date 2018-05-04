@@ -11,30 +11,41 @@ func ParamsVarByNameValue(ps *Params, name string) string {
 }
 
 type Params struct {
-	Store  *Store `json:"-"`
-	Tuple  *types.Tuple
-	Params []*Variable
+	Store *Store `json:"-"`
+	Tuple *types.Tuple
+	List  []*Variable
 }
 
 func NewParams(store *Store, tuple *types.Tuple) *Params {
-	return &Params{Store: store, Tuple: tuple}
+	ps := &Params{
+		Store: store,
+		Tuple: tuple,
+		List:  make([]*Variable, tuple.Len()),
+	}
+
+	for i := 0; i < tuple.Len(); i++ {
+		v := tuple.At(i)
+		ps.List[i] = &Variable{
+			Store: store,
+			VName: v.Name(),
+			// Tag   :
+			Var: v,
+		}
+	}
+
+	return ps
 }
 
-func (t *Params) String() string {
+func (ps *Params) String() string {
 	var ss []string
-	for i := 0; i < t.Tuple.Len(); i++ {
-		ss = append(ss, t.At(i).String())
+	for _, r := range ps.List {
+		ss = append(ss, r.String())
 	}
 	return strings.Join(ss, ", ")
 }
 
 func (t *Params) Len() int {
 	return t.Tuple.Len()
-}
-
-func (t *Params) At(i int) *Variable {
-	x := t.Tuple.At(i)
-	return &Variable{VName: x.Name(), Store: t.Store, Var: t.Tuple.At(i)}
 }
 
 func (t *Params) VarByName(name string) *Variable {
@@ -49,7 +60,7 @@ func (t *Params) VarByName(name string) *Variable {
 	parts0 := lowerCamelCase(parts[0])
 	// 从参数列表中查找
 	for i := 0; i < t.Tuple.Len(); i++ {
-		x := t.At(i)
+		x := t.List[i]
 		if x.Var.Name() == parts0 {
 			v = x
 			break
@@ -84,14 +95,14 @@ func (t *Params) VarByName(name string) *Variable {
 
 	out := upperCamelCase(name)
 	for i := 0; i < t.Len(); i++ {
-		s := underlying(t.At(i).Var.Type())
+		s := underlying(t.List[i].Var.Type())
 		if s != nil {
 			for j := 0; j < s.NumFields(); j++ {
 				x := s.Field(j)
 				if x.Name() == out {
 					z := getTag(s.Tag(j), "light")
 					return &Variable{
-						VName: t.At(i).Var.Name() + "." + x.Name(),
+						VName: t.List[i].Var.Name() + "." + x.Name(),
 						Store: t.Store,
 						Var:   x,
 						Tag:   z,

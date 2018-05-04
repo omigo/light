@@ -6,22 +6,22 @@ import (
 )
 
 type Results struct {
-	Store   *Store `json:"-"`
-	Tuple   *types.Tuple
-	Results []*Variable
-	Result  *Variable
+	Store  *Store `json:"-"`
+	Tuple  *types.Tuple
+	List   []*Variable
+	Result *Variable
 }
 
 func NewResults(store *Store, tuple *types.Tuple) *Results {
 	rs := &Results{
-		Store:   store,
-		Tuple:   tuple,
-		Results: make([]*Variable, tuple.Len()),
+		Store: store,
+		Tuple: tuple,
+		List:  make([]*Variable, tuple.Len()),
 	}
 
 	for i := 0; i < tuple.Len(); i++ {
 		v := tuple.At(i)
-		rs.Results[i] = &Variable{
+		rs.List[i] = &Variable{
 			Store: store,
 			VName: v.Name(),
 			// Tag   :
@@ -33,9 +33,9 @@ func NewResults(store *Store, tuple *types.Tuple) *Results {
 	case 1:
 		// ddl
 	case 2:
-		rs.Result = rs.Results[0]
+		rs.Result = rs.List[0]
 	case 3:
-		rs.Result = rs.Results[1]
+		rs.Result = rs.List[1]
 	default:
 		panic(rs.Len())
 	}
@@ -44,7 +44,7 @@ func NewResults(store *Store, tuple *types.Tuple) *Results {
 
 func (rs *Results) String() string {
 	var ss []string
-	for _, r := range rs.Results {
+	for _, r := range rs.List {
 		ss = append(ss, r.String())
 	}
 	return strings.Join(ss, ", ")
@@ -66,7 +66,7 @@ func (rs *Results) VarByName(name string) *Variable {
 	parts0 := lowerCamelCase(parts[0])
 	// 从参数列表中查找
 	for i := 0; i < rs.Len(); i++ {
-		x := rs.Results[i]
+		x := rs.List[i]
 		if x.Var.Name() == parts0 {
 			v = x
 			break
@@ -100,7 +100,7 @@ func (rs *Results) VarByName(name string) *Variable {
 	}
 
 	out := upperCamelCase(name)
-	for _, r := range rs.Results {
+	for _, r := range rs.List {
 		s := underlying(r.Var.Type())
 		if s != nil {
 			for j := 0; j < s.NumFields(); j++ {

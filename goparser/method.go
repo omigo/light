@@ -29,7 +29,7 @@ func MethodSignature(m *Method) string {
 
 func MethodTx(m *Method) string {
 	for i := 0; i < m.Params.Len(); i++ {
-		v := m.Params.At(i)
+		v := m.Params.List[i]
 		typ := typeString(v.Store, v.Var.Type())
 		if typ == "*sql.Tx" {
 			return v.Var.Name()
@@ -73,7 +73,7 @@ func (m *Method) SetType() {
 	case sqlparser.SELECT:
 		if m.Results.Len() == 3 {
 			m.Type = MethodTypePage
-		} else if m.Results.Results[0].IsSlice() {
+		} else if m.Results.List[0].IsSlice() {
 			m.Type = MethodTypeList
 		} else if m.Results.Result.IsBasic() {
 			m.Type = MethodTypeAgg
