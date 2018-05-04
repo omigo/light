@@ -38,12 +38,6 @@ func MethodTx(m *Method) string {
 	return ""
 }
 
-func (m *Method) resultVarByTagScan(name string) string {
-	s := m.Results.Result
-	v := s.VarByTag(name)
-	return v.Scan("xu." + v.VName)
-}
-
 type Method struct {
 	Store *Store `json:"-"`
 
@@ -55,16 +49,10 @@ type Method struct {
 
 	Params  *Params
 	Results *Results
-
-	ResultVarByTagScan func(name string) string
-
-	Signature func() string
-	Tx        func() string
 }
 
 func NewMethod(store *Store, name, doc string) *Method {
 	m := &Method{Store: store, Name: name, Doc: doc}
-	m.ResultVarByTagScan = m.resultVarByTagScan
 	return m
 }
 

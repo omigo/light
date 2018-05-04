@@ -136,7 +136,7 @@ xu := new({{VariableTypeName .Results.Result}})
 xdst := []interface{}{
 	{{- range $i, $field := .Statement.Fields -}}
 		{{- if $i -}} , {{- end -}}
-		{{- call $.ResultVarByTagScan $field -}}
+		{{- VariableVarByTagScan $.Results.Result $field -}}
 	{{- end -}}
 }
 err := row.Scan(xdst...)
@@ -183,7 +183,7 @@ for rows.Next() {
 	xdst := []interface{}{
 		{{- range $i, $field := .Statement.Fields -}}
 			{{- if $i -}} , {{- end -}}
-			{{- call $.ResultVarByTagScan $field -}}
+			{{- VariableVarByTagScan $.Results.Result $field -}}
 		{{- end -}}
 	}
 	err = rows.Scan(xdst...)
@@ -261,7 +261,7 @@ for rows.Next() {
 	xdst := []interface{}{
 		{{- range $i, $field := .Statement.Fields -}}
 			{{- if $i -}} , {{- end -}}
-			{{- call $.ResultVarByTagScan $field -}}
+			{{- VariableVarByTagScan $.Results.Result $field -}}
 		{{- end -}}
 	}
 	err = rows.Scan(xdst...)
