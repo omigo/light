@@ -19,7 +19,7 @@ const (
 	MethodTypeAgg    = "agg"
 )
 
-func (m *Method) signature() string {
+func MethodSignature(m *Method) string {
 	name := m.Store.Name
 	if name[0] == 'I' {
 		name = name[1:]
@@ -27,13 +27,7 @@ func (m *Method) signature() string {
 	return m.Name + "(" + m.Params.String() + ")(" + m.Results.String() + ")"
 }
 
-func (m *Method) resultVarByTagScan(name string) string {
-	s := m.Results.Result
-	v := s.VarByTag(name)
-	return v.Scan("xu." + v.VName)
-}
-
-func (m *Method) tx() string {
+func MethodTx(m *Method) string {
 	for i := 0; i < m.Params.Len(); i++ {
 		v := m.Params.At(i)
 		typ := typeString(v.Store, v.Var.Type())
@@ -42,6 +36,12 @@ func (m *Method) tx() string {
 		}
 	}
 	return ""
+}
+
+func (m *Method) resultVarByTagScan(name string) string {
+	s := m.Results.Result
+	v := s.VarByTag(name)
+	return v.Scan("xu." + v.VName)
 }
 
 type Method struct {
@@ -65,8 +65,6 @@ type Method struct {
 func NewMethod(store *Store, name, doc string) *Method {
 	m := &Method{Store: store, Name: name, Doc: doc}
 	m.ResultVarByTagScan = m.resultVarByTagScan
-	m.Signature = m.signature
-	m.Tx = m.tx
 	return m
 }
 

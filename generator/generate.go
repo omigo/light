@@ -47,6 +47,8 @@ func Generate(store *goparser.Store) []byte {
 		"aggregate": func(m *goparser.Method, v *sqlparser.Fragment) *Aggregate {
 			return &Aggregate{Method: m, Fragment: v}
 		},
+		"MethodTx":             goparser.MethodTx,
+		"MethodSignature":      goparser.MethodSignature,
 		"ParamsVarByNameValue": goparser.ParamsVarByNameValue,
 		"VariableTypeName":     goparser.VariableTypeName,
 		"VariableWrap":         goparser.VariableWrap,

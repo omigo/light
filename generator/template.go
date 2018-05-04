@@ -323,8 +323,8 @@ return agg, nil
 {{- /*************** main *****************/ -}}
 {{template "header" . -}}
 {{range $method := .Methods -}}
-	func (*Store{{$.Name}}) {{call $method.Signature}} {
-		{{$tx := call $method.Tx -}}
+	func (*Store{{$.Name}}) {{MethodSignature $method}} {
+		{{$tx := MethodTx $method -}}
 		var exec = {{if $tx }} light.GetExec({{$tx}}, db) {{else}} db {{end}}
 		var buf bytes.Buffer
 		var args []interface{}
