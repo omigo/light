@@ -152,7 +152,7 @@ if err != nil {
 		return nil, err
 	}
 {{- if .Store.Log}}
-	log.JSON(xdst)
+	log.Trace(xdst)
 {{- end }}
 return xu, err
 {{end}}
@@ -196,7 +196,7 @@ for rows.Next() {
 		return nil, err
 	}
 	{{- if .Store.Log }}
-		log.JSON(xdst)
+		log.Trace(xdst)
 	{{- end}}
 }
 if err = rows.Err(); err != nil {
@@ -232,6 +232,7 @@ if err != nil {
 {{- if .Store.Log }}
 	log.Debug(total)
 {{- end}}
+
 {{$i := sub (len .Statement.Fragments) 1}}
 {{ $fragment := index .Statement.Fragments $i }}
 {{template "fragment" (aggregate $ $fragment)}}
@@ -273,7 +274,7 @@ for rows.Next() {
 		return 0, nil, err
 	}
 	{{- if .Store.Log }}
-		log.JSON(xdst)
+		log.Trace(xdst)
 	{{- end}}
 }
 if err = rows.Err(); err != nil {

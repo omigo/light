@@ -8,7 +8,6 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -33,7 +32,7 @@ func Parse(src string) *Store {
 
 	extractDocs(store, f)
 
-	parseTypes(store)
+	parseTypes(store, f, fset)
 
 	return store
 }
@@ -83,34 +82,10 @@ func getDoc(cg *ast.CommentGroup) (comment string) {
 	return strings.TrimSpace(comment)
 }
 
-func parseTypes(store *Store) {
-	fset := token.NewFileSet()
-	idx := strings.LastIndex(store.Source, "/")
-	path := store.Source[:idx+1]
-	pkgs, err := parser.ParseDir(fset, path, func(fi os.FileInfo) bool {
-		if strings.HasSuffix(fi.Name(), ".light.go") {
-			return false
-		}
-		if strings.HasSuffix(fi.Name(), "_test.go") {
-			return false
-		}
-		return true
-	}, 0)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	var files []*ast.File
-	for _, p := range pkgs {
-		for _, v := range p.Files {
-			// ast.Print(fset, v)
-			files = append(files, v)
-		}
-	}
-
+func parseTypes(store *Store, f *ast.File, fset *token.FileSet) {
 	info := types.Info{Defs: make(map[*ast.Ident]types.Object)}
 	conf := types.Config{Importer: importer.Default()}
-	_, err = conf.Check(path, fset, files, &info)
+	_, err := conf.Check(store.Package, fset, []*ast.File{f}, &info)
 	log.Fataln(err)
 
 	for k, obj := range info.Defs {

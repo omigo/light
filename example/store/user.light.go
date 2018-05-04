@@ -218,7 +218,7 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 		log.Error(err)
 		return nil, err
 	}
-	log.JSON(xdst)
+	log.Trace(xdst)
 	return xu, err
 
 }
@@ -329,7 +329,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 			log.Error(err)
 			return nil, err
 		}
-		log.JSON(xdst)
+		log.Trace(xdst)
 	}
 	if err = rows.Err(); err != nil {
 		log.Error(query)
@@ -421,7 +421,7 @@ func (*StoreIUser) Page(u *model.User, ss []uint8, offset int, size int) (int64,
 			log.Error(err)
 			return 0, nil, err
 		}
-		log.JSON(xdst)
+		log.Trace(xdst)
 	}
 	if err = rows.Err(); err != nil {
 		log.Error(query)
