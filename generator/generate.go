@@ -15,8 +15,10 @@ import (
 func Generate(store *goparser.Store) []byte {
 	gopath := os.Getenv("GOPATH")
 	for _, v := range strings.Split(gopath, string(filepath.ListSeparator)) {
+		v = strings.TrimRight(v, "/")
 		if strings.HasPrefix(store.Source, v) {
 			store.Source = store.Source[len(v)+5:]
+			break
 		}
 	}
 
