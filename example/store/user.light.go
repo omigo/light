@@ -24,19 +24,18 @@ type StoreIUser struct{}
 func (*StoreIUser) Create(name string) error {
 	var exec = db
 	var buf bytes.Buffer
-	var args []interface{}
 
 	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
 
 	query := buf.String()
 	log.Debug(query)
-	log.Debug(args...)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	_, err := exec.ExecContext(ctx, query, args...)
+	_, err := exec.ExecContext(ctx, query)
 	if err != nil {
 		log.Error(query)
-		log.Error(args...)
+
 		log.Error(err)
 	}
 	return err
@@ -52,7 +51,7 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Debug(args...)
+	log.Error(args...)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -77,7 +76,7 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Debug(args...)
+	log.Error(args...)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -102,7 +101,7 @@ func (*StoreIUser) Replace(u *model.User) (int64, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Debug(args...)
+	log.Error(args...)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -202,7 +201,7 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Debug(args...)
+	log.Error(args...)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	row := exec.QueryRowContext(ctx, query, args...)
@@ -225,7 +224,6 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 func (*StoreIUser) Count() (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
-	var args []interface{}
 
 	buf.WriteString("SELECT count(1) ")
 
@@ -233,18 +231,18 @@ func (*StoreIUser) Count() (int64, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Debug(args...)
+
 	var agg int64
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	err := exec.QueryRowContext(ctx, query, args...).Scan(null.Int64(&agg))
+	err := exec.QueryRowContext(ctx, query).Scan(null.Int64(&agg))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Debug(agg)
 			return agg, nil
 		}
 		log.Error(query)
-		log.Error(args...)
+
 		log.Error(err)
 		return agg, err
 	}
@@ -306,7 +304,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 
 	query := buf.String()
 	log.Debug(query)
-	log.Debug(args...)
+	log.Error(args...)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := exec.QueryContext(ctx, query, args...)
@@ -381,7 +379,7 @@ func (*StoreIUser) Page(u *model.User, ss []uint8, offset int, size int) (int64,
 	var total int64
 	totalQuery := "SELECT count(1) " + buf.String()
 	log.Debug(totalQuery)
-	log.Debug(args...)
+	log.Error(args...)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	err := exec.QueryRowContext(ctx, totalQuery, args...).Scan(&total)
@@ -398,7 +396,7 @@ func (*StoreIUser) Page(u *model.User, ss []uint8, offset int, size int) (int64,
 
 	query := "SELECT id, username, phone, address, status, birth_day, created, updated " + buf.String()
 	log.Debug(query)
-	log.Debug(args...)
+	log.Error(args...)
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := exec.QueryContext(ctx, query, args...)

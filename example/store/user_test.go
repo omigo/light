@@ -1,29 +1,45 @@
 package store
 
 import (
+	"database/sql/driver"
+	"strings"
 	"testing"
 	"time"
 
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/arstd/light/example/model"
 	"github.com/arstd/log"
-
 	// import driver
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var mock sqlmock.Sqlmock
+
+func init() {
+	var err error
+	db, mock, err = sqlmock.New()
+	log.Fataln(err)
+	// defer db.Close()
+}
+
 var id uint64
 
 func TestUserCreate(t *testing.T) {
+	mock.ExpectExec("CREATE TABLE")
+
 	err := User.Create("users")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-var username string
-
 func TestUserInsert(t *testing.T) {
-	username = "admin" + time.Now().Format("150405")
+	mock.ExpectBegin()
+	mock.ExpectExec("INSERT INTO").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+	mock.ExpectClose()
+
+	username := "admin" + time.Now().Format("150405")
 	u := &model.User{
 		Username: username,
 		Phone:    username,
@@ -41,10 +57,15 @@ func TestUserInsert(t *testing.T) {
 	if id0 == 0 {
 		t.Errorf("expect id > 1, but %d", id0)
 	}
-	id = uint64(id0)
 }
 
 func TestUserUpsert(t *testing.T) {
+	mock.ExpectBegin()
+	mock.ExpectExec("INSERT INTO").WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+	mock.ExpectClose()
+
+	username := "admin" + time.Now().Format("150405")
 	u := &model.User{
 		Username: username,
 		Phone:    username,
@@ -63,6 +84,8 @@ func TestUserUpsert(t *testing.T) {
 }
 
 func TestUserDelete1(t *testing.T) {
+	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(0, 1))
+
 	a, err := User.Delete(id)
 	if err != nil {
 		t.Error(err)
@@ -106,28 +129,43 @@ func TestUserUpdate(t *testing.T) {
 	}
 }
 
-func TestUserGet(t *testing.T) {
-	u, err := User.Get(id)
-	if err != nil {
+func TestUserGetMock(t *testing.T) {
+	columns := strings.Split("id, username, phone, address, status, birth_day, created, updated", ", ")
+	returns := []driver.Value{int64(1), []byte("admin"), []byte("13812341234"),
+		[]byte("Pudong"), int64(1), time.Now(), time.Now(), time.Now()}
+	rows := sqlmock.NewRows(columns).AddRow(returns...)
+	mock.ExpectQuery("SELECT").WithArgs(1).WillReturnRows(rows)
+
+	if u, err := User.Get(1); err != nil {
 		t.Error(err)
-	}
-	if u == nil {
+	} else if u == nil {
 		t.Error("expect get one record, but not")
+	} else if u.Username != "admin" {
+		t.Errorf("expect username=admin, but got %s", u.Username)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
 	}
 }
 
 func TestUserList(t *testing.T) {
-	u := &model.User{
-		Username: "ad%",
-		Updated:  time.Now().Add(-time.Hour),
-		Status:   9,
+	columns := strings.Split("id, username, phone, address, status, birth_day, created, updated", ", ")
+	returns := []driver.Value{int64(1), []byte("admin"), []byte("13812341234"),
+		[]byte("Pudong"), int64(1), time.Now(), time.Now(), time.Now()}
+	rows := sqlmock.NewRows(columns).AddRow(returns...)
+	mock.ExpectQuery("SELECT").WithArgs(1).WillReturnRows(rows)
+
+	if u, err := User.Get(1); err != nil {
+		t.Error(err)
+	} else if u == nil {
+		t.Error("expect get one record, but not")
+	} else if u.Username != "admin" {
+		t.Errorf("expect username=admin, but got %s", u.Username)
 	}
-	data, err := User.List(u, 0, 2)
-	if err != nil {
-		log.Error(err)
-	}
-	if len(data) == 0 {
-		t.Error("expect get one or more records, but not")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
 	}
 }
 

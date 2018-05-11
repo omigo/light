@@ -52,6 +52,7 @@ func Generate(store *goparser.Store) []byte {
 		"MethodTx":             goparser.MethodTx,
 		"MethodSignature":      goparser.MethodSignature,
 		"ParamsVarByNameValue": goparser.ParamsVarByNameValue,
+		"HasVariable":          goparser.HasVariable,
 		"VariableTypeName":     goparser.VariableTypeName,
 		"VariableWrap":         goparser.VariableWrap,
 		"VariableElemTypeName": goparser.VariableElemTypeName,

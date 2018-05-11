@@ -38,6 +38,15 @@ func MethodTx(m *Method) string {
 	return ""
 }
 
+func HasVariable(m *Method) bool {
+	for _, f := range m.Statement.Fragments {
+		if len(f.Variables) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 type Method struct {
 	Store *Store `json:"-"`
 

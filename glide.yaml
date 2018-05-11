@@ -2,7 +2,6 @@ package: github.com/arstd/light
 license: MIT
 owners:
 - name: Arstd
-email: shangxuejin@gmail.com
 ignore:
 - google.golang.org/appengine/cloudsql
 import:
@@ -13,3 +12,5 @@ import:
   - imports
 testImport:
 - package: github.com/go-sql-driver/mysql
+- package: github.com/DATA-DOG/go-sqlmock
+  version: ^1.3.0
