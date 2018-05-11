@@ -1,5 +1,8 @@
-light
+light [![Build Status](https://travis-ci.org/YOUR/PROJECT.svg?branch=master)](https://travis-ci.org/YOUR/PROJECT)
+
 =====
+
+
 
 `light` is a tool for generating database query code from go source file with
 interface methods commented with SQLs and Variables.
