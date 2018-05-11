@@ -65,7 +65,7 @@ type Store{{.Name}} struct{}
 query := buf.String()
 {{- if .Store.Log }}
 	log.Debug(query)
-	{{ if HasVariable $ }}log.Error(args...){{end}}
+	{{ if HasVariable $ }}log.Debug(args...){{end}}
 {{- end}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
@@ -106,7 +106,7 @@ return res.RowsAffected()
 query := buf.String()
 {{- if .Store.Log }}
 	log.Debug(query)
-	{{if HasVariable $ }}log.Error(args...){{end}}
+	{{if HasVariable $ }}log.Debug(args...){{end}}
 {{end}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
@@ -127,7 +127,7 @@ return res.LastInsertId()
 query := buf.String()
 {{- if .Store.Log }}
 	log.Debug(query)
-	{{if HasVariable $ }}log.Error(args...){{end}}
+	{{if HasVariable $ }}log.Debug(args...){{end}}
 {{- end}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
@@ -162,7 +162,7 @@ return xu, err
 query := buf.String()
 {{- if .Store.Log }}
 	log.Debug(query)
-	{{if HasVariable $ }}log.Error(args...){{end}}
+	{{if HasVariable $ }}log.Debug(args...){{end}}
 {{- end}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
@@ -216,7 +216,7 @@ var total int64
 totalQuery := "SELECT count(1) "+ buf.String()
 {{- if .Store.Log }}
 	log.Debug(totalQuery)
-	{{if HasVariable $ }}log.Error(args...){{end}}
+	{{if HasVariable $ }}log.Debug(args...){{end}}
 {{- end}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
@@ -240,7 +240,7 @@ if err != nil {
 query := "{{$fragement0.Statement}} " + buf.String()
 {{- if .Store.Log }}
 	log.Debug(query)
-	{{if HasVariable $ }}log.Error(args...){{end}}
+	{{if HasVariable $ }}log.Debug(args...){{end}}
 {{- end}}
 ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()
@@ -294,7 +294,7 @@ return total, data, nil
 query := buf.String()
 {{- if .Store.Log}}
 	log.Debug(query)
-	{{if HasVariable $ }}log.Error(args...){{end}}
+	{{if HasVariable $ }}log.Debug(args...){{end}}
 {{- end}}
 var agg {{VariableTypeName .Results.Result}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

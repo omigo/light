@@ -16,7 +16,7 @@ func init() {
 }
 
 func open() {
-	log.Json(conf.Conf)
+	// log.Json(conf.Conf)
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s",
 		conf.Conf.DB.Username,

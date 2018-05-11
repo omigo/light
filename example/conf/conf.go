@@ -31,5 +31,5 @@ func init() {
 	Conf.DB.Params = "charset=utf8&parseTime=true&loc=Local"
 
 	log.SetLevelString(Conf.LogLevel)
-	log.Json(Conf)
+	// log.Json(Conf)
 }

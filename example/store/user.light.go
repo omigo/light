@@ -51,7 +51,7 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Error(args...)
+	log.Debug(args...)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -76,7 +76,7 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Error(args...)
+	log.Debug(args...)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -85,12 +85,11 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
-
 		return 0, err
 	}
 	return res.LastInsertId()
-
 }
+
 func (*StoreIUser) Replace(u *model.User) (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
@@ -101,7 +100,7 @@ func (*StoreIUser) Replace(u *model.User) (int64, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Error(args...)
+	log.Debug(args...)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -201,7 +200,7 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 
 	query := buf.String()
 	log.Debug(query)
-	log.Error(args...)
+	log.Debug(args...)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	row := exec.QueryRowContext(ctx, query, args...)
@@ -304,7 +303,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 
 	query := buf.String()
 	log.Debug(query)
-	log.Error(args...)
+	log.Debug(args...)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := exec.QueryContext(ctx, query, args...)
@@ -379,7 +378,7 @@ func (*StoreIUser) Page(u *model.User, ss []uint8, offset int, size int) (int64,
 	var total int64
 	totalQuery := "SELECT count(1) " + buf.String()
 	log.Debug(totalQuery)
-	log.Error(args...)
+	log.Debug(args...)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	err := exec.QueryRowContext(ctx, totalQuery, args...).Scan(&total)
@@ -396,7 +395,7 @@ func (*StoreIUser) Page(u *model.User, ss []uint8, offset int, size int) (int64,
 
 	query := "SELECT id, username, phone, address, status, birth_day, created, updated " + buf.String()
 	log.Debug(query)
-	log.Error(args...)
+	log.Debug(args...)
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := exec.QueryContext(ctx, query, args...)

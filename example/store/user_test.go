@@ -22,10 +22,8 @@ func init() {
 	// defer db.Close()
 }
 
-var id uint64
-
 func TestUserCreate(t *testing.T) {
-	mock.ExpectExec("CREATE TABLE")
+	mock.ExpectExec("CREATE TABLE").WillReturnResult(sqlmock.NewResult(0, 0))
 
 	err := User.Create("users")
 	if err != nil {
@@ -37,7 +35,7 @@ func TestUserInsert(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
-	mock.ExpectClose()
+	// mock.ExpectRollback()
 
 	username := "admin" + time.Now().Format("150405")
 	u := &model.User{
@@ -48,7 +46,7 @@ func TestUserInsert(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer tx.Rollback()
+	// defer tx.Rollback()
 	id0, err := User.Insert(tx, u)
 	if err != nil {
 		t.Error(err)
@@ -61,9 +59,10 @@ func TestUserInsert(t *testing.T) {
 
 func TestUserUpsert(t *testing.T) {
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO").WillReturnResult(sqlmock.NewResult(0, 0))
+	args := []driver.Value{sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()}
+	mock.ExpectExec("INSERT INTO").WithArgs(args...).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectCommit()
-	mock.ExpectClose()
+	// mock.ExpectRollback()
 
 	username := "admin" + time.Now().Format("150405")
 	u := &model.User{
@@ -71,8 +70,10 @@ func TestUserUpsert(t *testing.T) {
 		Phone:    username,
 	}
 	tx, err := db.Begin()
-	defer tx.Rollback()
-	log.Fataln(err)
+	if err != nil {
+		t.Error(err)
+	}
+	// defer tx.Rollback()
 	id0, err := User.Upsert(u, tx)
 	if err != nil {
 		t.Error(err)
@@ -83,19 +84,9 @@ func TestUserUpsert(t *testing.T) {
 	}
 }
 
-func TestUserDelete1(t *testing.T) {
-	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(0, 1))
-
-	a, err := User.Delete(id)
-	if err != nil {
-		t.Error(err)
-	}
-	if a != 1 {
-		t.Errorf("expect affect 1 rows, but %d", a)
-	}
-}
-
 func TestUserReplace(t *testing.T) {
+	mock.ExpectExec("REPLACE INTO").WillReturnResult(sqlmock.NewResult(1, 2))
+
 	u := &model.User{
 		Username: "admin" + time.Now().Format("150405"),
 	}
@@ -106,14 +97,15 @@ func TestUserReplace(t *testing.T) {
 	if id0 == 0 {
 		t.Errorf("expect id > 1, but %d", id0)
 	}
-	id = uint64(id0)
 }
 
 func TestUserUpdate(t *testing.T) {
+	mock.ExpectExec("UPDATE").WillReturnResult(sqlmock.NewResult(0, 1))
+
 	addr := "address3"
 	birth := time.Now()
 	u := &model.User{
-		Id:       id,
+		Id:       1,
 		Username: "admin3" + time.Now().Format("150405"),
 		Phone:    "phone3",
 		Address:  &addr,
@@ -170,12 +162,21 @@ func TestUserList(t *testing.T) {
 }
 
 func TestUserPage(t *testing.T) {
+	count := sqlmock.NewRows([]string{"count"}).AddRow(int64(10))
+	mock.ExpectQuery("SELECT").WillReturnRows(count)
+
+	columns := strings.Split("id, username, phone, address, status, birth_day, created, updated", ", ")
+	returns := []driver.Value{int64(1), []byte("admin"), []byte("13812341234"),
+		[]byte("Pudong"), int64(1), time.Now(), time.Now(), time.Now()}
+	rows := sqlmock.NewRows(columns).AddRow(returns...).AddRow(returns...)
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+
 	u := &model.User{
 		Username: "ad%",
 		Updated:  time.Now().Add(-time.Hour),
 		Status:   9,
 	}
-	total, data, err := User.Page(u, []model.Status{1, 2, 3}, 0, 1)
+	total, data, err := User.Page(u, []model.Status{1, 2, 3}, 1, 2)
 	if err != nil {
 		log.Error(err)
 	}
@@ -185,7 +186,9 @@ func TestUserPage(t *testing.T) {
 }
 
 func TestUserDelete(t *testing.T) {
-	a, err := User.Delete(id)
+	mock.ExpectExec("DELETE").WithArgs(1).WillReturnResult(sqlmock.NewResult(0, 1))
+
+	a, err := User.Delete(1)
 	if err != nil {
 		t.Error(err)
 	}
