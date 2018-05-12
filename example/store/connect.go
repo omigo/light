@@ -10,10 +10,10 @@ import (
 
 var db *sql.DB
 
-func init() {
-	open()
-	log.Fataln(Connect())
-}
+// func init() {
+// 	open()
+// 	log.Fataln(Connect())
+// }
 
 func open() {
 	// log.Json(conf.Conf)
