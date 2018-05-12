@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type Status = uint8
+type Status uint8
 
 type User struct {
 	Id       uint64

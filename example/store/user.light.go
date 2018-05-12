@@ -47,7 +47,7 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	var args []interface{}
 
 	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
-	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
+	args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
 
 	query := buf.String()
 	log.Debug(query)
@@ -72,7 +72,7 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 	var args []interface{}
 
 	buf.WriteString("INSERT INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birth_day=VALUES(birth_day), updated=CURRENT_TIMESTAMP ")
-	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
+	args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
 
 	query := buf.String()
 	log.Debug(query)
@@ -85,18 +85,19 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
+
 		return 0, err
 	}
 	return res.LastInsertId()
-}
 
+}
 func (*StoreIUser) Replace(u *model.User) (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 
 	buf.WriteString("REPLACE INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
-	args = append(args, u.Username, null.String(&u.Phone), u.Address, null.Uint8(&u.Status), u.BirthDay)
+	args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
 
 	query := buf.String()
 	log.Debug(query)
@@ -139,7 +140,7 @@ func (*StoreIUser) Update(u *model.User) (int64, error) {
 
 	if u.Status != 0 {
 		buf.WriteString("status=?, ")
-		args = append(args, null.Uint8(&u.Status))
+		args = append(args, u.Status)
 	}
 
 	if u.BirthDay != nil {
@@ -205,7 +206,7 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 	defer cancel()
 	row := exec.QueryRowContext(ctx, query, args...)
 	xu := new(model.User)
-	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
+	xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, &xu.Status, &xu.BirthDay, &xu.Created, &xu.Updated}
 	err := row.Scan(xdst...)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -289,7 +290,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 	}
 
 	buf.WriteString("AND status != ? ")
-	args = append(args, null.Uint8(&u.Status))
+	args = append(args, u.Status)
 
 	if !u.Updated.IsZero() {
 		buf.WriteString("AND updated > ? ")
@@ -318,7 +319,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
+		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, &xu.Status, &xu.BirthDay, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
 			log.Error(query)
@@ -337,7 +338,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 	return data, nil
 
 }
-func (*StoreIUser) Page(u *model.User, ss []uint8, offset int, size int) (int64, []*model.User, error) {
+func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) (int64, []*model.User, error) {
 	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
@@ -361,7 +362,7 @@ func (*StoreIUser) Page(u *model.User, ss []uint8, offset int, size int) (int64,
 	}
 
 	buf.WriteString("AND birth_day IS NOT NULL AND status != ? ")
-	args = append(args, null.Uint8(&u.Status))
+	args = append(args, u.Status)
 
 	if len(ss) > 0 {
 		fmt.Fprintf(&buf, "AND status in (%v) ", strings.Repeat(",?", len(ss))[1:])
@@ -410,7 +411,7 @@ func (*StoreIUser) Page(u *model.User, ss []uint8, offset int, size int) (int64,
 	for rows.Next() {
 		xu := new(model.User)
 		data = append(data, xu)
-		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, null.Uint8(&xu.Status), &xu.BirthDay, &xu.Created, &xu.Updated}
+		xdst := []interface{}{&xu.Id, &xu.Username, null.String(&xu.Phone), &xu.Address, &xu.Status, &xu.BirthDay, &xu.Created, &xu.Updated}
 		err = rows.Scan(xdst...)
 		if err != nil {
 			log.Error(query)
