@@ -1,4 +1,4 @@
-light [![Build Status](https://travis-ci.org/arstd/light.svg?branch=master)](https://travis-ci.org/arstd/light)
+light [![Build Status](https://api.travis-ci.org/arstd/light.svg?branch=master)](https://api.travis-ci.org/arstd/light.svg?branch=master)
 =====
 
 
