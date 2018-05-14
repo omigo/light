@@ -85,7 +85,7 @@ return err
 query := buf.String()
 {{if .Store.Log -}}
 	log.Debug(query)
-	log.Debug(args...)
+	{{if HasVariable $ }}log.Debug(args...){{end}}
 {{end -}}
 ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 defer cancel()

@@ -9,8 +9,6 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/arstd/light/example/model"
 	"github.com/arstd/log"
-	// import driver
-	_ "github.com/go-sql-driver/mysql"
 )
 
 var mock sqlmock.Sqlmock
