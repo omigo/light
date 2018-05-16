@@ -39,8 +39,8 @@ func (*StoreIUser) Create(name string) error {
 		log.Error(err)
 	}
 	return err
-
 }
+
 func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	var exec = light.GetExec(tx, db)
 	var buf bytes.Buffer
@@ -64,8 +64,8 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
-
 }
+
 func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 	var exec = light.GetExec(tx, db)
 	var buf bytes.Buffer
@@ -89,8 +89,8 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
-
 }
+
 func (*StoreIUser) Replace(u *model.User) (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
@@ -114,8 +114,8 @@ func (*StoreIUser) Replace(u *model.User) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
-
 }
+
 func (*StoreIUser) Update(u *model.User) (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
@@ -164,8 +164,8 @@ func (*StoreIUser) Update(u *model.User) (int64, error) {
 		return 0, err
 	}
 	return res.RowsAffected()
-
 }
+
 func (*StoreIUser) Delete(id uint64) (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
@@ -187,8 +187,8 @@ func (*StoreIUser) Delete(id uint64) (int64, error) {
 		return 0, err
 	}
 	return res.RowsAffected()
-
 }
+
 func (*StoreIUser) Get(id uint64) (*model.User, error) {
 	var exec = db
 	var buf bytes.Buffer
@@ -219,8 +219,8 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 	}
 	log.Trace(xdst)
 	return xu, err
-
 }
+
 func (*StoreIUser) Count() (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
@@ -248,8 +248,8 @@ func (*StoreIUser) Count() (int64, error) {
 	}
 	log.Debug(agg)
 	return agg, nil
-
 }
+
 func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var exec = db
 	var buf bytes.Buffer
@@ -336,8 +336,8 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 		return nil, err
 	}
 	return data, nil
-
 }
+
 func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) (int64, []*model.User, error) {
 	var exec = db
 	var buf bytes.Buffer
@@ -428,5 +428,4 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 		return 0, nil, err
 	}
 	return total, data, nil
-
 }

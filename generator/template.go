@@ -337,23 +337,24 @@ return agg, nil
 			{{end}}
 		{{- end }}
 
-		{{if eq $method.Type "ddl" -}}
-			{{template "ddl" $method}}
+		{{if eq $method.Type "ddl"}}
+			{{template "ddl" $method -}}
 		{{else if or (eq $method.Type "update") (eq $method.Type "delete") -}}
-			{{template "update" $method}}
+			{{template "update" $method -}}
 		{{else if eq $method.Type "insert"}}
-			{{template "insert" $method}}
+			{{template "insert" $method -}}
 		{{else if eq $method.Type "get"}}
-			{{template "get" $method}}
+			{{template "get" $method -}}
 		{{else if eq $method.Type "list"}}
-			{{template "list" $method}}
-		{{else if eq $method.Type "page"}}
-			{{template "page" $method}}
+			{{template "list" $method -}}
+		{{else if eq $method.Type "page" -}}
+			{{template "page" $method -}}
 		{{else if eq $method.Type "agg"}}
-			{{template "agg" $method}}
+			{{template "agg" $method -}}
 		{{else}}
 			panic("unimplemented")
 		{{end -}}
 	}
+
 {{end}}
 `
