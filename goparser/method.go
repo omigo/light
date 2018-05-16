@@ -40,7 +40,7 @@ func MethodTx(m *Method) string {
 
 func HasVariable(m *Method) bool {
 	for _, f := range m.Statement.Fragments {
-		if len(f.Variables) > 0 {
+		if len(f.Variables) > 0 || f.Range != "" {
 			return true
 		}
 	}
