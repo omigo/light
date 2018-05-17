@@ -44,7 +44,7 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 
-	buf.WriteString("INSERT INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+	buf.WriteString("INSERT IGNORE INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
 
 	query := buf.String()

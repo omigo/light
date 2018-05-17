@@ -24,7 +24,7 @@ type IUser interface {
 	// ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 	Create(name string) error
 
-	// insert into users(`username`, phone, address, status, birth_day, created, updated)
+	// insert ignore into users(`username`, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(tx *sql.Tx, u *model.User) (int64, error)
 

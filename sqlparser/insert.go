@@ -14,12 +14,24 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 	var buf bytes.Buffer
 	// First token should be a "INSERT" keyword.
 	if tok, lit := p.scanIgnoreWhitespace(); tok != INSERT {
-		return nil, fmt.Errorf("found %q, expected INSERT", lit)
+		return nil, fmt.Errorf("found %q, expect INSERT", lit)
 	}
-	if tok, lit := p.scanIgnoreWhitespace(); tok != INTO {
-		return nil, fmt.Errorf("found %q, expected INTO", lit)
+	buf.WriteString("INSERT ")
+	tok, lit := p.scanIgnoreWhitespace()
+	switch tok {
+	case IGNORE:
+		buf.WriteString("IGNORE ")
+		if tok, lit = p.scanIgnoreWhitespace(); tok != INTO {
+			return nil, fmt.Errorf("found %q, expect INTO", lit)
+		}
+		buf.WriteString("INTO ")
+
+	case INTO:
+		buf.WriteString("INTO ")
+
+	default:
+		return nil, fmt.Errorf("found %q, expect IGNORE or INTO", lit)
 	}
-	buf.WriteString("INSERT INTO ")
 
 	// table name
 	for {
@@ -31,7 +43,7 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 			f.Replacers = append(f.Replacers, lit)
 			buf.WriteString("%v")
 		} else {
-			return nil, fmt.Errorf("found %q, expected IDENT, at `%s`", lit, buf.String())
+			return nil, fmt.Errorf("found %q, expect IDENT, at `%s`", lit, buf.String())
 		}
 		if tok, _ := p.scanIgnoreWhitespace(); tok != LPAREN {
 			p.unscan()
@@ -43,7 +55,7 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 
 	for {
 		if tok, lit := p.scanIgnoreWhitespace(); tok != IDENT {
-			return nil, fmt.Errorf("found %q, expected IDENT", lit)
+			return nil, fmt.Errorf("found %q, expect IDENT", lit)
 		} else {
 			buf.WriteString(lit)
 			stmt.Fields = append(stmt.Fields, lit)
@@ -55,15 +67,15 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 			buf.WriteByte(')')
 			break
 		} else {
-			return nil, fmt.Errorf("found %q, expected `,` or `)`", lit)
+			return nil, fmt.Errorf("found %q, expect `,` or `)`", lit)
 		}
 	}
 	if tok, lit := p.scanIgnoreWhitespace(); tok != VALUES {
-		return nil, fmt.Errorf("found %q, expected `VALUES`", lit)
+		return nil, fmt.Errorf("found %q, expect `VALUES`", lit)
 	}
 	buf.WriteString(" VALUES ")
 	if tok, lit := p.scanIgnoreWhitespace(); tok != LPAREN {
-		return nil, fmt.Errorf("found %q, expected `(`", lit)
+		return nil, fmt.Errorf("found %q, expect `(`", lit)
 	}
 	buf.WriteByte('(')
 
@@ -88,7 +100,7 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 			buf.WriteByte(')')
 			break
 		} else {
-			return nil, fmt.Errorf("found %q, expected `,` or `)`", lit)
+			return nil, fmt.Errorf("found %q, expect `,` or `)`", lit)
 		}
 	}
 

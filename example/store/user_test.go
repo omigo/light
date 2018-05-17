@@ -31,7 +31,7 @@ func TestUserCreate(t *testing.T) {
 
 func TestUserInsert(t *testing.T) {
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT ").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	// mock.ExpectRollback()
 
