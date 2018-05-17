@@ -29,13 +29,11 @@ func (*StoreIUser) Create(name string) error {
 
 	query := buf.String()
 	log.Debug(query)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := exec.ExecContext(ctx, query)
 	if err != nil {
 		log.Error(query)
-
 		log.Error(err)
 	}
 	return err
@@ -52,7 +50,6 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
@@ -60,7 +57,6 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
-
 		return 0, err
 	}
 	return res.LastInsertId()
@@ -77,7 +73,6 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
@@ -85,7 +80,6 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
-
 		return 0, err
 	}
 	return res.LastInsertId()
@@ -102,7 +96,6 @@ func (*StoreIUser) Replace(u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
@@ -110,7 +103,6 @@ func (*StoreIUser) Replace(u *model.User) (int64, error) {
 		log.Error(query)
 		log.Error(args...)
 		log.Error(err)
-
 		return 0, err
 	}
 	return res.LastInsertId()
@@ -231,7 +223,6 @@ func (*StoreIUser) Count() (int64, error) {
 
 	query := buf.String()
 	log.Debug(query)
-
 	var agg int64
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -242,7 +233,6 @@ func (*StoreIUser) Count() (int64, error) {
 			return agg, nil
 		}
 		log.Error(query)
-
 		log.Error(err)
 		return agg, err
 	}
