@@ -25,13 +25,16 @@ func main() {
 	// TODO must remove all *.light.go files
 	os.Remove(dst)
 
-	store := goparser.Parse(src)
+	store, err := goparser.Parse(src, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 	// log.JSONIndent(store)
 	store.Log = *lg
 
 	content := generator.Generate(store)
 
-	err := ioutil.WriteFile(dst, content, 0666)
+	err = ioutil.WriteFile(dst, content, 0666)
 	log.Fataln(err)
 	fmt.Printf("Generated file %s\n", dst)
 

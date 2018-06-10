@@ -52,7 +52,7 @@ type IUser interface {
 	// DELETE FROM users WHERE id=?
 	Delete(id uint64) (int64, error)
 
-	// select id, username, phone, address, status, birth_day, created, updated
+	// select id, username, mobile, address, status, birth_day, created, updated
 	// FROM users WHERE id=?
 	Get(id uint64) (*model.User, error)
 

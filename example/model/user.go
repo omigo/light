@@ -7,9 +7,9 @@ type Status uint8
 type User struct {
 	Id       uint64
 	Username string
-	Phone    string `light:",nullable"`
+	Phone    string `light:"mobile,nullable"`
 	Address  *string
-	Status   Status `light:",nullable"`
+	Status   Status
 	BirthDay *time.Time
 	Created  time.Time
 	Updated  time.Time

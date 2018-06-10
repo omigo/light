@@ -47,7 +47,7 @@ type Store{{.Name}} struct{}
 		buf.WriteString("{{.Fragment.Statement}} ")
 	{{- end }}
 	{{- if .Fragment.Variables }}
-		args = append(args{{range $elem := .Fragment.Variables}}, {{ParamsVarByNameValue $.Method.Params $elem}}{{end}})
+		args = append(args{{range $elem := .Fragment.Variables}}, {{LookupValueOfParams $.Method $elem}}{{end}})
 	{{- end }}
 {{- else }}
 	{{- range $fragment := .Fragment.Fragments }}
@@ -63,7 +63,7 @@ type Store{{.Name}} struct{}
 {{- /*************** ddl template *****************/}}
 {{define "ddl" -}}
 query := buf.String()
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(query)
 	{{if HasVariable $ -}}
 		log.Debug(args...)
@@ -72,7 +72,7 @@ query := buf.String()
 ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 _, err := exec.ExecContext(ctx, query{{if HasVariable $ }}, args...{{end}})
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	if err != nil {
 		log.Error(query)
 		{{if HasVariable $ -}}
@@ -87,7 +87,7 @@ return err
 {{- /*************** update/delete template *****************/}}
 {{define "update" -}}
 query := buf.String()
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(query)
 	{{if HasVariable $ -}}
 		log.Debug(args...)
@@ -97,7 +97,7 @@ ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 res, err := exec.ExecContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 if err != nil {
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(query)
 		{{if HasVariable $ -}}
 			log.Error(args...)
@@ -112,7 +112,7 @@ return res.RowsAffected()
 {{- /*************** insert template *****************/}}
 {{define "insert" -}}
 query := buf.String()
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(query)
 	{{if HasVariable $ -}}
 		log.Debug(args...)
@@ -122,7 +122,7 @@ ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 res, err := exec.ExecContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 if err != nil {
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(query)
 		{{if HasVariable $ -}}
 			log.Error(args...)
@@ -137,7 +137,7 @@ return res.LastInsertId()
 {{- /*************** get template *****************/}}
 {{define "get" -}}
 query := buf.String()
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(query)
 	{{if HasVariable $ -}}
 		log.Debug(args...)
@@ -146,11 +146,11 @@ query := buf.String()
 ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 row := exec.QueryRowContext(ctx, query{{if HasVariable $ }}, args...{{end}})
-xu := new({{VariableTypeName .Results.Result}})
+xu := new({{VariableElemTypeName .Results.Result}})
 xdst := []interface{}{
 	{{- range $i, $field := .Statement.Fields -}}
 		{{- if $i -}} , {{- end -}}
-		{{- VariableVarByTagScan $.Results.Result $field -}}
+		{{- LookupScanOfResults $ $field -}}
 	{{- end -}}
 }
 err := row.Scan(xdst...)
@@ -158,7 +158,7 @@ if err != nil {
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(query)
 		{{if HasVariable $ -}}
 			log.Error(args...)
@@ -167,7 +167,7 @@ if err != nil {
 	{{end -}}
 		return nil, err
 	}
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Trace(xdst)
 {{end -}}
 return xu, err
@@ -176,7 +176,7 @@ return xu, err
 {{- /*************** list template *****************/}}
 {{define "list" -}}
 query := buf.String()
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(query)
 	{{if HasVariable $ -}}
 		log.Debug(args...)
@@ -186,7 +186,7 @@ ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 rows, err := exec.QueryContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 if err != nil {
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(query)
 		{{if HasVariable $ -}}
 			log.Error(args...)
@@ -203,12 +203,12 @@ for rows.Next() {
 	xdst := []interface{}{
 		{{- range $i, $field := .Statement.Fields -}}
 			{{- if $i -}} , {{- end -}}
-			{{- VariableVarByTagScan $.Results.Result $field -}}
+			{{- LookupScanOfResults $ $field -}}
 		{{- end -}}
 	}
 	err = rows.Scan(xdst...)
 	if err != nil {
-		{{if .Store.Log -}}
+		{{if .Interface.Log -}}
 			log.Error(query)
 			{{if HasVariable $ -}}
 				log.Error(args...)
@@ -217,12 +217,12 @@ for rows.Next() {
 		{{end -}}
 		return nil, err
 	}
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Trace(xdst)
 	{{end -}}
 }
 if err = rows.Err(); err != nil {
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(query)
 		{{if HasVariable $ -}}
 			log.Error(args...)
@@ -238,7 +238,7 @@ return data, nil
 {{define "page" -}}
 var total int64
 totalQuery := "SELECT count(1) "+ buf.String()
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(totalQuery)
 	{{if HasVariable $ -}}
 		log.Debug(args...)
@@ -248,7 +248,7 @@ ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 err := exec.QueryRowContext(ctx, totalQuery{{if HasVariable $ }}, args...{{end}}).Scan(&total)
 if err != nil {
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(totalQuery)
 		{{if HasVariable $ -}}
 			log.Error(args...)
@@ -257,7 +257,7 @@ if err != nil {
 	{{end -}}
 	return 0, nil, err
 }
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(total)
 {{end -}}
 
@@ -266,7 +266,7 @@ if err != nil {
 {{template "fragment" (aggregate $ $fragment)}}
 {{ $fragement0 := index .Statement.Fragments 0 }}
 query := "{{$fragement0.Statement}} " + buf.String()
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(query)
 	{{if HasVariable $ -}}
 		log.Debug(args...)
@@ -276,7 +276,7 @@ ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 rows, err := exec.QueryContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 if err != nil {
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(query)
 		{{if HasVariable $ -}}
 			log.Error(args...)
@@ -293,12 +293,12 @@ for rows.Next() {
 	xdst := []interface{}{
 		{{- range $i, $field := .Statement.Fields -}}
 			{{- if $i -}} , {{- end -}}
-			{{- VariableVarByTagScan $.Results.Result $field -}}
+			{{- LookupScanOfResults $ $field -}}
 		{{- end -}}
 	}
 	err = rows.Scan(xdst...)
 	if err != nil {
-		{{if .Store.Log -}}
+		{{if .Interface.Log -}}
 			log.Error(query)
 			{{if HasVariable $ -}}
 				log.Error(args...)
@@ -307,12 +307,12 @@ for rows.Next() {
 		{{end -}}
 		return 0, nil, err
 	}
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Trace(xdst)
 	{{end -}}
 }
 if err = rows.Err(); err != nil {
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(query)
 		{{if HasVariable $ -}}
 			log.Error(args...)
@@ -328,42 +328,42 @@ return total, data, nil
 {{- /*************** agg template *****************/}}
 {{define "agg" -}}
 query := buf.String()
-{{if .Store.Log -}}
+{{if .Interface.Log -}}
 	log.Debug(query)
 	{{if HasVariable $ -}}
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-var agg {{VariableTypeName .Results.Result}}
+var xu {{VariableTypeName .Results.Result}}
 ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
-err := exec.QueryRowContext(ctx, query{{if HasVariable $ }}, args...{{end}}).Scan({{VariableWrap .Results.Result}}(&agg))
+err := exec.QueryRowContext(ctx, query{{if HasVariable $ }}, args...{{end}}).Scan({{LookupScanOfResults $ ""}})
 if err != nil {
 	if err == sql.ErrNoRows {
-		{{- if .Store.Log}}
-			log.Debug(agg)
+		{{- if .Interface.Log}}
+			log.Debug(xu)
 		{{- end}}
-		return agg, nil
+		return xu, nil
 	}
-	{{if .Store.Log -}}
+	{{if .Interface.Log -}}
 		log.Error(query)
 		{{if HasVariable $ -}}
 			log.Error(args...)
 		{{end -}}
 		log.Error(err)
 	{{end -}}
-	return agg, err
+	return xu, err
 }
-{{if .Store.Log -}}
-	log.Debug(agg)
+{{if .Interface.Log -}}
+	log.Debug(xu)
 {{end -}}
-return agg, nil
+return xu, nil
 {{end}}
 
 {{- /*************** main *****************/ -}}
 {{template "header" . -}}
 {{range $method := .Methods -}}
-	func (*Store{{$.Name}}) {{MethodSignature $method}} {
+	func (*Store{{$.Name}}) {{$method.Expr}} {
 		{{$tx := MethodTx $method -}}
 		var exec = {{if $tx }} light.GetExec({{$tx}}, db) {{else}} db {{end}}
 		var buf bytes.Buffer

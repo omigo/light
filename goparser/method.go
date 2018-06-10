@@ -19,20 +19,10 @@ const (
 	MethodTypeAgg    = "agg"
 )
 
-func MethodSignature(m *Method) string {
-	name := m.Store.Name
-	if name[0] == 'I' {
-		name = name[1:]
-	}
-	return m.Name + "(" + m.Params.String() + ")(" + m.Results.String() + ")"
-}
-
 func MethodTx(m *Method) string {
-	for i := 0; i < m.Params.Len(); i++ {
-		v := m.Params.List[i]
-		typ := typeString(v.Store, v.Var.Type())
-		if typ == "*sql.Tx" {
-			return v.Var.Name()
+	for _, v := range m.Params.List {
+		if v.Tx {
+			return v.Name
 		}
 	}
 	return ""
@@ -48,10 +38,11 @@ func HasVariable(m *Method) bool {
 }
 
 type Method struct {
-	Store *Store `json:"-"`
+	Interface *Interface `json:"-"`
 
 	Name string // Insert
 	Doc  string // insert into users ...
+	Expr string // Insert(tx *sql.Tx, u *model.User) (int64, error)
 
 	Statement *sqlparser.Statement
 	Type      MethodType
@@ -60,21 +51,26 @@ type Method struct {
 	Results *Results
 }
 
-func NewMethod(store *Store, name, doc string) *Method {
-	m := &Method{Store: store, Name: name, Doc: doc}
-	return m
+func NewMethod(itf *Interface, name, doc string, expr string) *Method {
+	return &Method{
+		Interface: itf,
+		Name:      name,
+		Doc:       doc,
+		Expr:      expr,
+	}
 }
 
 func (m *Method) SetType() {
 	switch m.Statement.Type {
 	case sqlparser.SELECT:
-		if m.Results.Len() == 3 {
+		switch {
+		case len(m.Results.List) == 3:
 			m.Type = MethodTypePage
-		} else if m.Results.List[0].IsSlice() {
+		case m.Results.Result.Slice:
 			m.Type = MethodTypeList
-		} else if m.Results.Result.IsBasic() {
+		case !m.Results.Result.Array && !m.Results.Result.Slice && !m.Results.Result.Struct:
 			m.Type = MethodTypeAgg
-		} else {
+		default:
 			m.Type = MethodTypeGet
 		}
 
@@ -103,8 +99,11 @@ func deepGenCondition(f *sqlparser.Fragment, m *Method) {
 		if f.Condition == "-" {
 			var cs []string
 			for _, name := range f.Variables {
-				v := m.Params.VarByName(name)
-				d := v.NotDefault(v.VName)
+				v := m.Params.Names[name]
+				if v == nil {
+					panic("method `" + m.Name + "` variable `" + name + "` not found")
+				}
+				d := v.NotDefault()
 				cs = append(cs, "("+d+")")
 			}
 			f.Condition = strings.Join(cs, " && ")

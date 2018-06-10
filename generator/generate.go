@@ -12,24 +12,24 @@ import (
 	"github.com/arstd/log"
 )
 
-func Generate(store *goparser.Store) []byte {
+func Generate(itf *goparser.Interface) []byte {
 	gopath := os.Getenv("GOPATH")
 	for _, v := range strings.Split(gopath, string(filepath.ListSeparator)) {
 		v = strings.TrimRight(v, "/")
-		if strings.HasPrefix(store.Source, v) {
-			store.Source = store.Source[len(v)+5:]
+		if strings.HasPrefix(itf.Source, v) {
+			itf.Source = itf.Source[len(v)+5:]
 			break
 		}
 	}
 
-	for k, v := range store.Imports {
+	for k, v := range itf.Imports {
 		if i := strings.Index(k, "/vendor/"); i > 0 {
-			delete(store.Imports, k)
-			store.Imports[k[i+8:]] = v
+			delete(itf.Imports, k)
+			itf.Imports[k[i+8:]] = v
 		}
 	}
 
-	for _, m := range store.Methods {
+	for _, m := range itf.Methods {
 		p := sqlparser.NewParser(bytes.NewBufferString(m.Doc))
 		stmt, err := p.Parse()
 		if err != nil {
@@ -50,17 +50,15 @@ func Generate(store *goparser.Store) []byte {
 			return &Aggregate{Method: m, Fragment: v}
 		},
 		"MethodTx":             goparser.MethodTx,
-		"MethodSignature":      goparser.MethodSignature,
-		"ParamsVarByNameValue": goparser.ParamsVarByNameValue,
 		"HasVariable":          goparser.HasVariable,
 		"VariableTypeName":     goparser.VariableTypeName,
-		"VariableWrap":         goparser.VariableWrap,
 		"VariableElemTypeName": goparser.VariableElemTypeName,
-		"VariableVarByTagScan": goparser.VariableVarByTagScan,
+		"LookupScanOfResults":  goparser.LookupScanOfResults,
+		"LookupValueOfParams":  goparser.LookupValueOfParams,
 	})
 	log.Fataln(t.Parse(tpl))
 	buf := bytes.NewBuffer(make([]byte, 0, 1024*16))
-	log.Fataln(t.Execute(buf, store))
+	log.Fataln(t.Execute(buf, itf))
 	return buf.Bytes()
 }
 
