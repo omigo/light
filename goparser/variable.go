@@ -8,8 +8,9 @@ import (
 	"github.com/arstd/log"
 )
 
-func VariableTypeName(v *Variable) string     { return v.FullTypeName() }
-func VariableElemTypeName(v *Variable) string { return v.FullElemTypeName() }
+func ResultWrap(v *Variable) string         { return v.Wrap() }
+func ResultTypeName(v *Variable) string     { return v.FullTypeName() }
+func ResultElemTypeName(v *Variable) string { return v.FullElemTypeName() }
 func LookupScanOfResults(m *Method, name string) string {
 	v := m.Results.Lookup(name)
 	if v == nil {
@@ -128,6 +129,13 @@ func (v *Variable) Scan() string {
 	default:
 		return "&" + name
 	}
+}
+
+func (v *Variable) Wrap() string {
+	name := v.FullName()
+	name = fmt.Sprintf("null.%s%s(&%s)", strings.ToUpper(v.TypeName[:1]), v.TypeName[1:], name)
+	log.Debug(name)
+	return name
 }
 
 func (v *Variable) Value() string {

@@ -146,7 +146,7 @@ query := buf.String()
 ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 row := exec.QueryRowContext(ctx, query{{if HasVariable $ }}, args...{{end}})
-xu := new({{VariableElemTypeName .Results.Result}})
+xu := new({{ResultElemTypeName .Results.Result}})
 xdst := []interface{}{
 	{{- range $i, $field := .Statement.Fields -}}
 		{{- if $i -}} , {{- end -}}
@@ -196,9 +196,9 @@ if err != nil {
 	return nil, err
 }
 defer rows.Close()
-var data {{VariableTypeName .Results.Result}}
+var data {{ResultTypeName .Results.Result}}
 for rows.Next() {
-	xu := new({{ VariableElemTypeName .Results.Result }})
+	xu := new({{ ResultElemTypeName .Results.Result }})
 	data = append(data, xu)
 	xdst := []interface{}{
 		{{- range $i, $field := .Statement.Fields -}}
@@ -286,9 +286,9 @@ if err != nil {
 	return 0, nil, err
 }
 defer rows.Close()
-var data {{VariableTypeName .Results.Result}}
+var data {{ResultTypeName .Results.Result}}
 for rows.Next() {
-	xu := new({{ VariableElemTypeName .Results.Result }})
+	xu := new({{ ResultElemTypeName .Results.Result }})
 	data = append(data, xu)
 	xdst := []interface{}{
 		{{- range $i, $field := .Statement.Fields -}}
@@ -334,10 +334,10 @@ query := buf.String()
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-var xu {{VariableTypeName .Results.Result}}
+var xu {{ResultTypeName .Results.Result}}
 ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
-err := exec.QueryRowContext(ctx, query{{if HasVariable $ }}, args...{{end}}).Scan({{LookupScanOfResults $ ""}})
+err := exec.QueryRowContext(ctx, query{{if HasVariable $ }}, args...{{end}}).Scan({{ResultWrap .Results.Result}})
 if err != nil {
 	if err == sql.ErrNoRows {
 		{{- if .Interface.Log}}

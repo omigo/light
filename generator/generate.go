@@ -49,12 +49,13 @@ func Generate(itf *goparser.Interface) []byte {
 		"aggregate": func(m *goparser.Method, v *sqlparser.Fragment) *Aggregate {
 			return &Aggregate{Method: m, Fragment: v}
 		},
-		"MethodTx":             goparser.MethodTx,
-		"HasVariable":          goparser.HasVariable,
-		"VariableTypeName":     goparser.VariableTypeName,
-		"VariableElemTypeName": goparser.VariableElemTypeName,
-		"LookupScanOfResults":  goparser.LookupScanOfResults,
-		"LookupValueOfParams":  goparser.LookupValueOfParams,
+		"MethodTx":            goparser.MethodTx,
+		"HasVariable":         goparser.HasVariable,
+		"ResultWrap":          goparser.ResultWrap,
+		"ResultTypeName":      goparser.ResultTypeName,
+		"ResultElemTypeName":  goparser.ResultElemTypeName,
+		"LookupScanOfResults": goparser.LookupScanOfResults,
+		"LookupValueOfParams": goparser.LookupValueOfParams,
 	})
 	log.Fataln(t.Parse(tpl))
 	buf := bytes.NewBuffer(make([]byte, 0, 1024*16))
