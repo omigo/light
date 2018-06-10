@@ -183,6 +183,7 @@ func (itf *Interface) makeCache() {
 			method.Params.Names[param.Name] = param
 		}
 		for _, result := range method.Results.List {
+			result.Name = ""
 			key := result.Type.String()
 			profile, ok := itf.Cache[key]
 			if !ok {

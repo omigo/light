@@ -39,7 +39,7 @@ func (*StoreIUser) Create(name string) error {
 	return err
 }
 
-func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
+func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (a int64, b error) {
 	var exec = light.GetExec(tx, db)
 	var buf bytes.Buffer
 	var args []interface{}
@@ -181,7 +181,7 @@ func (*StoreIUser) Delete(id uint64) (int64, error) {
 	return res.RowsAffected()
 }
 
-func (*StoreIUser) Get(id uint64) (*model.User, error) {
+func (*StoreIUser) Get(id uint64) (ret *model.User, e error) {
 	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
@@ -240,7 +240,7 @@ func (*StoreIUser) Count() (int64, error) {
 	return xu, nil
 }
 
-func (*StoreIUser) List(u *model.User, offset, size int) ([]*model.User, error) {
+func (*StoreIUser) List(u *model.User, offset, size int) (us []*model.User, xxx error) {
 	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}

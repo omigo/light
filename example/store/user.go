@@ -26,7 +26,7 @@ type IUser interface {
 
 	// insert ignore into users(`username`, phone, address, status, birth_day, created, updated)
 	// values (${u.Username},?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	Insert(tx *sql.Tx, u *model.User) (int64, error)
+	Insert(tx *sql.Tx, u *model.User) (a int64, b error)
 
 	// insert into users(username, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -54,7 +54,7 @@ type IUser interface {
 
 	// select id, username, mobile, address, status, birth_day, created, updated
 	// FROM users WHERE id=?
-	Get(id uint64) (*model.User, error)
+	Get(id uint64) (ret *model.User, e error)
 
 	// select count(1)
 	// from users
@@ -78,7 +78,7 @@ type IUser interface {
 	// and birth_day is not null
 	// order by updated desc
 	// limit ${offset}, ${size}
-	List(u *model.User, offset, size int) ([]*model.User, error)
+	List(u *model.User, offset, size int) (us []*model.User, xxx error)
 
 	// select id, username, phone, address, status, birth_day, created, updated
 	// from users
