@@ -213,26 +213,30 @@ func (*StoreIUser) Get(id uint64) (ret *model.User, e error) {
 	return xu, err
 }
 
-func (*StoreIUser) Count() (int64, error) {
+func (*StoreIUser) Count(birthDay time.Time) (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
+	var args []interface{}
 
 	buf.WriteString("SELECT count(1) ")
 
-	buf.WriteString("FROM users ")
+	buf.WriteString("FROM users WHERE birth_day < ? ")
+	args = append(args, birthDay)
 
 	query := buf.String()
 	log.Debug(query)
+	log.Debug(args...)
 	var xu int64
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err := exec.QueryRowContext(ctx, query).Scan(null.Int64(&xu))
+	err := exec.QueryRowContext(ctx, query, args...).Scan(null.Int64(&xu))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Debug(xu)
 			return xu, nil
 		}
 		log.Error(query)
+		log.Error(args...)
 		log.Error(err)
 		return xu, err
 	}

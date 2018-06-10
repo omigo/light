@@ -181,6 +181,7 @@ func (itf *Interface) makeCache() {
 			}
 			*param.Profile = *profile
 			method.Params.Names[param.Name] = param
+			method.Params.Names[underLower(param.Name)] = param
 		}
 		for _, result := range method.Results.List {
 			result.Name = ""

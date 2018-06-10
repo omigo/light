@@ -2,7 +2,7 @@ package goparser
 
 import (
 	"go/types"
-	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -105,17 +105,20 @@ func (p *Profile) parseStruct(s *types.Struct, cache map[string]*Profile) {
 	}
 }
 
-var tagRegexp = regexp.MustCompile(`(.+):"(.+)"`)
-
 func parseTags(tag string) (alias string, cmds []string) {
 	// Username string `json:"username" light:"uname,nullable"`
 
-	groups := tagRegexp.FindAllStringSubmatch(tag, -1)
-	for _, m := range groups {
-		if m[1] != "light" {
+	groups := strings.Split(tag, " ")
+	for _, g := range groups {
+		kv := strings.Split(g, ":")
+		if kv[0] != "light" {
 			continue
 		}
-		vs := strings.Split(m[2], ",")
+		v, err := strconv.Unquote(kv[1])
+		if err != nil {
+			panic(err)
+		}
+		vs := strings.Split(v, ",")
 		if len(vs) == 0 {
 			return "", nil
 		} else if len(vs) == 1 {
@@ -124,7 +127,6 @@ func parseTags(tag string) (alias string, cmds []string) {
 			return vs[0], vs[1:]
 		}
 	}
-
 	return "", nil
 }
 

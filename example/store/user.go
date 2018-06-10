@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/arstd/light/example/model"
 )
@@ -58,7 +59,8 @@ type IUser interface {
 
 	// select count(1)
 	// from users
-	Count() (int64, error)
+	// where birth_day < ?
+	Count(birthDay time.Time) (int64, error)
 
 	// select (select id from users where id=a.id) as id,
 	// `username`, phone as phone, address, status, birth_day, created, updated

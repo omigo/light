@@ -7,7 +7,7 @@ type Status uint8
 type User struct {
 	Id       uint64
 	Username string
-	Phone    string `light:"mobile,nullable"`
+	Phone    string `json:"mobile" light:"mobile,nullable"`
 	Address  *string
 	Status   Status
 	BirthDay *time.Time
