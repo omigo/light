@@ -25,7 +25,7 @@ type IUser interface {
 	Create(name string) error
 
 	// insert ignore into users(`username`, phone, address, status, birth_day, created, updated)
-	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	// values (${u.Username},?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(tx *sql.Tx, u *model.User) (int64, error)
 
 	// insert into users(username, phone, address, status, birth_day, created, updated)

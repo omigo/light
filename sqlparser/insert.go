@@ -85,10 +85,8 @@ func (p *Parser) ParseInsert() (*Statement, error) {
 		if tok == QUESTION {
 			f.Variables = append(f.Variables, stmt.Fields[i])
 			buf.WriteByte('?')
-		} else if tok == DOLLAR {
-			p.unscan()
-			v := p.scanVariable()
-			f.Variables = append(f.Variables, v)
+		} else if tok == VARIABLE {
+			f.Variables = append(f.Variables, lit)
 			buf.WriteByte('?')
 		} else {
 			buf.WriteString(lit)

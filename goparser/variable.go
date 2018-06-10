@@ -134,7 +134,7 @@ func (v *Variable) Scan() string {
 func (v *Variable) Wrap() string {
 	name := v.FullName()
 	name = fmt.Sprintf("null.%s%s(&%s)", strings.ToUpper(v.TypeName[:1]), v.TypeName[1:], name)
-	log.Debug(name)
+	// log.Debug(name)
 	return name
 }
 
