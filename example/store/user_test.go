@@ -119,7 +119,7 @@ func TestUserUpdate(t *testing.T) {
 	}
 }
 
-func TestUserGetMock(t *testing.T) {
+func TestUserGet(t *testing.T) {
 	columns := strings.Split("id, username, phone, address, status, birth_day, created, updated", ", ")
 	returns := []driver.Value{int64(1), []byte("admin"), []byte("13812341234"),
 		[]byte("Pudong"), int64(1), time.Now(), time.Now(), time.Now()}

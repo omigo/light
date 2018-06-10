@@ -39,7 +39,7 @@ func (*StoreIUser) Create(name string) error {
 	return err
 }
 
-func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
+func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (a int64, b error) {
 	var exec = light.GetExec(tx, db)
 	var buf bytes.Buffer
 	var args []interface{}
@@ -135,7 +135,7 @@ func (*StoreIUser) Update(u *model.User) (int64, error) {
 		args = append(args, u.Status)
 	}
 
-	if u.BirthDay != nil {
+	if !u.BirthDay.IsZero() {
 		buf.WriteString("birth_day=?, ")
 		args = append(args, u.BirthDay)
 	}
@@ -181,12 +181,12 @@ func (*StoreIUser) Delete(id uint64) (int64, error) {
 	return res.RowsAffected()
 }
 
-func (*StoreIUser) Get(id uint64) (*model.User, error) {
+func (*StoreIUser) Get(id uint64) (ret *model.User, e error) {
 	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
 
-	buf.WriteString("SELECT id, username, phone, address, status, birth_day, created, updated ")
+	buf.WriteString("SELECT id, username, mobile, address, status, birth_day, created, updated ")
 
 	buf.WriteString("FROM users WHERE id=? ")
 	args = append(args, id)
@@ -213,34 +213,38 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 	return xu, err
 }
 
-func (*StoreIUser) Count() (int64, error) {
+func (*StoreIUser) Count(birthDay time.Time) (int64, error) {
 	var exec = db
 	var buf bytes.Buffer
+	var args []interface{}
 
 	buf.WriteString("SELECT count(1) ")
 
-	buf.WriteString("FROM users ")
+	buf.WriteString("FROM users WHERE birth_day < ? ")
+	args = append(args, birthDay)
 
 	query := buf.String()
 	log.Debug(query)
-	var agg int64
+	log.Debug(args...)
+	var xu int64
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err := exec.QueryRowContext(ctx, query).Scan(null.Int64(&agg))
+	err := exec.QueryRowContext(ctx, query, args...).Scan(null.Int64(&xu))
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Debug(agg)
-			return agg, nil
+			log.Debug(xu)
+			return xu, nil
 		}
 		log.Error(query)
+		log.Error(args...)
 		log.Error(err)
-		return agg, err
+		return xu, err
 	}
-	log.Debug(agg)
-	return agg, nil
+	log.Debug(xu)
+	return xu, nil
 }
 
-func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, error) {
+func (*StoreIUser) List(u *model.User, offset, size int) (us []*model.User, xxx error) {
 	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
@@ -265,7 +269,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 
 		if (u.BirthDay != nil && !u.BirthDay.IsZero()) || u.Id > 1 {
 
-			if u.BirthDay != nil {
+			if !u.BirthDay.IsZero() {
 				buf.WriteString("AND birth_day > ? ")
 				args = append(args, u.BirthDay)
 			}

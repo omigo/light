@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/importer"
 	"go/parser"
 	"go/token"
@@ -14,11 +15,11 @@ import (
 	"github.com/arstd/log"
 )
 
-type Store struct {
+type Interface struct {
 	Source string
 	Log    bool
 
-	Package string            // store
+	Package string            // itf
 	Imports map[string]string // database/sql => sql
 	Name    string            // IUser
 
@@ -26,29 +27,34 @@ type Store struct {
 	StoreName string
 
 	Methods []*Method
+
+	// full-type-name : type-profile
+	Cache map[string]*Profile
 }
 
-func Parse(src string) *Store {
+func Parse(filename string, src interface{}) (*Interface, error) {
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, src, nil, parser.ParseComments)
+	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
 	if err != nil {
 		log.Panic(err)
 	}
 	// ast.Print(fset, f)
 
-	store := &Store{
-		Source:  src,
+	itf := &Interface{
+		Source:  filename,
 		Package: f.Name.Name,
 		Imports: map[string]string{},
 	}
 
-	goBuild(src)
+	goBuild(filename)
 
-	extractDocs(store, f)
+	extractDocs(itf, f, fset)
 
-	parseTypes(store, f, fset)
+	extractTypes(itf, f, fset)
 
-	return store
+	itf.makeCache()
+
+	return itf, nil
 }
 
 func goBuild(src string) {
@@ -64,20 +70,23 @@ func goBuild(src string) {
 	}
 }
 
-func extractDocs(store *Store, f *ast.File) {
+func extractDocs(itf *Interface, f *ast.File, fset *token.FileSet) {
 	for _, decl := range f.Decls {
 		if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
 			for _, spec := range genDecl.Specs {
 				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 					if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
-						if store.Name != "" {
+						if itf.Name != "" {
 							panic("one file must contains one interface only")
 						}
 
-						store.Name = typeSpec.Name.Name
-						for _, field := range interfaceType.Methods.List {
-							m := NewMethod(store, field.Names[0].Name, getDoc(field.Doc))
-							store.Methods = append(store.Methods, m)
+						itf.Name = typeSpec.Name.Name
+						for _, method := range interfaceType.Methods.List {
+							var buf bytes.Buffer
+							format.Node(&buf, fset, method.Type)
+							expr := method.Names[0].Name + buf.String()[4:]
+							m := NewMethod(itf, method.Names[0].Name, getDoc(method.Doc), expr)
+							itf.Methods = append(itf.Methods, m)
 						}
 					}
 				}
@@ -96,31 +105,31 @@ func getDoc(cg *ast.CommentGroup) (comment string) {
 	return strings.TrimSpace(comment)
 }
 
-func parseTypes(store *Store, f *ast.File, fset *token.FileSet) {
+func extractTypes(itf *Interface, f *ast.File, fset *token.FileSet) {
 	info := types.Info{Defs: make(map[*ast.Ident]types.Object)}
 	conf := types.Config{Importer: importer.Default()}
-	_, err := conf.Check(store.Package, fset, []*ast.File{f}, &info)
+	_, err := conf.Check(itf.Package, fset, []*ast.File{f}, &info)
 	log.Fataln(err)
 
 	for k, obj := range info.Defs {
 		if k.Obj != nil {
-			if k.Name == store.Name {
+			if k.Name == itf.Name {
 				if k.Obj.Kind == ast.Typ {
 					// get method name and params/returns
 					if itfType, ok := obj.Type().Underlying().(*types.Interface); ok {
 						for i := 0; i < itfType.NumMethods(); i++ {
 							x := itfType.Method(i)
-							m := getMethodByName(store, x.Name())
+							m := getMethodByName(itf, x.Name())
 							y := x.Type().(*types.Signature)
-							m.Params = NewParams(store, y.Params())
-							m.Results = NewResults(store, y.Results())
+							m.Params = NewParams(y.Params())
+							m.Results = NewResults(y.Results())
 						}
 					}
 				}
 			} else {
 				if tn, ok := obj.Type().(*types.Named); ok {
-					if store.Name == tn.Obj().Name() {
-						store.VarName = k.Name
+					if itf.Name == tn.Obj().Name() {
+						itf.VarName = k.Name
 					}
 				}
 			}
@@ -128,11 +137,105 @@ func parseTypes(store *Store, f *ast.File, fset *token.FileSet) {
 	}
 }
 
-func getMethodByName(s *Store, name string) *Method {
+func getMethodByName(s *Interface, name string) *Method {
 	for _, a := range s.Methods {
 		if a.Name == name {
 			return a
 		}
 	}
 	return nil
+}
+
+func (itf *Interface) makeCache() {
+	itf.Cache = map[string]*Profile{}
+
+	for _, method := range itf.Methods {
+		for _, param := range method.Params.List {
+			key := param.Type.String()
+			profile, ok := itf.Cache[key]
+			if !ok {
+				profile = NewProfile(param.Type, itf.Cache, true)
+				itf.Cache[key] = profile
+			}
+
+			for _, f := range profile.Fields {
+				// field 是一个变量，在不同的方法中，名字不一样，所以不能公用
+				field := new(Variable)
+				*field = *f
+
+				k := field.Type.String()
+				p, ok := itf.Cache[k]
+				if !ok {
+					p = NewProfile(field.Type, itf.Cache, false)
+					itf.Cache[k] = p
+				}
+				field.Profile = p
+				field.Parent = param
+
+				method.Params.Names[field.Name] = field
+				method.Params.Names[underLower(field.Name)] = field
+				method.Params.Names[param.Name+"."+field.Name] = field
+				if field.TagAlias != "" {
+					method.Params.Names[field.TagAlias] = field
+				}
+			}
+			*param.Profile = *profile
+			method.Params.Names[param.Name] = param
+			method.Params.Names[underLower(param.Name)] = param
+		}
+		for _, result := range method.Results.List {
+			result.Name = ""
+			key := result.Type.String()
+			profile, ok := itf.Cache[key]
+			if !ok {
+				profile = NewProfile(result.Type, itf.Cache, true)
+				itf.Cache[key] = profile
+			}
+
+			for _, f := range profile.Fields {
+				field := new(Variable)
+				*field = *f
+
+				k := field.Type.String()
+				p, ok := itf.Cache[k]
+				if !ok {
+					p = NewProfile(field.Type, itf.Cache, false)
+					itf.Cache[k] = p
+				}
+				field.Profile = p
+				field.Parent = result
+				if field.Name == "" {
+					log.JsonIndent(profile)
+					panic("unreachable code")
+				}
+				method.Results.Names[field.Name] = field
+				method.Results.Names[underLower(field.Name)] = field
+				if result.Name != "" {
+					method.Results.Names[result.Name+"."+field.Name] = field
+				}
+				if field.TagAlias != "" {
+					method.Results.Names[field.TagAlias] = field
+				}
+			}
+			result.Profile = profile
+			if result.Name != "" {
+				method.Results.Names[result.Name] = result
+			}
+		}
+	}
+}
+
+func underLower(field string) string {
+	var buf bytes.Buffer
+	for i, v := range field {
+		if v >= 'A' && v <= 'Z' {
+			if i != 0 {
+				buf.WriteByte('_')
+			}
+			buf.WriteRune(v + 32)
+		} else {
+			buf.WriteRune(v)
+		}
+	}
+	return buf.String()
 }
