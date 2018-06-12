@@ -9,6 +9,7 @@ import (
 	"go/token"
 	"go/types"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/arstd/log"
@@ -51,6 +52,8 @@ func Parse(filename string, src interface{}) (*Interface, error) {
 
 	extractTypes(itf, f, fset)
 
+	// log.JsonIndent(itf)
+
 	itf.makeCache()
 
 	return itf, nil
@@ -71,18 +74,36 @@ func goBuild(src string) {
 
 func extractDocs(itf *Interface, f *ast.File, fset *token.FileSet) {
 	for _, decl := range f.Decls {
-		if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
-			for _, spec := range genDecl.Specs {
-				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-					if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
-						if itf.Name != "" {
-							panic("one file must contains one interface only")
+		if genDecl, ok := decl.(*ast.GenDecl); ok {
+			switch genDecl.Tok {
+			case token.IMPORT:
+				for _, spec := range genDecl.Specs {
+					if importSpec, ok := spec.(*ast.ImportSpec); ok {
+						path, err := strconv.Unquote(importSpec.Path.Value)
+						if err != nil {
+							panic(importSpec.Path.Value + " " + err.Error())
 						}
+						if importSpec.Name != nil {
+							itf.Imports[path] = importSpec.Name.Name
+						} else {
+							itf.Imports[path] = ""
+						}
+					}
+				}
 
-						itf.Name = typeSpec.Name.Name
-						for _, method := range interfaceType.Methods.List {
-							m := NewMethod(itf, method.Names[0].Name, getDoc(method.Doc))
-							itf.Methods = append(itf.Methods, m)
+			case token.TYPE:
+				for _, spec := range genDecl.Specs {
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
+							if itf.Name != "" {
+								panic("one file must contains one interface only")
+							}
+
+							itf.Name = typeSpec.Name.Name
+							for _, method := range interfaceType.Methods.List {
+								m := NewMethod(itf, method.Names[0].Name, getDoc(method.Doc))
+								itf.Methods = append(itf.Methods, m)
+							}
 						}
 					}
 				}
@@ -155,6 +176,10 @@ func (itf *Interface) makeCache() {
 			}
 
 			for _, f := range profile.Fields {
+				if f.PkgPath != "" {
+					itf.Imports[f.PkgPath] = ""
+				}
+
 				// field 是一个变量，在不同的方法中，名字不一样，所以不能公用
 				field := new(Variable)
 				*field = *f
@@ -189,6 +214,10 @@ func (itf *Interface) makeCache() {
 			}
 
 			for _, f := range profile.Fields {
+				if f.PkgPath != "" {
+					itf.Imports[f.PkgPath] = ""
+				}
+
 				field := new(Variable)
 				*field = *f
 

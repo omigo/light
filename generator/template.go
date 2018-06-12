@@ -17,7 +17,7 @@ import (
 		{{- end}}
 
 		{{- range $path, $short := .Imports}}
-			{{$short}} "{{$path}}"
+			{{/* $short */}} "{{$path}}"
 		{{- end}}
 )
 
