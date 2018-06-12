@@ -1,6 +1,7 @@
 package goparser
 
 import (
+	"bytes"
 	"strings"
 
 	"github.com/arstd/light/sqlparser"
@@ -40,9 +41,9 @@ func HasVariable(m *Method) bool {
 type Method struct {
 	Interface *Interface `json:"-"`
 
-	Name string // Insert
-	Doc  string // insert into users ...
-	Expr string // Insert(tx *sql.Tx, u *model.User) (int64, error)
+	Name      string // Insert
+	Doc       string // insert into users ...
+	Signature string // Insert(tx *sql.Tx, u *model.User) (int64, error)
 
 	Statement *sqlparser.Statement
 	Type      MethodType
@@ -51,13 +52,37 @@ type Method struct {
 	Results *Results
 }
 
-func NewMethod(itf *Interface, name, doc string, expr string) *Method {
+func NewMethod(itf *Interface, name, doc string) *Method {
 	return &Method{
 		Interface: itf,
 		Name:      name,
 		Doc:       doc,
-		Expr:      expr,
 	}
+}
+
+func (m *Method) SetSignature() {
+	var buf bytes.Buffer
+	buf.WriteString(m.Name)
+
+	buf.WriteByte('(')
+	for i, v := range m.Params.List {
+		if i != 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(v.Define())
+	}
+	buf.WriteByte(')')
+
+	buf.WriteByte('(')
+	for i, v := range m.Results.List {
+		if i != 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(v.Define())
+	}
+	buf.WriteByte(')')
+
+	m.Signature = buf.String()
 }
 
 func (m *Method) SetType() {

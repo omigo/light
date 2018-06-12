@@ -40,6 +40,8 @@ func Generate(itf *goparser.Interface) []byte {
 
 		m.GenCondition()
 		m.SetType()
+
+		m.SetSignature()
 	}
 
 	var t *template.Template

@@ -363,7 +363,7 @@ return xu, nil
 {{- /*************** main *****************/ -}}
 {{template "header" . -}}
 {{range $method := .Methods -}}
-	func (*Store{{$.Name}}) {{$method.Expr}} {
+	func (*Store{{$.Name}}) {{$method.Signature}} {
 		{{$tx := MethodTx $method -}}
 		var exec = {{if $tx }} light.GetExec({{$tx}}, db) {{else}} db {{end}}
 		var buf bytes.Buffer

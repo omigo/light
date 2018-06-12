@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/format"
 	"go/importer"
 	"go/parser"
 	"go/token"
@@ -82,10 +81,7 @@ func extractDocs(itf *Interface, f *ast.File, fset *token.FileSet) {
 
 						itf.Name = typeSpec.Name.Name
 						for _, method := range interfaceType.Methods.List {
-							var buf bytes.Buffer
-							format.Node(&buf, fset, method.Type)
-							expr := method.Names[0].Name + buf.String()[4:]
-							m := NewMethod(itf, method.Names[0].Name, getDoc(method.Doc), expr)
+							m := NewMethod(itf, method.Names[0].Name, getDoc(method.Doc))
 							itf.Methods = append(itf.Methods, m)
 						}
 					}

@@ -72,6 +72,9 @@ func (v *Variable) NotDefault() string {
 	name := v.FullName()
 
 	switch {
+	case v.PkgPath == "github.com/arstd/light/null":
+		return "!" + name + ".IsEmpty()"
+
 	case v.PkgPath == "time" && v.TypeName == "Time":
 		return "!" + name + ".IsZero()"
 
@@ -122,6 +125,8 @@ func (v *Variable) FullName() string {
 func (v *Variable) Scan() string {
 	name := v.FullName()
 	switch {
+	case v.PkgPath == "github.com/arstd/light/null":
+		return "&" + name
 	case v.Pointer:
 		return "&" + name
 	case v.Nullable():
@@ -133,14 +138,18 @@ func (v *Variable) Scan() string {
 
 func (v *Variable) Wrap() string {
 	name := v.FullName()
+	if v.PkgPath == "github.com/arstd/light/null" {
+		return name
+	}
 	name = fmt.Sprintf("null.%s%s(&%s)", strings.ToUpper(v.TypeName[:1]), v.TypeName[1:], name)
-	// log.Debug(name)
 	return name
 }
 
 func (v *Variable) Value() string {
 	name := v.FullName()
 	switch {
+	case v.PkgPath == "github.com/arstd/light/null":
+		return name
 	case v.Pointer:
 		return name
 	case v.Nullable():
@@ -148,4 +157,8 @@ func (v *Variable) Value() string {
 	default:
 		return name
 	}
+}
+
+func (v *Variable) Define() string {
+	return v.Name + " " + v.FullTypeName()
 }

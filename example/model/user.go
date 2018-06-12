@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/arstd/light/null"
+)
 
 type Status uint8
 
@@ -12,5 +16,5 @@ type User struct {
 	Status   Status
 	BirthDay *time.Time
 	Created  time.Time
-	Updated  time.Time
+	Updated  null.Timestamp `light:",nullable"`
 }

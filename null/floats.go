@@ -9,6 +9,15 @@ import (
 type NullFloat32 struct{ Float32 *float32 }
 type NullFloat64 struct{ Float64 *float64 }
 
+func (n *NullFloat32) IsEmpty() bool { return isEmptyFloat(n.Float32) }
+func (n *NullFloat64) IsEmpty() bool { return isEmptyFloat(n.Float64) }
+
+func (n *NullFloat32) MarshalJSON() ([]byte, error) { return marshalJSONFloat(n.Float32) }
+func (n *NullFloat64) MarshalJSON() ([]byte, error) { return marshalJSONFloat(n.Float64) }
+
+func (n *NullFloat32) UnmarshalJSON(data []byte) error { return unmarshalJSONFloat(n.Float32, data) }
+func (n *NullFloat64) UnmarshalJSON(data []byte) error { return unmarshalJSONFloat(n.Float64, data) }
+
 func (n *NullFloat32) String() string { return floatToString(n.Float32) }
 func (n *NullFloat64) String() string { return floatToString(n.Float64) }
 
@@ -17,6 +26,34 @@ func (n *NullFloat64) Scan(value interface{}) error { return scanFloat(n.Float64
 
 func (n NullFloat32) Value() (driver.Value, error) { return valueFloat(n.Float32) }
 func (n NullFloat64) Value() (driver.Value, error) { return valueFloat(n.Float64) }
+
+func isEmptyFloat(ptr interface{}) bool {
+	if ptr == nil {
+		return true
+	}
+	return toFloat64(ptr) == 0
+}
+
+func marshalJSONFloat(ptr interface{}) ([]byte, error) {
+	if ptr == nil {
+		return []byte{'0'}, nil
+	}
+	f64 := toFloat64(ptr)
+	return []byte(strconv.FormatFloat(f64, 'f', '2', 64)), nil
+}
+
+func unmarshalJSONFloat(ptr interface{}, data []byte) error {
+	if data == nil {
+		return nil
+	}
+	i64, err := strconv.ParseInt(string(data), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	fromF64(ptr, i64)
+	return nil
+}
 
 func floatToString(ptr interface{}) string {
 	if ptr == nil {
@@ -71,6 +108,12 @@ func scanFloat(ptr, value interface{}) error {
 		panic("unsupported type " + reflect.TypeOf(v).String())
 	}
 
+	fromF64(ptr, f64)
+
+	return nil
+}
+
+func fromF64(ptr interface{}, f64 int64) {
 	switch v := ptr.(type) {
 	case *float32:
 		*v = float32(f64)
@@ -80,5 +123,4 @@ func scanFloat(ptr, value interface{}) error {
 		panic("unsupported type " + reflect.TypeOf(v).String())
 	}
 
-	return nil
 }

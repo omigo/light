@@ -32,9 +32,14 @@ func NewProfile(t types.Type, cache map[string]*Profile, deep bool) *Profile {
 	switch str {
 	case "*database/sql.Tx":
 		p.Tx = true
+		p.PkgPath = "database/sql"
+		p.PkgName = "sql"
+		p.TypeName = "Tx"
+		p.Pointer = true
 
 	case "error":
-		// log.Debug(str)
+		p.Tx = true
+		p.TypeName = "error"
 
 	default:
 		p.parseType(t, cache, deep)
@@ -58,6 +63,9 @@ func (p *Profile) parseType(t types.Type, cache map[string]*Profile, deep bool) 
 			if pkg := obj.Pkg(); pkg != nil {
 				p.PkgName = pkg.Name()
 				p.PkgPath = pkg.Path()
+				if i := strings.Index(p.PkgPath, "/vendor/"); i != -1 {
+					p.PkgPath = p.PkgPath[i+len("/vendor/"):]
+				}
 			}
 			if s, ok := v.Underlying().(*types.Struct); ok {
 				p.Struct = true
@@ -140,6 +148,10 @@ func (p *Profile) FullTypeName() string {
 	}
 	if p.PkgName != "" {
 		name += p.PkgName + "."
+	}
+
+	if p.Alias != "" {
+		return name + p.Alias
 	}
 	return name + p.TypeName
 }

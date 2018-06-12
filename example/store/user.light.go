@@ -39,7 +39,7 @@ func (*StoreIUser) Create(name string) error {
 	return err
 }
 
-func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (a int64, b error) {
+func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	var exec = light.GetExec(tx, db)
 	var buf bytes.Buffer
 	var args []interface{}
@@ -181,7 +181,7 @@ func (*StoreIUser) Delete(id uint64) (int64, error) {
 	return res.RowsAffected()
 }
 
-func (*StoreIUser) Get(id uint64) (ret *model.User, e error) {
+func (*StoreIUser) Get(id uint64) (*model.User, error) {
 	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
@@ -244,7 +244,7 @@ func (*StoreIUser) Count(birthDay time.Time) (int64, error) {
 	return xu, nil
 }
 
-func (*StoreIUser) List(u *model.User, offset, size int) (us []*model.User, xxx error) {
+func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, error) {
 	var exec = db
 	var buf bytes.Buffer
 	var args []interface{}
@@ -286,7 +286,7 @@ func (*StoreIUser) List(u *model.User, offset, size int) (us []*model.User, xxx 
 	buf.WriteString("AND status != ? ")
 	args = append(args, u.Status)
 
-	if !u.Updated.IsZero() {
+	if !u.Updated.IsEmpty() {
 		buf.WriteString("AND updated > ? ")
 		args = append(args, u.Updated)
 	}
@@ -365,7 +365,7 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 		}
 	}
 
-	if !u.Updated.IsZero() {
+	if !u.Updated.IsEmpty() {
 		buf.WriteString("AND updated > ? ")
 		args = append(args, u.Updated)
 	}

@@ -8,6 +8,7 @@ import (
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/arstd/light/example/model"
+	"github.com/arstd/light/null"
 	"github.com/arstd/log"
 )
 
@@ -169,9 +170,10 @@ func TestUserPage(t *testing.T) {
 	rows := sqlmock.NewRows(columns).AddRow(returns...).AddRow(returns...)
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
+	update := time.Now().Add(-time.Hour)
 	u := &model.User{
 		Username: "ad%",
-		Updated:  time.Now().Add(-time.Hour),
+		Updated:  null.Timestamp{Time: &update},
 		Status:   9,
 	}
 	total, data, err := User.Page(u, []model.Status{1, 2, 3}, 1, 2)
