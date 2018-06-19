@@ -48,8 +48,8 @@ func Generate(itf *goparser.Interface) []byte {
 	t = template.New("tpl")
 	t.Funcs(template.FuncMap{
 		"sub": func(a, b int) int { return a - b },
-		"aggregate": func(m *goparser.Method, v *sqlparser.Fragment) *Aggregate {
-			return &Aggregate{Method: m, Fragment: v}
+		"aggregate": func(m *goparser.Method, v *sqlparser.Fragment, buf, args string) *Aggregate {
+			return &Aggregate{Method: m, Fragment: v, Buf: buf, Args: args}
 		},
 		"MethodTx":            goparser.MethodTx,
 		"HasVariable":         goparser.HasVariable,
@@ -68,4 +68,6 @@ func Generate(itf *goparser.Interface) []byte {
 type Aggregate struct {
 	Method   *goparser.Method
 	Fragment *sqlparser.Fragment
+	Buf      string
+	Args     string
 }

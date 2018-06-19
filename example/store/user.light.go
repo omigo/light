@@ -337,6 +337,10 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 	var buf bytes.Buffer
 	var args []interface{}
 
+	var xFirstBuf bytes.Buffer
+	var xFirstArgs []interface{}
+	xFirstBuf.WriteString("SELECT id, username, phone, address, status, birth_day, created, updated ")
+
 	buf.WriteString("FROM users WHERE username LIKE ? ")
 	args = append(args, u.Username)
 
@@ -370,6 +374,11 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 		args = append(args, u.Updated)
 	}
 
+	var xLastBuf bytes.Buffer
+	var xLastArgs []interface{}
+	xLastBuf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
+	xLastArgs = append(xLastArgs, offset, size)
+
 	var total int64
 	totalQuery := "SELECT count(1) " + buf.String()
 	log.Debug(totalQuery)
@@ -384,11 +393,9 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 		return 0, nil, err
 	}
 	log.Debug(total)
-
-	buf.WriteString("ORDER BY updated DESC LIMIT ?, ? ")
-	args = append(args, offset, size)
-
-	query := "SELECT id, username, phone, address, status, birth_day, created, updated " + buf.String()
+	query := xFirstBuf.String() + buf.String() + xLastBuf.String()
+	args = append(xFirstArgs, args...)
+	args = append(args, xLastArgs...)
 	log.Debug(query)
 	log.Debug(args...)
 	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)

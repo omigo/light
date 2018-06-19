@@ -36,22 +36,22 @@ type Store{{.Name}} struct{}
 {{- if .Fragment.Statement }}
 	{{- if .Fragment.Range }}
 		if len({{.Fragment.Range}}) > 0 {
-			fmt.Fprintf(&buf, "{{.Fragment.Statement}} ", strings.Repeat(",?", len({{.Fragment.Range}}))[1:])
+			fmt.Fprintf(&{{.Buf}}, "{{.Fragment.Statement}} ", strings.Repeat(",?", len({{.Fragment.Range}}))[1:])
 			for _, v := range {{.Fragment.Range}} {
-				args = append(args, v)
+				{{.Args}} = append({{.Args}}, v)
 			}
 		}
 	{{- else if .Fragment.Replacers }}
-		fmt.Fprintf(&buf, "{{.Fragment.Statement}} "{{range $elem := .Fragment.Replacers}}, {{$elem}}{{end}})
+		fmt.Fprintf(&{{.Buf}}, "{{.Fragment.Statement}} "{{range $elem := .Fragment.Replacers}}, {{$elem}}{{end}})
 	{{- else }}
-		buf.WriteString("{{.Fragment.Statement}} ")
+		{{.Buf}}.WriteString("{{.Fragment.Statement}} ")
 	{{- end }}
 	{{- if .Fragment.Variables }}
-		args = append(args{{range $elem := .Fragment.Variables}}, {{LookupValueOfParams $.Method $elem}}{{end}})
+		{{.Args}} = append({{.Args}}{{range $elem := .Fragment.Variables}}, {{LookupValueOfParams $.Method $elem}}{{end}})
 	{{- end }}
 {{- else }}
 	{{- range $fragment := .Fragment.Fragments }}
-		{{template "fragment" (aggregate $.Method $fragment)}}
+		{{template "fragment" (aggregate $.Method $fragment $.Buf $.Args)}}
 	{{- end }}
 {{- end }}
 {{- if .Fragment.Condition}}
@@ -261,11 +261,9 @@ if err != nil {
 	log.Debug(total)
 {{end -}}
 
-{{$i := sub (len .Statement.Fragments) 1}}
-{{ $fragment := index .Statement.Fragments $i }}
-{{template "fragment" (aggregate $ $fragment)}}
-{{ $fragement0 := index .Statement.Fragments 0 }}
-query := "{{$fragement0.Statement}} " + buf.String()
+query := xFirstBuf.String() + buf.String() + xLastBuf.String()
+args = append(xFirstArgs, args...)
+args = append(args, xLastArgs...)
 {{if .Interface.Log -}}
 	log.Debug(query)
 	{{if HasVariable $ -}}
@@ -374,8 +372,16 @@ return xu, nil
 		{{- range $i, $fragment := .Statement.Fragments }}
 			{{/* if type=page, return field statement and ordery by limit statement reserved */}}
 			{{$last := sub (len $method.Statement.Fragments) 1 }}
-			{{if not (and (eq $method.Type "page") (or (eq $i 0) (eq $i $last)))}}
-				{{template "fragment" (aggregate $method $fragment)}}
+			{{if and (eq $method.Type "page") (eq $i 0) }}
+				var xFirstBuf bytes.Buffer
+				var xFirstArgs []interface{}
+				{{- template "fragment" (aggregate $method $fragment "xFirstBuf" "xFirstArgs")}}
+			{{else if and (eq $method.Type "page") (eq $i $last) }}
+				var xLastBuf bytes.Buffer
+				var xLastArgs []interface{}
+				{{- template "fragment" (aggregate $method $fragment "xLastBuf" "xLastArgs")}}
+			{{else if not (and (eq $method.Type "page") (or (eq $i 0) (eq $i $last)))}}
+				{{template "fragment" (aggregate $method $fragment "buf" "args")}}
 			{{end}}
 		{{- end }}
 
