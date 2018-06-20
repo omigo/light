@@ -46,7 +46,7 @@ func unmarshalJSONFloat(ptr interface{}, data []byte) error {
 	if data == nil {
 		return nil
 	}
-	i64, err := strconv.ParseInt(string(data), 10, 64)
+	i64, err := strconv.ParseFloat(string(data), 10)
 	if err != nil {
 		return err
 	}
@@ -98,11 +98,11 @@ func scanFloat(ptr, value interface{}) error {
 		return nil
 	}
 
-	var f64 int64
+	var f64 float64
 	switch v := value.(type) {
-	case int64:
+	case float64:
 		f64 = v
-	case *int64:
+	case *float64:
 		f64 = *v
 	default:
 		panic("unsupported type " + reflect.TypeOf(v).String())
@@ -113,7 +113,7 @@ func scanFloat(ptr, value interface{}) error {
 	return nil
 }
 
-func fromF64(ptr interface{}, f64 int64) {
+func fromF64(ptr interface{}, f64 float64) {
 	switch v := ptr.(type) {
 	case *float32:
 		*v = float32(f64)

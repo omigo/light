@@ -17,8 +17,4 @@ type User struct {
 	BirthDay *time.Time
 	Created  time.Time
 	Updated  null.Timestamp `light:",nullable"`
-
-	Type      string
-	StartTime time.Time
-	EndTime   time.Time
 }
