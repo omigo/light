@@ -2,6 +2,7 @@ package null
 
 import (
 	"database/sql/driver"
+	"log"
 	"reflect"
 	"strconv"
 )
@@ -104,6 +105,16 @@ func scanFloat(ptr, value interface{}) error {
 		f64 = v
 	case *float64:
 		f64 = *v
+	case []byte:
+		bitSize := 64
+		if _, ok := ptr.(*float32); ok {
+			bitSize = 32
+		}
+		var err error
+		f64, err = strconv.ParseFloat(string(v), bitSize)
+		if err != nil {
+			log.Print(err)
+		}
 	default:
 		panic("unsupported type " + reflect.TypeOf(v).String())
 	}
@@ -122,5 +133,4 @@ func fromF64(ptr interface{}, f64 float64) {
 	default:
 		panic("unsupported type " + reflect.TypeOf(v).String())
 	}
-
 }
