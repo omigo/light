@@ -37,6 +37,7 @@ func (*StoreIUser) Create(name string) error {
 		log.Error(err)
 	}
 	return err
+
 }
 
 func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
@@ -60,6 +61,7 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
+
 }
 
 func (*StoreIUser) Bulky(us []*model.User) (int64, error) {
@@ -79,11 +81,10 @@ func (*StoreIUser) Bulky(us []*model.User) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	var args []interface{}
 	for _, u := range us {
-		var args []interface{}
-
+		args = args[:0]
 		args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
-
 		log.Debug(args...)
 		if _, err := stmt.Exec(args...); err != nil {
 			return 0, err
@@ -94,6 +95,7 @@ func (*StoreIUser) Bulky(us []*model.User) (int64, error) {
 	}
 
 	return int64(len(us)), nil
+
 }
 
 func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
@@ -117,6 +119,7 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
+
 }
 
 func (*StoreIUser) Replace(u *model.User) (int64, error) {
@@ -140,6 +143,7 @@ func (*StoreIUser) Replace(u *model.User) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
+
 }
 
 func (*StoreIUser) Update(u *model.User) (int64, error) {
@@ -190,6 +194,7 @@ func (*StoreIUser) Update(u *model.User) (int64, error) {
 		return 0, err
 	}
 	return res.RowsAffected()
+
 }
 
 func (*StoreIUser) Delete(id uint64) (int64, error) {
@@ -213,6 +218,7 @@ func (*StoreIUser) Delete(id uint64) (int64, error) {
 		return 0, err
 	}
 	return res.RowsAffected()
+
 }
 
 func (*StoreIUser) Get(id uint64) (*model.User, error) {
@@ -245,6 +251,7 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 	}
 	log.Trace(xdst)
 	return xu, err
+
 }
 
 func (*StoreIUser) Count(birthDay time.Time) (int64, error) {
@@ -276,6 +283,7 @@ func (*StoreIUser) Count(birthDay time.Time) (int64, error) {
 	}
 	log.Debug(xu)
 	return xu, nil
+
 }
 
 func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, error) {
@@ -289,32 +297,24 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 	args = append(args, u.Username)
 
 	if (u.Phone != "") || ((u.BirthDay != nil && !u.BirthDay.IsZero()) || u.Id > 1) {
-
 		buf.WriteString("AND address = ? ")
 		args = append(args, u.Address)
-
 		if u.Phone != "" {
 			buf.WriteString("AND phone LIKE ? ")
 			args = append(args, null.String(&u.Phone))
 		}
-
 		buf.WriteString("AND created > ? ")
 		args = append(args, u.Created)
-
 		if (u.BirthDay != nil && !u.BirthDay.IsZero()) || u.Id > 1 {
-
 			if !u.BirthDay.IsZero() {
 				buf.WriteString("AND birth_day > ? ")
 				args = append(args, u.BirthDay)
 			}
-
 			if u.Id != 0 {
 				buf.WriteString("AND id > ? ")
 				args = append(args, u.Id)
 			}
-
 		}
-
 	}
 
 	buf.WriteString("AND _status != ? ")
@@ -364,6 +364,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 		return nil, err
 	}
 	return data, nil
+
 }
 
 func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) (int64, []*model.User, error) {
@@ -379,18 +380,14 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 	args = append(args, u.Username)
 
 	if u.Phone != "" {
-
 		buf.WriteString("AND address = ? ")
 		args = append(args, u.Address)
-
 		if u.Phone != "" {
 			buf.WriteString("AND phone LIKE ? ")
 			args = append(args, null.String(&u.Phone))
 		}
-
 		buf.WriteString("AND created > ? ")
 		args = append(args, u.Created)
-
 	}
 
 	buf.WriteString("AND birth_day IS NOT NULL AND _status != ? ")
@@ -463,4 +460,5 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 		return 0, nil, err
 	}
 	return total, data, nil
+
 }

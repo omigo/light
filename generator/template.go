@@ -61,13 +61,13 @@ type Store{{.Name}} struct{}
 	{{- end }}
 {{- else }}
 	{{- range $fragment := .Fragment.Fragments }}
-		{{template "fragment" (aggregate $.Method $fragment $.Buf $.Args)}}
+		{{- template "fragment" (aggregate $.Method $fragment $.Buf $.Args)}}
 	{{- end }}
 {{- end }}
 {{- if .Fragment.Condition}}
 	}
 {{- end }}
-{{end}}
+{{- end}}
 
 
 {{- /*************** ddl template *****************/}}
@@ -172,10 +172,11 @@ stmt, err := tx.Prepare(query)
 if err != nil {
 	return 0, err
 }
+var args []interface{}
 for _, {{ParamsLastElem .Params}} := range {{ParamsLast .Params}} {
-	var args []interface{}
+	args = args[:0]
 	{{- range $i, $fragment := .Statement.Fragments }}
-		{{template "fragment" (aggregate $ $fragment "" "args")}}
+		{{- template "fragment" (aggregate $ $fragment "" "args")}}
 	{{- end }}
 	log.Debug(args...)
 	if _, err := stmt.Exec(args...); err != nil {
@@ -445,24 +446,24 @@ return xu, nil
 				{{end}}
 			{{- end }}
 
-			{{if eq $method.Type "ddl"}}
-				{{template "ddl" $method -}}
-			{{else if or (eq $method.Type "update") (eq $method.Type "delete") -}}
-				{{template "update" $method -}}
-			{{else if eq $method.Type "insert"}}
-				{{template "insert" $method -}}
-			{{else if eq $method.Type "get"}}
-				{{template "get" $method -}}
-			{{else if eq $method.Type "list"}}
-				{{template "list" $method -}}
-			{{else if eq $method.Type "page" -}}
-				{{template "page" $method -}}
-			{{else if eq $method.Type "agg"}}
-				{{template "agg" $method -}}
-			{{else}}
+			{{- if eq $method.Type "ddl"}}
+				{{template "ddl" $method}}
+			{{- else if or (eq $method.Type "update") (eq $method.Type "delete")}}
+				{{template "update" $method}}
+			{{- else if eq $method.Type "insert"}}
+				{{template "insert" $method}}
+			{{- else if eq $method.Type "get"}}
+				{{template "get" $method}}
+			{{- else if eq $method.Type "list"}}
+				{{template "list" $method}}
+			{{- else if eq $method.Type "page"}}
+				{{template "page" $method}}
+			{{- else if eq $method.Type "agg"}}
+				{{template "agg" $method}}
+			{{- else}}
 				panic("unimplemented")
-			{{end -}}
-		{{end -}}
+			{{- end}}
+		{{- end}}
 	}
 
 {{end}}
