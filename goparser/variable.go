@@ -173,16 +173,17 @@ func (v *Variable) Define() string {
 	return v.Name + " " + v.FullTypeName()
 }
 
-func (v *Variable) Elem() *Variable {
-	switch {
-	case v.Slice:
-		x := *v
-		*x.Profile = *(v.Profile)
-		x.Slice = false
-		if x.Name[len(x.Name)-1] == 's' {
-			x.Name = x.Name[:len(x.Name)-1]
-		}
-		return &x
-	}
-	return v
-}
+//
+// func (v *Variable) Elem() *Variable {
+// 	switch {
+// 	case v.Slice:
+// 		x := *v
+// 		*x.Profile = *(v.Profile)
+// 		x.Slice = false
+// 		if x.Name[len(x.Name)-1] == 's' {
+// 			x.Name = x.Name[:len(x.Name)-1]
+// 		}
+// 		return &x
+// 	}
+// 	return v
+// }

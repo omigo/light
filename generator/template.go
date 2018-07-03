@@ -172,7 +172,7 @@ stmt, err := tx.Prepare(query)
 if err != nil {
 	return 0, err
 }
-for _, u := range {{ParamsLast .Params}} {
+for _, {{ParamsLastElem .Params}} := range {{ParamsLast .Params}} {
 	var args []interface{}
 	{{- range $i, $fragment := .Statement.Fragments }}
 		{{template "fragment" (aggregate $ $fragment "" "args")}}
