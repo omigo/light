@@ -25,7 +25,7 @@ func (*StoreIUser) Create(name string) error {
 	var exec = db
 	var buf bytes.Buffer
 
-	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
+	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), _status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
 
 	query := buf.String()
 	log.Debug(query)
@@ -44,7 +44,7 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 
-	buf.WriteString("INSERT IGNORE INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+	buf.WriteString("INSERT IGNORE INTO users(`username`,phone,address,_status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
 
 	query := buf.String()
@@ -65,7 +65,7 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 func (*StoreIUser) Bulky(us []*model.User) (int64, error) {
 	var buf bytes.Buffer
 
-	buf.WriteString("INSERT IGNORE INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+	buf.WriteString("INSERT IGNORE INTO users(`username`,phone,address,_status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 
 	query := buf.String()
 	log.Debug(query)
@@ -101,7 +101,7 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 
-	buf.WriteString("INSERT INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), status=VALUES(status), birth_day=VALUES(birth_day), updated=CURRENT_TIMESTAMP ")
+	buf.WriteString("INSERT INTO users(username,phone,address,_status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE username=VALUES(username), phone=VALUES(phone), address=VALUES(address), _status=VALUES(_status), birth_day=VALUES(birth_day), updated=CURRENT_TIMESTAMP ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
 
 	query := buf.String()
@@ -124,7 +124,7 @@ func (*StoreIUser) Replace(u *model.User) (int64, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 
-	buf.WriteString("REPLACE INTO users(username,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+	buf.WriteString("REPLACE INTO users(username,phone,address,_status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
 	args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
 
 	query := buf.String()
@@ -165,7 +165,7 @@ func (*StoreIUser) Update(u *model.User) (int64, error) {
 	}
 
 	if u.Status != 0 {
-		buf.WriteString("status=?, ")
+		buf.WriteString("_status=?, ")
 		args = append(args, u.Status)
 	}
 
@@ -220,7 +220,7 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 	var buf bytes.Buffer
 	var args []interface{}
 
-	buf.WriteString("SELECT id, username, mobile, address, status, birth_day, created, updated ")
+	buf.WriteString("SELECT id, username, mobile, address, _status, birth_day, created, updated ")
 
 	buf.WriteString("FROM users WHERE id=? ")
 	args = append(args, id)
@@ -283,7 +283,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 	var buf bytes.Buffer
 	var args []interface{}
 
-	buf.WriteString("SELECT (SELECT id FROM users WHERE id=a.id) AS id, `username`, phone AS phone, address, status, birth_day, created, updated ")
+	buf.WriteString("SELECT (SELECT id FROM users WHERE id=a.id) AS id, `username`, phone AS phone, address, _status, birth_day, created, updated ")
 
 	buf.WriteString("FROM users a WHERE id != -1 AND username <> 'admin' AND username LIKE ? ")
 	args = append(args, u.Username)
@@ -317,7 +317,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 
 	}
 
-	buf.WriteString("AND status != ? ")
+	buf.WriteString("AND _status != ? ")
 	args = append(args, u.Status)
 
 	if !u.Updated.IsEmpty() {
@@ -373,7 +373,7 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 
 	var xFirstBuf bytes.Buffer
 	var xFirstArgs []interface{}
-	xFirstBuf.WriteString("SELECT id, username, phone, address, status, birth_day, created, updated ")
+	xFirstBuf.WriteString("SELECT id, username, phone, address, _status, birth_day, created, updated ")
 
 	buf.WriteString("FROM users WHERE username LIKE ? ")
 	args = append(args, u.Username)
@@ -393,11 +393,11 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 
 	}
 
-	buf.WriteString("AND birth_day IS NOT NULL AND status != ? ")
+	buf.WriteString("AND birth_day IS NOT NULL AND _status != ? ")
 	args = append(args, u.Status)
 
 	if len(ss) > 0 {
-		fmt.Fprintf(&buf, "AND status in (%v) ", strings.Repeat(",?", len(ss))[1:])
+		fmt.Fprintf(&buf, "AND _status in (%v) ", strings.Repeat(",?", len(ss))[1:])
 		for _, v := range ss {
 			args = append(args, v)
 		}

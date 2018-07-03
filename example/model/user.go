@@ -13,7 +13,7 @@ type User struct {
 	Username string
 	Phone    string `json:"mobile" light:"mobile,nullable"`
 	Address  *string
-	Status   Status
+	Status   Status `light:"_status"`
 	BirthDay *time.Time
 	Created  time.Time
 	Updated  null.Timestamp `light:",nullable"`
