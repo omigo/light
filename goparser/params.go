@@ -5,11 +5,7 @@ import (
 	"strings"
 )
 
-//
-// func ParamsVarByNameValue(ps *Params, name string) string {
-// 	x := ps.VarByName(name)
-// 	return x.Value(x.Name)
-// }
+func ParamsLast(ps *Params) string { return ps.List[len(ps.List)-1].FullName() }
 
 type Params struct {
 	Tuple *types.Tuple

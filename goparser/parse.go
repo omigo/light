@@ -199,6 +199,12 @@ func (itf *Interface) makeCache() {
 				if field.TagAlias != "" {
 					method.Params.Names[field.TagAlias] = field
 				}
+				if profile.Slice {
+					if param.Name[len(param.Name)-1] == 's' {
+						elem := param.Name[:len(param.Name)-1]
+						method.Params.Names[elem+"."+field.Name] = field
+					}
+				}
 			}
 			*param.Profile = *profile
 			method.Params.Names[param.Name] = param

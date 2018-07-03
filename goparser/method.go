@@ -12,6 +12,7 @@ type MethodType string
 const (
 	MethodTypeDDL    = "ddl"
 	MethodTypeInsert = "insert"
+	MethodTypeBulky  = "bulky"
 	MethodTypeUpdate = "update"
 	MethodTypeDelete = "delete"
 	MethodTypeGet    = "get"
@@ -100,7 +101,11 @@ func (m *Method) SetType() {
 		}
 
 	case sqlparser.INSERT, sqlparser.REPLACE:
-		m.Type = MethodTypeInsert
+		if m.Params.List[len(m.Params.List)-1].Slice {
+			m.Type = MethodTypeBulky
+		} else {
+			m.Type = MethodTypeInsert
+		}
 
 	case sqlparser.UPDATE:
 		m.Type = MethodTypeUpdate

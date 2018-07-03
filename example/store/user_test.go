@@ -56,6 +56,34 @@ func TestUserInsert(t *testing.T) {
 	}
 }
 
+func TestUserBulky(t *testing.T) {
+	mock.ExpectBegin()
+	stmt := mock.ExpectPrepare("INSERT ")
+	stmt.ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
+	stmt.ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+	// mock.ExpectRollback()
+
+	us := []*model.User{
+		{
+			Username: "admin1" + time.Now().Format("150405"),
+			Phone:    "admin2" + time.Now().Format("150405"),
+		},
+		{
+			Username: "admin1" + time.Now().Format("150405"),
+			Phone:    "admin2" + time.Now().Format("150405"),
+		},
+	}
+
+	id0, err := User.Bulky(us)
+	if err != nil {
+		t.Error(err)
+	}
+	if id0 == 0 {
+		t.Errorf("expect id > 1, but %d", id0)
+	}
+}
+
 func TestUserUpsert(t *testing.T) {
 	mock.ExpectBegin()
 	args := []driver.Value{sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()}
@@ -72,7 +100,7 @@ func TestUserUpsert(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	// defer tx.Rollback()
+	defer tx.Rollback()
 	id0, err := User.Upsert(u, tx)
 	if err != nil {
 		t.Error(err)

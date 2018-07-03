@@ -29,6 +29,10 @@ type IUser interface {
 	// values (${u.Username},?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	Insert(tx *sql.Tx, u *model.User) (a int64, b error)
 
+	// insert ignore into users(`username`, phone, address, status, birth_day, created, updated)
+	// values (${u.Username},?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	Bulky(us []*model.User) (int64, error)
+
 	// insert into users(username, phone, address, status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	// on duplicate key update
@@ -98,3 +102,35 @@ type IUser interface {
 	// limit ${offset}, ${size}
 	Page(u *model.User, ss []model.Status, offset int, size int) (int64, []*model.User, error)
 }
+
+//
+// func Bulky0(us []*model.User) (int64, error) {
+// 	var buf bytes.Buffer
+//
+// 	buf.WriteString("INSERT IGNORE INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+//
+// 	query := buf.String()
+// 	log.Debug(query)
+// 	tx, err := db.Begin()
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	tx.Rollback()
+//
+// 	stmt, err := tx.Prepare(query)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	for _, u := range us {
+// 		args := []interface{}{u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay}
+// 		log.Debug(args...)
+// 		if _, err := stmt.Exec(args...); err != nil {
+// 			return 0, err
+// 		}
+// 	}
+// 	if err := tx.Commit(); err != nil {
+// 		return 0, err
+// 	}
+//
+// 	return int64(len(us)), nil
+// }

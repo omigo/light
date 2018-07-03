@@ -53,6 +53,7 @@ func Generate(itf *goparser.Interface) []byte {
 		},
 		"MethodTx":            goparser.MethodTx,
 		"HasVariable":         goparser.HasVariable,
+		"ParamsLast":          goparser.ParamsLast,
 		"ResultWrap":          goparser.ResultWrap,
 		"ResultTypeName":      goparser.ResultTypeName,
 		"ResultElemTypeName":  goparser.ResultElemTypeName,

@@ -62,6 +62,40 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	return res.LastInsertId()
 }
 
+func (*StoreIUser) Bulky(us []*model.User) (int64, error) {
+	var buf bytes.Buffer
+
+	buf.WriteString("INSERT IGNORE INTO users(`username`,phone,address,status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
+
+	query := buf.String()
+	log.Debug(query)
+	tx, err := db.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		return 0, err
+	}
+	for _, u := range us {
+		var args []interface{}
+
+		args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
+
+		log.Debug(args...)
+		if _, err := stmt.Exec(args...); err != nil {
+			return 0, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	return int64(len(us)), nil
+}
+
 func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 	var exec = light.GetExec(tx, db)
 	var buf bytes.Buffer

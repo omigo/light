@@ -25,6 +25,10 @@ func LookupValueOfParams(m *Method, name string) string {
 	if v == nil {
 		panic(fmt.Sprintf("method `%s` result varialbe `%s` not found", m.Name, name))
 	}
+	// fmt.Println(name, v.FullName())
+	// if v.Slice {
+	// 	v.Elem().Value()
+	// }
 	return v.Value()
 }
 
@@ -112,7 +116,13 @@ func (v *Variable) FullName() string {
 		if v.Parent.Name == "" {
 			name += "xu."
 		} else {
-			name += v.Parent.Name + "."
+			if v.Parent.Slice {
+				if v.Parent.Name[len(v.Parent.Name)-1] == 's' {
+					name += v.Parent.Name[:len(v.Parent.Name)-1] + "."
+				}
+			} else {
+				name += v.Parent.Name + "."
+			}
 		}
 	}
 	if v.Name == "" {
@@ -161,4 +171,18 @@ func (v *Variable) Value() string {
 
 func (v *Variable) Define() string {
 	return v.Name + " " + v.FullTypeName()
+}
+
+func (v *Variable) Elem() *Variable {
+	switch {
+	case v.Slice:
+		x := *v
+		*x.Profile = *(v.Profile)
+		x.Slice = false
+		if x.Name[len(x.Name)-1] == 's' {
+			x.Name = x.Name[:len(x.Name)-1]
+		}
+		return &x
+	}
+	return v
 }
