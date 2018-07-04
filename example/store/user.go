@@ -31,7 +31,7 @@ type IUser interface {
 
 	// insert ignore into users(`username`, phone, address, _status, birth_day, created, updated)
 	// values (${u.Username},?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	Bulky(us []*model.User) (int64, error)
+	Bulky(us []*model.User) (insertedRows int64, ignoreRows int64, err error)
 
 	// insert into users(username, phone, address, _status, birth_day, created, updated)
 	// values (?,?,?,?,?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)

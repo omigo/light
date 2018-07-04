@@ -147,7 +147,14 @@ return res.LastInsertId()
 
 {{- /*************** bulky template *****************/}}
 {{define "bulky" -}}
+xn := int64(len({{ParamsLast .Params}}))
+if xn == 0 {
+	return 0, 0, nil
+}
+
+var xaffect, xignore int64
 var buf bytes.Buffer
+
 {{- range $i, $fragment := .Statement.Fragments }}
 	{{template "fragment" (aggregate $ $fragment "buf" "")}}
 {{- end }}
@@ -163,14 +170,20 @@ log.Debug(query)
 {{- else}}
 	tx, err := db.Begin()
 	if err != nil {
-		return 0, err
+		{{if .Interface.Log -}}
+			log.Error(err)
+		{{end -}}
+		return 0, xn, err
 	}
 	defer tx.Rollback()
 {{- end}}
 
 stmt, err := tx.Prepare(query)
 if err != nil {
-	return 0, err
+	{{if .Interface.Log -}}
+		log.Error(query, err)
+	{{end -}}
+	return 0, xn, err
 }
 var args []interface{}
 for _, {{ParamsLastElem .Params}} := range {{ParamsLast .Params}} {
@@ -180,16 +193,21 @@ for _, {{ParamsLastElem .Params}} := range {{ParamsLast .Params}} {
 	{{- end }}
 	log.Debug(args...)
 	if _, err := stmt.Exec(args...); err != nil {
-		return 0, err
+		xignore++
+		{{if .Interface.Log -}}
+			log.Error(query, err)
+		{{end -}}
+	} else {
+		xaffect++
 	}
 }
 {{- if not $tx}}
 if err := tx.Commit(); err != nil {
-	return 0, err
+	return 0, xn, err
 }
 {{- end}}
 
-return int64(len({{ParamsLast .Params}})), nil
+return xaffect, xignore, nil
 {{end}}
 
 {{- /*************** get template *****************/}}

@@ -75,12 +75,12 @@ func TestUserBulky(t *testing.T) {
 		},
 	}
 
-	id0, err := User.Bulky(us)
+	affect, _, err := User.Bulky(us)
 	if err != nil {
 		t.Error(err)
 	}
-	if id0 == 0 {
-		t.Errorf("expect id > 1, but %d", id0)
+	if affect <= 1 {
+		t.Errorf("expect affect > 1, but %d", affect)
 	}
 }
 

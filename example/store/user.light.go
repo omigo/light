@@ -60,7 +60,13 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	return res.LastInsertId()
 }
 
-func (*StoreIUser) Bulky(us []*model.User) (int64, error) {
+func (*StoreIUser) Bulky(us []*model.User) (int64, int64, error) {
+	xn := int64(len(us))
+	if xn == 0 {
+		return 0, 0, nil
+	}
+
+	var xaffect, xignore int64
 	var buf bytes.Buffer
 
 	buf.WriteString("INSERT IGNORE INTO users(`username`,phone,address,_status,birth_day,created,updated) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ")
@@ -69,13 +75,15 @@ func (*StoreIUser) Bulky(us []*model.User) (int64, error) {
 	log.Debug(query)
 	tx, err := db.Begin()
 	if err != nil {
-		return 0, err
+		log.Error(err)
+		return 0, xn, err
 	}
 	defer tx.Rollback()
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
-		return 0, err
+		log.Error(query, err)
+		return 0, xn, err
 	}
 	var args []interface{}
 	for _, u := range us {
@@ -83,14 +91,17 @@ func (*StoreIUser) Bulky(us []*model.User) (int64, error) {
 		args = append(args, u.Username, null.String(&u.Phone), u.Address, u.Status, u.BirthDay)
 		log.Debug(args...)
 		if _, err := stmt.Exec(args...); err != nil {
-			return 0, err
+			xignore++
+			log.Error(query, err)
+		} else {
+			xaffect++
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		return 0, err
+		return 0, xn, err
 	}
 
-	return int64(len(us)), nil
+	return xaffect, xignore, nil
 }
 
 func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {

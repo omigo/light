@@ -101,7 +101,7 @@ func (m *Method) SetType() {
 		}
 
 	case sqlparser.INSERT, sqlparser.REPLACE:
-		if m.Params.List[len(m.Params.List)-1].Slice {
+		if len(m.Results.List) == 3 {
 			m.Type = MethodTypeBulky
 		} else {
 			m.Type = MethodTypeInsert
