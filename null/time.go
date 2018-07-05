@@ -30,23 +30,19 @@ func (n *NullTime) MarshalJSON() ([]byte, error) {
 	return []byte(n.Time.Format(formatDatetime)), nil
 }
 
-func (n *NullTime) UnmarshalJSON(data []byte) error {
-	loc, err := time.LoadLocation("Asia/Shanghai")
-	if err != nil {
-		return err
-	}
+func (n *NullTime) UnmarshalJSON(data []byte) (err error) {
 	if n.Time == nil {
 		n.Time = new(time.Time)
 	}
-	if bytes.Equal(data, []byte("0000-00-00")) || bytes.Equal(data, []byte("0000-00-00 00:00:00")) {
+	if bytes.HasPrefix(data, []byte(`"0000-00-00`)) {
 		var tmp time.Time
 		*n.Time = tmp
 		return nil
 	}
 	if len(data) == len(formatDate) {
-		*n.Time, err = time.ParseInLocation(formatDate, string(data), loc)
+		*n.Time, err = time.ParseInLocation(formatDate, string(data), time.Local)
 	} else {
-		*n.Time, err = time.ParseInLocation(formatDatetime, string(data), loc)
+		*n.Time, err = time.ParseInLocation(formatDatetime, string(data), time.Local)
 	}
 	return err
 }
