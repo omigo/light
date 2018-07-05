@@ -1,6 +1,7 @@
 package null
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"reflect"
 	"time"
@@ -36,6 +37,11 @@ func (n *NullTime) UnmarshalJSON(data []byte) error {
 	}
 	if n.Time == nil {
 		n.Time = new(time.Time)
+	}
+	if bytes.Equal(data, []byte("0000-00-00")) || bytes.Equal(data, []byte("0000-00-00 00:00:00")) {
+		var tmp time.Time
+		*n.Time = tmp
+		return nil
 	}
 	if len(data) == len(formatDate) {
 		*n.Time, err = time.ParseInLocation(formatDate, string(data), loc)
