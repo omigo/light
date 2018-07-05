@@ -31,7 +31,7 @@ func (n *ClickHouseTime) UnmarshalJSON(data []byte) (err error) {
 	if n.Time == nil {
 		n.Time = new(time.Time)
 	}
-	if bytes.HasPrefix(data, []byte(`"0000-00-00`)) {
+	if bytes.EqualFold(data, []byte("null")) || bytes.HasPrefix(data, []byte(`"0000-00-00`)) {
 		*n.Time = zero
 		return nil
 	}
