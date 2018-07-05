@@ -195,7 +195,8 @@ for _, {{ParamsLastElem .Params}} := range {{ParamsLast .Params}} {
 	if _, err := stmt.Exec(args...); err != nil {
 		xignore++
 		{{if .Interface.Log -}}
-			log.Error(query, err)
+			log.Error(args...)
+			log.Error(err)
 		{{end -}}
 	} else {
 		xaffect++

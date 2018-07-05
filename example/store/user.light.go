@@ -92,7 +92,8 @@ func (*StoreIUser) Bulky(us []*model.User) (int64, int64, error) {
 		log.Debug(args...)
 		if _, err := stmt.Exec(args...); err != nil {
 			xignore++
-			log.Error(query, err)
+			log.Error(args...)
+			log.Error(err)
 		} else {
 			xaffect++
 		}
