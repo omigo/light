@@ -139,10 +139,40 @@ func scan(ptr, value interface{}) error {
 
 	var i64 int64
 	switch v := value.(type) {
+	case int:
+		i64 = int64(v)
 	case int64:
 		i64 = v
 	case *int64:
 		i64 = *v
+	case uint64:
+		i64 = int64(v)
+	case *uint64:
+		i64 = int64(*v)
+	case int8:
+		i64 = int64(v)
+	case *int8:
+		i64 = int64(*v)
+	case uint8:
+		i64 = int64(v)
+	case *uint8:
+		i64 = int64(*v)
+	case int16:
+		i64 = int64(v)
+	case *int16:
+		i64 = int64(*v)
+	case uint16:
+		i64 = int64(v)
+	case *uint16:
+		i64 = int64(*v)
+	case int32:
+		i64 = int64(v)
+	case *int32:
+		i64 = int64(*v)
+	case uint32:
+		i64 = int64(v)
+	case *uint32:
+		i64 = int64(*v)
 	case []uint8:
 		var err error
 		i64, err = strconv.ParseInt(string(v), 10, 64)
@@ -188,6 +218,12 @@ func unmarshalJSON(ptr interface{}, data []byte) error {
 
 func fromI64(ptr interface{}, i64 int64) {
 	switch v := ptr.(type) {
+	case *int:
+		*v = int(i64)
+	case *int64:
+		*v = i64
+	case *uint64:
+		*v = uint64(i64)
 	case *int8:
 		*v = int8(i64)
 	case *uint8:
@@ -202,14 +238,8 @@ func fromI64(ptr interface{}, i64 int64) {
 		*v = int32(i64)
 	case *uint32:
 		*v = uint32(i64)
-	case *int:
-		*v = int(i64)
 	// case *rune:
 	// 	*v = rune(i64)
-	case *int64:
-		*v = i64
-	case *uint64:
-		*v = uint64(i64)
 
 	default:
 		panic("unsupported type " + reflect.TypeOf(v).String())
