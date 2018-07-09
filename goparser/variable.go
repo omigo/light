@@ -15,10 +15,10 @@ func LookupScanOfResults(m *Method, name string) string {
 	v := m.Results.Lookup(name)
 	if v == nil {
 		// log.Error(fmt.Sprintf("method `%s` result varialbe `%s` not found", m.Name, name))
-		return m.Results.Result.Scan()
+		return m.Results.Result.Scan(name)
 	}
 
-	return v.Scan()
+	return v.Scan("")
 }
 func LookupValueOfParams(m *Method, name string) string {
 	v := m.Params.Lookup(name)
@@ -73,7 +73,7 @@ func (v *Variable) Nullable() bool {
 }
 
 func (v *Variable) NotDefault() string {
-	name := v.FullName()
+	name := v.FullName("")
 
 	switch {
 	case v.PkgPath == "github.com/arstd/light/null":
@@ -109,8 +109,12 @@ func (v *Variable) NotDefault() string {
 	}
 }
 
-func (v *Variable) FullName() string {
-	var name string
+func (v *Variable) FullName(key string) (name string) {
+	defer func() {
+		if key != "" {
+			name += "." + upperCamelCase(key)
+		}
+	}()
 
 	if v.Parent != nil {
 		if v.Parent.Name == "" {
@@ -132,8 +136,8 @@ func (v *Variable) FullName() string {
 	return name + v.Name
 }
 
-func (v *Variable) Scan() string {
-	name := v.FullName()
+func (v *Variable) Scan(name string) string {
+	name = v.FullName(name)
 	switch {
 	case v.PkgPath == "github.com/arstd/light/null":
 		return "&" + name
@@ -147,7 +151,7 @@ func (v *Variable) Scan() string {
 }
 
 func (v *Variable) Wrap() string {
-	name := v.FullName()
+	name := v.FullName("")
 	if v.PkgPath == "github.com/arstd/light/null" {
 		return name
 	}
@@ -156,7 +160,7 @@ func (v *Variable) Wrap() string {
 }
 
 func (v *Variable) Value() string {
-	name := v.FullName()
+	name := v.FullName("")
 	switch {
 	case v.PkgPath == "github.com/arstd/light/null":
 		return name

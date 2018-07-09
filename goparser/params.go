@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ParamsLast(ps *Params) string { return ps.List[len(ps.List)-1].FullName() }
+func ParamsLast(ps *Params) string { return ps.List[len(ps.List)-1].FullName("") }
 func ParamsLastElem(ps *Params) string {
 	var x = ps.List[len(ps.List)-1]
 	if x.Slice {
@@ -13,7 +13,7 @@ func ParamsLastElem(ps *Params) string {
 			return x.Name[:len(x.Name)-1]
 		}
 	}
-	return x.FullName()
+	return x.FullName("")
 }
 
 type Params struct {

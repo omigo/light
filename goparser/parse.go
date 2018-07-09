@@ -270,3 +270,19 @@ func underLower(field string) string {
 	}
 	return buf.String()
 }
+
+func upperCamelCase(field string) string {
+	var buf bytes.Buffer
+	var upper bool = true
+	for _, v := range field {
+		if v == '_' {
+			upper = true
+		} else if upper {
+			buf.WriteRune(v - 32)
+			upper = false
+		} else {
+			buf.WriteRune(v)
+		}
+	}
+	return buf.String()
+}
