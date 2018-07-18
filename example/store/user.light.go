@@ -25,7 +25,7 @@ func (*StoreIUser) Create(name string) error {
 	var exec = db
 	var buf bytes.Buffer
 
-	fmt.Fprintf(&buf, "CREATE TABLE IF NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), _status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
+	fmt.Fprintf(&buf, "CREATE TABLE if NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), _status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
 	query := buf.String()
 	log.Debug(query)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -367,7 +367,7 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 
 	var xFirstBuf bytes.Buffer
 	var xFirstArgs []interface{}
-	xFirstBuf.WriteString("SELECT id, username, phone, address, _status, birth_day, created, updated ")
+	xFirstBuf.WriteString("SELECT id, username, if(phone='', '0', phone) phone, address, _status, birth_day, created, updated ")
 
 	buf.WriteString("FROM users WHERE username LIKE ? ")
 	args = append(args, u.Username)

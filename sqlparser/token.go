@@ -73,7 +73,6 @@ const (
 	DELETE
 	CREATE
 	TABLE
-	IF
 	SELECT
 	FROM
 	WHERE
@@ -150,7 +149,6 @@ var tokens = [...]string{
 	DELETE:            "DELETE",
 	CREATE:            "CREATE",
 	TABLE:             "TABLE",
-	IF:                "IF",
 	SELECT:            "SELECT",
 	FROM:              "FROM",
 	WHERE:             "WHERE",

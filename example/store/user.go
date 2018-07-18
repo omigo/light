@@ -13,7 +13,7 @@ var User IUser
 
 type IUser interface {
 
-	// CREATE TABLE IF NOT EXISTS #{name} (
+	// CREATE TABLE if NOT EXISTS #{name} (
 	// 	id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	// 	username VARCHAR(32) NOT NULL UNIQUE,
 	// 	Phone VARCHAR(32),
@@ -86,7 +86,7 @@ type IUser interface {
 	// limit ${offset}, ${size}
 	List(u *model.User, offset, size int) (us []*model.User, xxx error)
 
-	// select id, username, phone, address, _status, birth_day, created, updated
+	// select id, username, if(phone='', '0', phone) phone, address, _status, birth_day, created, updated
 	// from users
 	// where username like ?
 	// [
