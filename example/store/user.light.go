@@ -28,7 +28,7 @@ func (*StoreIUser) Create(name string) error {
 	fmt.Fprintf(&buf, "CREATE TABLE if NOT EXISTS %v ( id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(32) NOT NULL UNIQUE, Phone VARCHAR(32), address VARCHAR(256), _status TINYINT UNSIGNED, birth_day DATE, created TIMESTAMP default CURRENT_TIMESTAMP, updated TIMESTAMP default CURRENT_TIMESTAMP ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ", name)
 	query := buf.String()
 	log.Debug(query)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	_, err := exec.ExecContext(ctx, query)
 	if err != nil {
@@ -48,7 +48,7 @@ func (*StoreIUser) Insert(tx *sql.Tx, u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -115,7 +115,7 @@ func (*StoreIUser) Upsert(u *model.User, tx *sql.Tx) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -137,7 +137,7 @@ func (*StoreIUser) Replace(u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -186,7 +186,7 @@ func (*StoreIUser) Update(u *model.User) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -208,7 +208,7 @@ func (*StoreIUser) Delete(id uint64) (int64, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	res, err := exec.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -232,7 +232,7 @@ func (*StoreIUser) Get(id uint64) (*model.User, error) {
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	row := exec.QueryRowContext(ctx, query, args...)
 	xu := new(model.User)
@@ -264,7 +264,7 @@ func (*StoreIUser) Count(birthDay time.Time) (int64, error) {
 	log.Debug(query)
 	log.Debug(args...)
 	var xu int64
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	err := exec.QueryRowContext(ctx, query, args...).Scan(null.Int64(&xu))
 	if err != nil {
@@ -327,7 +327,7 @@ func (*StoreIUser) List(u *model.User, offset int, size int) ([]*model.User, err
 	query := buf.String()
 	log.Debug(query)
 	log.Debug(args...)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	rows, err := exec.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -406,7 +406,7 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 	totalQuery := "SELECT count(1) " + buf.String()
 	log.Debug(totalQuery)
 	log.Debug(args...)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	err := exec.QueryRowContext(ctx, totalQuery, args...).Scan(&total)
 	if err != nil {
@@ -421,7 +421,7 @@ func (*StoreIUser) Page(u *model.User, ss []model.Status, offset int, size int) 
 	args = append(args, xLastArgs...)
 	log.Debug(query)
 	log.Debug(args...)
-	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	rows, err := exec.QueryContext(ctx, query, args...)
 	if err != nil {

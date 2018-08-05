@@ -26,7 +26,7 @@ Run `light -h`, check install.
 Define a interface, and comment methods with SQLs and Variables, then write a directive `//go:generate light`.
 
 ```go
-//go:generate light
+//go:generate light -log -timeout 30
 
 type User interface {
     // UPDATE users
