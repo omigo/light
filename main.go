@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	lg = flag.Bool("log", false, "Generated file with log")
+	withLog = flag.Bool("log", false, "Generated file with log")
+	timeout = flag.Int64("timeout", 10, "Timeout(s) of SQL execution canceled context")
 )
 
 func main() {
@@ -30,7 +31,8 @@ func main() {
 		log.Fatal(err)
 	}
 	// log.JSONIndent(store)
-	store.Log = *lg
+	store.Log = *withLog
+	store.Timeout = *timeout
 
 	content := generator.Generate(store)
 

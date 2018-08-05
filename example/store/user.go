@@ -7,7 +7,7 @@ import (
 	"github.com/arstd/light/example/model"
 )
 
-//go:generate light -log
+//go:generate light -log -timeout 30
 
 var User IUser
 

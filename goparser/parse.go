@@ -16,8 +16,9 @@ import (
 )
 
 type Interface struct {
-	Source string
-	Log    bool
+	Source  string
+	Log     bool
+	Timeout int64
 
 	Package string            // itf
 	Imports map[string]string // database/sql => sql

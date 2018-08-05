@@ -79,7 +79,7 @@ query := buf.String()
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), {{.Interface.Timeout}}*time.Second)
 defer cancel()
 _, err := exec.ExecContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 {{if .Interface.Log -}}
@@ -103,7 +103,7 @@ query := buf.String()
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), {{.Interface.Timeout}}*time.Second)
 defer cancel()
 res, err := exec.ExecContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 if err != nil {
@@ -128,7 +128,7 @@ query := buf.String()
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), {{.Interface.Timeout}}*time.Second)
 defer cancel()
 res, err := exec.ExecContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 if err != nil {
@@ -220,7 +220,7 @@ query := buf.String()
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), {{.Interface.Timeout}}*time.Second)
 defer cancel()
 row := exec.QueryRowContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 xu := new({{ResultElemTypeName .Results.Result}})
@@ -259,7 +259,7 @@ query := buf.String()
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), {{.Interface.Timeout}}*time.Second)
 defer cancel()
 rows, err := exec.QueryContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 if err != nil {
@@ -321,7 +321,7 @@ totalQuery := "SELECT count(1) "+ buf.String()
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), {{.Interface.Timeout}}*time.Second)
 defer cancel()
 err := exec.QueryRowContext(ctx, totalQuery{{if HasVariable $ }}, args...{{end}}).Scan(&total)
 if err != nil {
@@ -347,7 +347,7 @@ args = append(args, xLastArgs...)
 		log.Debug(args...)
 	{{end -}}
 {{end -}}
-ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel = context.WithTimeout(context.Background(), {{.Interface.Timeout}}*time.Second)
 defer cancel()
 rows, err := exec.QueryContext(ctx, query{{if HasVariable $ }}, args...{{end}})
 if err != nil {
@@ -410,7 +410,7 @@ query := buf.String()
 	{{end -}}
 {{end -}}
 var xu {{ResultTypeName .Results.Result}}
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), {{.Interface.Timeout}}*time.Second)
 defer cancel()
 err := exec.QueryRowContext(ctx, query{{if HasVariable $ }}, args...{{end}}).Scan({{ResultWrap .Results.Result}})
 if err != nil {
