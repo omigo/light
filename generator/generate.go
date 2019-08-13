@@ -12,13 +12,31 @@ import (
 	"github.com/arstd/log"
 )
 
+func getGomodPath(path string) string {
+	for {
+		path = filepath.Dir(path)
+		if path == "" || path == "/" || path == "." {
+			return path
+		}
+		if fileInfo, err := os.Stat(path + "/go.mod"); err != nil {
+			if os.IsExist(err) {
+				return path
+			}
+		} else if !fileInfo.IsDir() {
+			return path
+		}
+	}
+}
+
 func Generate(itf *goparser.Interface) []byte {
-	gopath := os.Getenv("GOPATH")
-	for _, v := range strings.Split(gopath, string(filepath.ListSeparator)) {
-		v = strings.TrimRight(v, "/")
-		if strings.HasPrefix(itf.Source, v) {
-			itf.Source = itf.Source[len(v)+5:]
-			break
+	path := getGomodPath(itf.Source)
+
+	if i := strings.LastIndex(path, string(filepath.Separator)); i > 0 {
+		path = path[:i]
+
+		if strings.HasPrefix(itf.Source, path) {
+			itf.Source = itf.Source[len(path)+1:]
+			log.Error(itf.Source)
 		}
 	}
 
