@@ -125,7 +125,7 @@ func getDoc(cg *ast.CommentGroup) (comment string) {
 
 func extractTypes(itf *Interface, f *ast.File, fset *token.FileSet) {
 	info := types.Info{Defs: make(map[*ast.Ident]types.Object)}
-	conf := types.Config{Importer: importer.Default()}
+	conf := types.Config{Importer: importer.For("source", nil)}
 	_, err := conf.Check(itf.Package, fset, []*ast.File{f}, &info)
 	log.Fataln(err)
 
