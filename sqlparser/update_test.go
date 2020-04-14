@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/arstd/log"
+	"github.com/omigo/log"
 )
 
 func TestParseUpdateStmt(t *testing.T) {

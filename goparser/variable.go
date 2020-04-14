@@ -5,7 +5,7 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/arstd/log"
+	"github.com/omigo/log"
 )
 
 func ResultWrap(v *Variable) string         { return v.Wrap() }
@@ -76,7 +76,7 @@ func (v *Variable) NotDefault() string {
 	name := v.FullName("")
 
 	switch {
-	case v.PkgPath == "github.com/arstd/light/null":
+	case v.PkgPath == "github.com/omigo/light/null":
 		return "!" + name + ".IsEmpty()"
 
 	case v.PkgPath == "time" && v.TypeName == "Time":
@@ -139,7 +139,7 @@ func (v *Variable) FullName(key string) (name string) {
 func (v *Variable) Scan(name string) string {
 	name = v.FullName(name)
 	switch {
-	case v.PkgPath == "github.com/arstd/light/null":
+	case v.PkgPath == "github.com/omigo/light/null":
 		return "&" + name
 	case v.Pointer:
 		return "&" + name
@@ -152,7 +152,7 @@ func (v *Variable) Scan(name string) string {
 
 func (v *Variable) Wrap() string {
 	name := v.FullName("")
-	if v.PkgPath == "github.com/arstd/light/null" {
+	if v.PkgPath == "github.com/omigo/light/null" {
 		return name
 	}
 	name = fmt.Sprintf("null.%s%s(&%s)", strings.ToUpper(v.TypeName[:1]), v.TypeName[1:], name)
@@ -162,7 +162,7 @@ func (v *Variable) Wrap() string {
 func (v *Variable) Value() string {
 	name := v.FullName("")
 	switch {
-	case v.PkgPath == "github.com/arstd/light/null":
+	case v.PkgPath == "github.com/omigo/light/null":
 		return name
 	case v.Pointer:
 		return name

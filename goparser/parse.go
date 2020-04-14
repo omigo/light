@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/arstd/log"
+	"github.com/omigo/log"
 )
 
 type Interface struct {

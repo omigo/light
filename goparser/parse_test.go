@@ -5,16 +5,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/arstd/log"
+	"github.com/omigo/log"
 )
 
 func TestParse(t *testing.T) {
 	gopath := strings.TrimSuffix(os.Getenv("GOPATH"), "/")
-	filename := gopath + "/src/github.com/arstd/light/example/store/user.go"
+	filename := gopath + "/src/github.com/omigo/light/example/store/user.go"
 	src := `package store
 import (
 	// "database/sql"
-	"github.com/arstd/light/example/model"
+	"github.com/omigo/light/example/model"
 )
 var User IUser
 type IUser interface {

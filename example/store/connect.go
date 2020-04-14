@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/arstd/light/example/conf"
-	"github.com/arstd/log"
+	"github.com/omigo/light/example/conf"
+	"github.com/omigo/log"
 )
 
 var db *sql.DB

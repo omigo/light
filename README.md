@@ -1,4 +1,4 @@
-light [![Build Status](https://api.travis-ci.org/arstd/light.svg?branch=master)](https://api.travis-ci.org/arstd/light.svg?branch=master)
+light [![Build Status](https://api.travis-ci.org/omigo/light.svg?branch=master)](https://api.travis-ci.org/omigo/light.svg?branch=master)
 =====
 
 
@@ -14,7 +14,7 @@ interface methods commented with SQLs and Variables.
 
 Install `light` tool. Make sure $GOBIN in your $PATH environment.
 
-    `go get -u -v github.com/arstd/light`
+    `go get -u -v github.com/omigo/light`
 
 Run `light -h`, check install.
 
@@ -44,8 +44,8 @@ type User interface {
 After that, run `go generate ./...`, code generated.
 
 	# go generate ./...
-	Source file    /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.go
-	Generated file /Users/Arstd/Reposits/src/github.com/arstd/light/example/store/user.light.go
+	Source file    /Users/Arstd/Reposits/src/github.com/omigo/light/example/store/user.go
+	Generated file /Users/Arstd/Reposits/src/github.com/omigo/light/example/store/user.light.go
 
 ```go
 

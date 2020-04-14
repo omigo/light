@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/arstd/light/null"
+	"github.com/omigo/light/null"
 )
 
 type Status uint8

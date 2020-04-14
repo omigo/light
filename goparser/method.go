@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/arstd/light/sqlparser"
+	"github.com/omigo/light/sqlparser"
 )
 
 type MethodType string

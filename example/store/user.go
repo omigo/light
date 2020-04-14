@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/arstd/light/example/model"
+	"github.com/omigo/light/example/model"
 )
 
 //go:generate light -log -timeout 30

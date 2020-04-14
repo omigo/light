@@ -7,9 +7,9 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/arstd/light/example/model"
-	"github.com/arstd/light/null"
-	"github.com/arstd/log"
+	"github.com/omigo/light/example/model"
+	"github.com/omigo/light/null"
+	"github.com/omigo/log"
 )
 
 var mock sqlmock.Sqlmock

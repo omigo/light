@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/arstd/light/generator"
-	"github.com/arstd/light/goparser"
-	"github.com/arstd/log"
+	"github.com/omigo/light/generator"
+	"github.com/omigo/light/goparser"
+	"github.com/omigo/log"
 	"golang.org/x/tools/imports"
 )
 

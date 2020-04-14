@@ -7,9 +7,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/arstd/light/goparser"
-	"github.com/arstd/light/sqlparser"
-	"github.com/arstd/log"
+	"github.com/omigo/light/goparser"
+	"github.com/omigo/light/sqlparser"
+	"github.com/omigo/log"
 )
 
 func getGomodPath(path string) string {
@@ -36,7 +36,6 @@ func Generate(itf *goparser.Interface) []byte {
 
 		if strings.HasPrefix(itf.Source, path) {
 			itf.Source = itf.Source[len(path)+1:]
-			log.Error(itf.Source)
 		}
 	}
 

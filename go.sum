@@ -1,6 +1,6 @@
 9fans.net/go v0.0.2/go.mod h1:lfPdxjq9v8pVQXUMBCx5EO5oLXWQFlKRQgs1kEkjoIM=
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
-github.com/arstd/log v0.0.0-20170720133207-7bc0b1c0d6cb h1:MI2bhymSme4hSB19QkSKXfi3nN62i3Rd5Aa8RMLjd4o=
-github.com/arstd/log v0.0.0-20170720133207-7bc0b1c0d6cb/go.mod h1:qJDE2SzG3VFhjPTOME3Fv3QoH1WcuA9QmDEJtfOTjz4=
 github.com/golang/tools v0.0.0-20181219222714-6e267b5cc78e h1:HkO2Iz6rgBMoP305cPk2KLA6RNBVx0qr7r6l6a6lOdU=
 github.com/golang/tools v0.0.0-20181219222714-6e267b5cc78e/go.mod h1:BZR6KJOI/IQ5FlSQroxL7yevEMRCz1dARTXHD9s4mHE=
+github.com/omigo/log v0.0.0-20170720133207-7bc0b1c0d6cb h1:/y2zrzhJrUJuqMZlsuF4QjM1i34VnQk8GZHbTDdh3Bs=
+github.com/omigo/log v0.0.0-20170720133207-7bc0b1c0d6cb/go.mod h1:3pGFKsTTRBzfMvwHcfJckhhX9caoO4IHhmi14Qf12Ik=

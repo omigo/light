@@ -1,6 +1,6 @@
 package conf
 
-import "github.com/arstd/log"
+import "github.com/omigo/log"
 
 type conf struct {
 	Name     string
