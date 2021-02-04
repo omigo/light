@@ -9,8 +9,10 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	gopath := strings.TrimSuffix(os.Getenv("GOPATH"), "/")
-	filename := gopath + "/src/github.com/omigo/light/example/store/user.go"
+	gopath := strings.TrimSuffix(os.Getenv("PWD"), "/")
+
+	t.Log(os.Getenv(""))
+	filename := gopath + "/../example/store/user.go"
 	src := `package store
 import (
 	// "database/sql"

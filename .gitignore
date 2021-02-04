@@ -34,3 +34,4 @@ _testmain.go
 !/vendor/golang.org/x/tools/internal/fastwalk
 
 # Generated files
+.idea
