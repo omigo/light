@@ -61,7 +61,7 @@ func Parse(filename string, src interface{}) (*Interface, error) {
 }
 
 func goBuild(src string) {
-	cmd := exec.Command("go", "build", "-i", src)
+	cmd := exec.Command("go", "build", src)
 	out, err := cmd.CombinedOutput()
 	if bytes.HasSuffix(out, []byte("command-line-arguments\n")) {
 		fmt.Printf("%s", out[:len(out)-23])
